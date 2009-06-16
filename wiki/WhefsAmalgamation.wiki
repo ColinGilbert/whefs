@@ -1,6 +1,8 @@
 #summary Amalgamation builds of whefs.
 #labels Phase-Implementation,Category-UserDocs
 
+See also: [BuildAndInstall]
+
 <h1>whefs Amalgamation Builds</h1>
 
 To simplify integration with other software, whefs's makefile provides an "amalgamation build." This copies all header files needed by whefs into a single mega-header, and all source files into a single mega-source file. Those two files can then be dropped into arbitrary client trees.
