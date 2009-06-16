@@ -1,4 +1,5 @@
 #summary Recent whefs news items.
+#labels Category-UserDocs
 
 <h1>whefs News (most recent items at the top)</h1>
 
