@@ -9,6 +9,6 @@ Aside from the [WhefsTools common command flags], whefs-addblocks supports these
 
    *  -a# = Appends # blocks to the EFS.
 
-The total number of blocks is limited by the value of [WhefsTweaking WHEFS_ID_TYPE_BITS]. The default maximum number of inodes or blocks is 2^16 (64k).
+The total number of blocks is limited by the value of [WhefsTweakingEFS WHEFS_ID_TYPE_BITS]. The default maximum number of inodes or blocks is 2^16 (64k).
 
 Achtung: always make a backup of your EFS first, just in case lingering bugs in whefs (or an untimely Ctrl-C) corrupts the EFS.
