@@ -1,4 +1,5 @@
 #summary Notes about whefs vs. concurrency
+#labels Phase-Implementation,Category-Developer
 
 <h1>Concurrency: multi-process and multi-thread access</h1>
 
