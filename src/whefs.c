@@ -15,7 +15,7 @@
 
 char const * whefs_home_page_url()
 {
-    return "http://fossil.wanderinghorse.net/repos/whefs/";
+    return "http://code.google.com/p/whefs";
 }
 
 const whefs_id_type whefs_id_type_end = (whefs_id_type)-1;
