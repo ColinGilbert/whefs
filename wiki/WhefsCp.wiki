@@ -1,4 +1,5 @@
 #summary A tool to copy files into and out of EFS containers.
+#labels Category-ToolDocs
 
 
 whefs-cp is a tool similar to the conventional <tt>cp</tt> command. It can import local files into an EFS and export them from an EFS.
