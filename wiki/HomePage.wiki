@@ -1,5 +1,5 @@
 #summary The main/home wiki page.
-<h1>whefs: WanderingHorse.net Embedded Filesystem</h1>
+<h1>whefs: !WanderingHorse.net Embedded Filesystem</h1>
 
 whefs is a free C library implementing an embedded virtual filesystem.
 It works by creating a "filesystem" inside a so-called container file
