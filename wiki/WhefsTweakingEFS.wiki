@@ -1,4 +1,5 @@
 #summary Notes about tweaking certain internals of libwhefs.
+#labels Category-Internals
 
 <h1>Tweaking a VFS</h1>
 
