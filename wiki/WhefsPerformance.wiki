@@ -1,4 +1,5 @@
 #summary Notes about whefs performance and tuning
+#labels Category-Internals
 <h1>Notes and ramblings about whefs's performance</h1>
 
 (See also: [WhefsTweakingEFS Tweaking an EFS])
