@@ -1,23 +1,18 @@
 #summary The main/home wiki page.
 #labels Featured,Category-UserDocs
-<h1>whefs: !WanderingHorse.net Embedded Filesystem</h1>
+<h1>whefs: the !WanderingHorse.net Embedded Filesystem Library for C</h1>
 
-whefs is a free C library implementing an embedded virtual filesystem.
-It works by creating a "filesystem" inside a so-called container file
-(or in memory). This API can then treat that container similarly to
-a filesystem. In essence this is similar to conventional archives
-(e.g. zip files), except that this library provides random-access
-read/write support to the filesystem via an API similar to the
-conventional fopen(), fread(), fwrite() and friends.
+whefs is a Free/Open Source C library implementing an embedded virtual filesystem.
+It works by creating a "filesystem" inside a so-called container file (or in memory). This API can then treat that container similarly to a filesystem. In essence this is similar to conventional archives (e.g. zip files), except that this library provides random-access read/write support to the filesystem via an API similar to the conventional fopen(), fread(), fwrite() and friends.
 
 <b>Author</b>: Stephan Beal ([http://wanderinghorse.net/home/stephan/])
 
-<b>License</b>: The code is released in the Public Domain except in jurisdictions which do not recognize Public Domain property, in which case it is released under the MIT license (which is about as close as Public Domain as a license can get).
+<b>License</b>: The code is released in the Public Domain except in jurisdictions which o not recognize Public Domain property, in which case it is released under the MIT license which is about as close as Public Domain as a license can get).
 
 <h2>Features</h2>
 
-   *  Provides features to create and open embedded/virtual filesystems, which is basically a filesystem which lives inside of a single file, and to access "pseudofiles" within those filesystems.
-   *  i'm a documentation maniac - whefs comes with over 100k of API documentation and another 60k+ of docs in this site's wiki.
+   *  Provides features to create and open embedded/virtual filesystems, which is basically a filesystem which lives inside of a single file (or in memory), and to access "pseudofiles" within those filesystems.
+   *  i'm a documentation maniac - whefs comes with over 150k of API documentation and another 100k+ of docs in this site's wiki.
    *  Optimized for low memory consumption: small use cases can get away with less than 2kb of malloc()'d memory, and "normal" cases need less than 10k (as measured by Valgrind).
    *  The i/o support is provided by [http://fossil.wanderinghorse.net/repos/whio/ libwhio], meaning it can in principal use a wide range of back-end storage devices. Implementations are provided for FILE handles, in-memory buffers, and mapping a user-supplied memory range as storage. It can also host an EFS which is statically compiled and linked into the application (see [Whefs2c]).
    *  The [WhefsFilesystem EFS file format] is independent of the device or platform bitness/endianness. 
