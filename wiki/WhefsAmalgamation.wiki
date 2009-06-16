@@ -1,5 +1,5 @@
 #summary Amalgamation builds of whefs.
-#labels Phase-Implementation
+#labels Phase-Implementation,Category-UserDocs
 
 Everything on this page is a big fat lie until i get the amalgamation build re-worked for the restructured source tree.
 
