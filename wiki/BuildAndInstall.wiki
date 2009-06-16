@@ -1,0 +1,36 @@
+#summary Building and installing libwhefs
+
+=Building and Installing=
+
+==Unixish Platforms==
+
+The build tree currently requires GNU Make 3.81 or higher. That said, see [WhefsAmalgamation] for details on how to create a single standalone source file which can be compiled using an arbitrary build tool.
+
+To build the tree on Unixish platforms:
+
+{{{
+~> make
+# Or, if you want to build using the TinyC compiler:
+# ~> make CC=tcc CXX=tcc
+}}}
+
+Just for fun, try holding your breath while it builds. It'll only takes 2-3 seconds to build the library and supporting tools on a reasonably fast machine (and much faster with tcc - 0.85 seconds on my box using a non-parallel build).
+
+*To install it:*
+
+  * Copy `src/libwhefs.*` to a directory in your library search path.
+  * Copy the directory `include/wh` to a directory in your INCLUDES search path.
+  * Copy `app/whefs-*` to a directory in your executable search path.
+
+Some day i'll add `make install` rules, but the makefile code is intentionally kept overly simple.
+
+==Non-Unixish Platforms==
+
+This code is 100% untested on non-Unix platforms. In theory, [WhefsAmalgamation the amalgamation build] should compile on any system which provides C99 support and two or three non-C99 (but POSIX-1.2001) functions used for dealing with file-based EFSes.
+
+=Using whefs from client code=
+
+To use libwhefs from client code:
+
+  * Include the appropriate header file(s) from `<wh/whefs/*.h>` and/or `<wh/whio/*.h>`. If you're using the [WhefsAmalgamation amalgamation build] you'll need to include `whefs_amalgamation.h` _instead of_ the other headers.
+  * Link against `-lwhefs`.
