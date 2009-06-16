@@ -1,4 +1,5 @@
 #summary A tool to remove files from an EFS container.
+#labels Category-ToolDocs
 
 whefs-rm is a tool similar to the conventional <tt>rm</tt> command. It can remove files living inside a VFS.
 
