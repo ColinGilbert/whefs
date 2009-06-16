@@ -1,7 +1,7 @@
 #summary Amalgamation builds of whefs.
 #labels Phase-Implementation,Category-UserDocs
 
-Everything on this page is a big fat lie until i get the amalgamation build re-worked for the restructured source tree.
+*Everything on this page is a big fat lie* until i get the amalgamation build re-worked for the restructured source tree.
 
 ----
 <h1>whefs Amalgamation Builds</h1>
