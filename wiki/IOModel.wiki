@@ -1,5 +1,5 @@
 #summary Overview of the i/o model used by whefs.
-#labels Phase-Design
+#labels Phase-Design,Category-Internals
 
 <h1>whefs' I/O Model</h1>
 
