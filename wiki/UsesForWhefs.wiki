@@ -1,4 +1,5 @@
 #summary Potential uses for whefs
+#labels Category-UserDocs
 
 Here are some potential uses for whefs clients:
 
