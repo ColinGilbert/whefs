@@ -1,0 +1,32 @@
+#summary One-sentence summary of this page.
+
+<h1>Example #1</h1>
+
+Here's the "Hello, world!" of whefs...
+
+{{{
+// Open an existing EFS:
+whefs_fs * fs = 0;
+int rc = whefs_openfs( "my.whefs", &fs, true );
+if( whefs_rc.OK != rc ) { ... error ... }
+
+// Open or create a file:
+whefs_file * fi = whefs_fopen( fs, "hello.txt", "r+" );
+if( ! fi ) { ... error ... }
+
+// Set new content:
+whefs_ftrunc( fi, 0 );
+whefs_fwrite( fi, "Hello, world!\n", 14 );
+
+// Read it back:
+whefs_frewind( fi );
+enum { bufSize = 1024 * 2 };
+char buf[bufSize];
+memset(buf,0,bufSize);
+whefs_fread( fi, buf, bufSize );
+printf( "Read back: %s", buf );
+
+// Clean up:
+whefs_fclose( fi );
+whefs_fs_finalize( fs );
+}}}
