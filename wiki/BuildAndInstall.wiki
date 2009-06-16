@@ -5,7 +5,7 @@
 
 ==Unixish Platforms==
 
-The build tree currently requires GNU Make 3.81 or higher. That said, see [WhefsAmalgamation] for details on how to create a single standalone source file which can be compiled using an arbitrary build tool.
+The build tree currently requires GNU Make 3.81 or higher. It also assumes a compiler which supports GCC's arguments (with the special exception that it also supports tcc). That said, see [WhefsAmalgamation] for details on how to create a single standalone source file which can be compiled using an arbitrary build tool and C99 compiler.
 
 To build the tree on Unixish platforms:
 
