@@ -1,4 +1,5 @@
 #summary Tools for creating and manipulating whefs containers
+#labels Category-ToolDocs
 
 =whefs tools=
 
