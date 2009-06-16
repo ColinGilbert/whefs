@@ -1,5 +1,7 @@
-#summary One-sentence summary of this page.
+#summary Brief examples of using libwhefs
 #labels Category-UserDocs
+
+See also: [WhefsTools]
 
 <h1>Example #1</h1>
 
