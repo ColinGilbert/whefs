@@ -1,4 +1,5 @@
 #summary One-sentence summary of this page.
+#labels Category-UserDocs
 
 <h1>Example #1</h1>
 
