@@ -1,4 +1,4 @@
-#summary One-sentence summary of this page.
+#summary Notes about tweaking certain internals of libwhefs.
 
 <h1>Tweaking a VFS</h1>
 
