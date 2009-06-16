@@ -1,4 +1,5 @@
 #summary Description of the filesystem layout.
+#labels Category-Internals
 
 <h1>The whefs Filesystem</h1>
 
