@@ -1,5 +1,10 @@
 #!/bin/bash
-
+########################################################################
+# Generates an "amalgamation build" for whefs. Output is two files,
+# ${AMAL_C} and ${AMAL_H}. If all goes well they can be compiled
+# as-is to get a standalone whefs/whio library.
+#
+########################################################################
 inc_w=include/wh
 inc_io=${inc_w}/whio
 inc_efs=${inc_w}/whefs
