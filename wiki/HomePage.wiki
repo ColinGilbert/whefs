@@ -24,9 +24,9 @@ conventional fopen(), fread(), fwrite() and friends.
    *  A side-effect of the i/o model is that it is possible to embed one VFS within another (to a near arbitrary depth). Being a side-effect, this support requires no special-case handling in the vfs kernel or i/o layer.
    *  The source tree comes with [WhefsTools several tools for working with VFSes], e.g. for creating VFSes, listing their contents, and copying files into and out of a VFS.
    *  Supports read-only as well as read-write operation, at the VFS and pseudofile levels.
-   *  Released into the Public Domain, completely unhindered by licensing restrictions (or warranties, for that matter!). Googling has revealed little open-source work on embedded filesystems (but lots of commercial products), and i have been unable to find a comparable library released under non-restrictive (or non-viral) licensing terms.
+   *  Has very liberal, non-viral licensing conditions, unhindered by licensing restrictions (or warranties, for that matter!). Googling has revealed little open-source work on embedded filesystems (but lots of commercial products), and i have been unable to find a comparable library released under non-restrictive (or non-viral) licensing terms.
    *  Designed to be easy to copy directly into a client source tree. See [WhefsAmalgamation the amalgamation page] for details.
-   *  Fairly rigorous consistency and bounds checking - it bails out of it finds the slightest hint of foul play. (Just remember to check the error codes!)
+   *  Fairly rigorous consistency and bounds checking - it bails out of it finds the slightest hint of foul play. (Just remember to check the error codes! They're there for a reason!)
 
 <h2>Misfeatures</h2>
 
