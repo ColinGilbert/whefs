@@ -1,4 +1,5 @@
 #summary A tool to add data blocks to an EFS container.
+#labels Category-ToolDocs
 
 whefs-addblocks appends data blocks to an existing EFS container file. It is not currently possible to expand the number of inodes or change the maximum filename length without recreating the FS and re-importing the data.
 
