@@ -1,0 +1,28 @@
+#summary Summary of platform/environment requirements for using whefs
+
+<h1>Requirements/Prerequisites for compiling whefs</h1>
+
+The library is standalone C code conforming to the ISO C99 standard (don't even think about asking me to back-port to C89 - not gonna happen). The storage handler for on-disk EFSes (as opposed to in-memory VFSes) requires certain functions defined in the POSIX-1.2001 standard (e.g. <tt>ftruncate()</tt> and <tt>fileno()</tt>). Most or all Unix-like systems will have the few required POSIX routines. Windows... i don't know. Without those storage handlers it can only be used for in-memory filesystems.
+
+No third-party libraries are needed except the system's standard C libraries.
+
+The i/o layer has some optional support for compression using zlib, but zlib has become a core system-level component and is available preinstalled on any sane system. The feature can be activated with a C macro (when building whefs, not the client) - see [http://code.google.com/p/whefs/source/browse/trunk/include/wh/whio/whio_zlib.h whio_zlib.h] for details.
+
+Most compilers explicitly require enabling C99 compatibility mode (in gcc this is the <tt>-std=c99</tt> flag, on SunCC it's <tt>-xc99=all</tt>). Note that compilers which don't support C99 variable-sized arrays (e.g. tcc) will need to `malloc()` in some places where other compilers do not, so the overall memory costs may go up.
+
+<h1>Platforms seen to work with whefs</h1>
+
+The whefs code has been shown to build, run, and pass basic sanity checks on:
+
+   *  [http://www.gnu.org/software/gcc/ gcc] on Linux ix86/32: gcc 3.2.3, 4.0.2, 4.3.x
+   *  [http://www.gnu.org/software/gcc/ gcc] on Linux ix86/64: gcc 4.2.x
+   *  [http://bellard.org/tcc/ tcc] on ix86/32 Linux: tcc 0.9.24/25 (and tcc is FAST!)
+   *  gcc on [http://www.nexentaos.org/os Nexenta] !OpenSolaris 2.x in an x86/32 virtual machine.
+   *  gcc on a Sun V240 (sparcv9) under Solaris 10: gcc 3.4
+   *  Sun Studio 12 on a Sun V240 (sparcv9) under Solaris 10
+
+That is not to say the code is _supported_ on all of those platforms - my access to non-Linux boxes is very limited, and i cannot test all new code on all of those platforms (especially Sun Solaris). It might just be that a platform which worked yesterday might not work tomorrow (but that's _not_ a project goal!).
+
+Last i checked, the code compiles cleanly even with gcc's `-pedantic` mode enabled.
+
+Reports of success/failure for other platforms are always appreciated. (Simply email me or add a comment to this wiki page.)
