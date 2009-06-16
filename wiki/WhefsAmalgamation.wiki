@@ -15,7 +15,13 @@ To build the amalgamation, simply do the following from the whefs source tree:
 
 That will create the files <tt>whefs_amalgamation.h</tt> and <tt>whefs_amalgamation.c</tt>, which can be compiled into library form or embedded directly in a client source tree. The [http://sqlite.org sqlite project] uses this technique as well, and they claim that via this approach the overall performance of the library can be improved by 5-10% because the compiler can perform certain extra optimizations when all definitions are in the same source file.
 
-Creating the amalgamation requires some (automated) tweaks to the source and header files (e.g. removing the #includes for the related headers). To see how it's done, look at the Makefile.
+Creating the amalgamation requires some (automated) tweaks to the source and header files (e.g. removing the #includes for the related headers). To see how it's done, look at the the script `createAmalgamation.sh`.
+
+<h1>Using the amalgamation from client code</h1>
+
+The amalgamation is intended to be compiled and linked as part of a client project. To use it from the client code, the user must `#include "whefs_amalgamation.h"`. If `whefs_amalgamation.c` is not compiled directly in with the client code then the client code will of course need to link to either `whefs_amalgamation.o` or a library containing the code from `whefs_amalgamation.c`.
+
+<h1>Compiling the amalgamation</h1>
 
 Compilation of the library is <em>much</em> faster when compiling just whefs_amalgamation.c, as opposed to the individual source files:
 
@@ -66,9 +72,9 @@ s#/\*[^*]*\*+([^/*][^*]*\*+)*/|([^/"']*("[^"\\]*(\\[\d\D][^"\\]*)*"[^/"']*|'[^'\
 print;
 }}}
 
-That said, stripping the API docs, even though they are large, does not have a consistent measurable effect on the compilation speed, and they should probably only be stripped when space is at a premium.
+That said, stripping the API docs, even though they are large, does not have a consistent measurable effect on the compilation speed, and they should probably only be stripped when space is at a premium. _It also incidentally strips the license text, which might make some lawyers nervous._
 
-<h2>Using tcc with the amalgamation</h2>
+<h1>Using tcc with the amalgamation</h1>
 
 [http://bellard.org/tcc/ TinyCC] is a <em>really</em> fast C compiler with some interesting features. Namely, it's so fast that it can be used to run C code as if it were a shell-style script. With a copy of the whefs amalgamation it is trivial to write "scripts" in C which use whefs, without ever actually having to have libwhefs installed. tcc will compile it on the fly (and will do so so quickly that you won't even have time to time it). Here's an example, which uses [Whefs2c] input for an in-memory VFS:
 
