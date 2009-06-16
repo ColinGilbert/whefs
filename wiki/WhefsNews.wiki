@@ -1,0 +1,41 @@
+#summary Recent whefs news items.
+
+<h1>whefs News (most recent items at the top)</h1>
+
+<b>13 June 2009:</b>
+   *  Added a heavier-weight name caching supplement, which allows us to search for an inode by name without search-related i/o once it has been traversed. Its memory cost becomes arguably too high for EFSs with lots of files, especially those with high maximum filename length limits. It is currently always on but a toggle will eventually provided, as the memory cost becomes prohibitive on very small systems 
+
+<b>10/11 June 2009:</b>
+   *  Added a basic filename lookup cache. It's quite primitive, and isn't yet fully optimized (it must be sorted more often than it should be) but it's fairly memory-light and it's a starting point. For cases where a file is sought by name, this provides a dramatic reduction in the search time.
+   *  Shown to compile and run cleanly on the [http://www.nexentaos.org/os Nexenta flavour of OpenSolaris].
+
+<b>8 June 2009:</b> (Happy birthday to my brother Toby!)
+   *  Now compiles with gcc's <tt>-pedantic</tt> and <tt>-fstrict-aliasing</tt> flags. Seems to work, too.
+   *  It is now possible to add blocks to an EFS at runtime (via <tt>whefs_fs_append_blocks()</tt>). It is not possible to add inodes, and will not be without first significantly refactoring of how inodes <em>and</em> blocks are stored (and subsequently addressed).
+
+<b>22 March 2009:</b>
+   *  Got the most basic of concurrency options - locking the whole VFS - working. See [WhefsConcurrency] for the current state.
+   *  It is now possible to use whefs from JavaScript: [http://code.google.com/p/v8-juice/wiki/PluginWhefs]. As far as i know, this is the world's first embedded filesystem which is JavaScriptable.
+
+<b>15 Jan 2009:</b>
+   *  Some restructuring of the inodes data (not yet completed) has led to an overall reduction in the number of calls to read() and write() on the underlying storage by approximately 40%. The amount of data is the same, but we're read/writing certain objects as an encoded blob then decoding/encoding them in memory, as opposed to making one read()/write() call per member field (as was done before).
+
+<b>11 Jan 2009:</b>
+   *  whefs now runs on 64-bit platforms. Previously it wouldn't work on platforms where size_t was not 32 bits. Thanks to [http://www.hostmonster.com] for unwittingly providing a 64-bit box to test on. This also proved that the file format is independent of the bitness (it is theoretically also endian-neutral, but that hasn't yet been proven).
+
+<b>9 Jan 2009:</b>
+   *  <em>More speed!</em> The routine which figures out which virtual block is associated with a given pseudofile read/write position is now somewhere close to amortized constant-time (it used to be linear before, based on the number of blocks owned by the inode). It is O(N) (linear) the first time it is called for a given inode (to load the block list: N=(number of blocks owned by the inode)) and when appending multiple blocks at a time (N=(new_block_count-old_block_count)), but for operations within existing block boundaries (that is, the vast majority of the time) it is constant time after the one-time load of the block list.
+
+<b>8 Jan 2009:</b>
+   *  i added a cache of blocks used by opened inodes. This <em>drastically</em> speeds up the majority of pseudofile read/write operations, cutting the number of underlying i/o operations by more than <em>20 times</em> in some places. But... this also means that it's no longer possible to configure whefs to use <em>no</em> calls to malloc(). That said, the memory cost is still low - currently about 8 bytes per block belonging to the opened inode (they get cleaned up when the inode is closed).
+   *  There have been other dramatic performance improvements today. After running many tests through valgrind/callgrind i was able (with the help of KCacheGrind) to identify the horrible hotspots and eliminate the most glaring performance problems. As of right now, i haven't got any complaints about performance for the average use case (though some ops are still glaringly linear).
+
+<b>7 Jan 2009:</b>
+   *  So you want a <em>fully embedded</em> filesystem? An experiment a few hours ago showed that we could: A) create a VFS file, B) convert that VFS file to C code (as a big char array), C) link that C code in with a standalone program, and D) use the VFS in memory from there (with read/write access). Since it is trivial to dump any VFS to any other output device, the in-memory VFS can be dumped to a file (and re-imported into static memory, as long as the VFS file doesn't grow). There's got to be some weird uses for that, e.g. embedding config files (or default versions of them) directly in the application. Or even app temp files (and no more worries about other applications reading them).
+
+<b>2 Jan 2009:</b>
+   *  Experimentation with alternatives to malloc() has shown that we can, with the proper combination of compile-time options, configure whefs to not require a single call to malloc() (by using shared pools of statically-initialized objects, dropping back to malloc() if the pool fills up). That said, calling fopen() will indeed malloc() (352 bytes on my machine), so unless one is using a custom i/o device (or a read/write static memory buffer) for the back end storage, at least 1 malloc() is required.
+
+<b>27 Dec 2008:</b>
+   *  The read() API appears to work, so now the most significant bits are in place for full-featured pseudofiles. (Now we just need to test the hell out of it and flesh out the API.)
+   *  It is indeed possible to embed a vfs within a vfs (apparently to an arbitrary depth). This is a side-effect of the i/o model, and requires no special case handling in the vfs or i/o parts.
