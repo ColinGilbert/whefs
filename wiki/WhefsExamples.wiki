@@ -1,5 +1,5 @@
 #summary Brief examples of using libwhefs
-#labels Category-UserDocs
+#labels Category-UserDocs,Featured
 
 See also: [WhefsTools]
 
