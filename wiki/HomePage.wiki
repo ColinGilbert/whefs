@@ -77,7 +77,7 @@ The i/o layer has some optional support for compression using zlib, but zlib has
 
 <h2>News</h2>
 
-See [whefs-news|the news page].
+See [WhefsNews the news page].
 
 <h2>Want to help?</h2>
 
