@@ -1,4 +1,5 @@
 #summary A tool to list the contents of an EFS container.
+#labels Category-ToolDocs
 
 
 whefs-ls is a tool similar to the conventional <tt>ls</tt> command. It lists the contents of a VFS file.
