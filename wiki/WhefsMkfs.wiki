@@ -1,4 +1,5 @@
 #summary Tool for creating whefs containers.
+#labels Category-ToolDocs
 <h1>whefs-mkfs</h1>
 
 whefs-mkfs is a tool similar to the conventional <tt>mkfs</tt> command. It creates VFS container files.
