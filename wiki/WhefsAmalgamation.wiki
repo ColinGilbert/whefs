@@ -76,7 +76,7 @@ That said, stripping the API docs, even though they are large, does not have a c
 
 <h1>Using tcc with the amalgamation</h1>
 
-[http://bellard.org/tcc/ TinyCC] is a <em>really</em> fast C compiler with some interesting features. Namely, it's so fast that it can be used to run C code as if it were a shell-style script. With a copy of the whefs amalgamation it is trivial to write "scripts" in C which use whefs, without ever actually having to have libwhefs installed. tcc will compile it on the fly (and will do so so quickly that you won't even have time to time it). Here's an example, which uses [Whefs2c] input for an in-memory VFS:
+[http://bellard.org/tcc/ TinyCC] is a <em>really</em> fast C compiler with some interesting features. Namely, it's so fast that it can be used to run C code as if it were a shell-style script. With a copy of the whefs amalgamation it is trivial to write "scripts" in C which use whefs, without ever actually having to have libwhefs installed. tcc will compile it on the fly (and will do so so quickly that you won't even have time to time it). Here's an example, which uses [Whefs2c] input for an in-memory EFS:
 
 {{{
 #!/usr/bin/tcc -run
@@ -166,7 +166,7 @@ user	0m0.088s
 sys	0m0.000s
 }}}
 
-The vast majority of that time was spent processing StaticWHEFS.c and exporting the VFS to a file (see the call to whefs_fs_dump_to_filename()). In this case the VFS is 119kb and the static VFS C code is 725kb. If we replace that .c file with a smaller one (406k generated from a 66k VFS), the time changes drastically:
+The vast majority of that time was spent processing StaticWHEFS.c and exporting the VFS to a file (see the call to whefs_fs_dump_to_filename()). In this case the EFS is 119kb and the static EFS C code is 725kb. If we replace that .c file with a smaller one (406k generated from a 66k VFS), the time changes drastically:
 
 {{{
 stephan@jareth:~/cvs/fossil/whefs$ time ./X.c
