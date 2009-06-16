@@ -1,4 +1,5 @@
 #summary Building and installing libwhefs
+#labels Category-UserDocs,Phase-Deploy
 
 =Building and Installing=
 
