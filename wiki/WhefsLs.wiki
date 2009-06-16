@@ -39,4 +39,4 @@ Node ID:        First block:    Size:       Timestamp:      Name:
 5 of 37 inodes in use
 }}}
 
-Not all common glob patterns are supported. Most notably missing are sets in the form <tt>{a,b,c}</tt>. For example, the pattern '*.{c,h}' will not behave as it does in the shell (specifically, it will only match some really weird file names). As a workaround, break it into two patterns: '*.c' and '*.h'.
+Not all common glob patterns are supported. Most notably missing are sets in the form <tt>{a,b,c}</tt>. For example, the pattern `*.{c,h}` will not behave as it does in the shell (specifically, it will only match some really weird file names). As a workaround, break it into two patterns: `*.c` and `*.h`.
