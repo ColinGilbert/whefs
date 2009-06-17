@@ -3,7 +3,7 @@
 
 whefs2c converts a whefs EFS to C code and create a statically-linked  in-memory EFS for it.
 
-Usage: <tt>whefs2c ObjectName < input.whefs > outfile.c</tt>
+Usage: `whefs2c ObjectName < input.whefs > outfile.c`
 
 The input should be a whefs EFS, but this program does not check that because the generated output could potentially still be used as a target for whefs_mkfs().
 
