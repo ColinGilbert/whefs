@@ -561,6 +561,7 @@ void whio_blockdev_free( whio_blockdev * obj )
 	return;
     }
 #else
+    if( obj ) *obj = whio_blockdev_init;
     free(obj);
 #endif /* WHIO_USE_STATIC_MALLOC */
 }
