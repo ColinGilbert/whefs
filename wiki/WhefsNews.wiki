@@ -11,7 +11,7 @@
 
 <b>10/11 June 2009:</b>
    *  Added a basic filename lookup cache. It's quite primitive, and isn't yet fully optimized (it must be sorted more often than it should be) but it's fairly memory-light and it's a starting point. For cases where a file is sought by name, this provides a dramatic reduction in the search time.
-   *  Shown to compile and run cleanly on the [http://www.nexentaos.org/os Nexenta flavour of OpenSolaris].
+   *  Shown to compile and run cleanly on the [http://www.nexenta.org/os Nexenta flavour of OpenSolaris].
 
 <b>8 June 2009:</b> (Happy birthday to my brother Toby!)
    *  Now compiles with gcc's <tt>-pedantic</tt> and <tt>-fstrict-aliasing</tt> flags. Seems to work, too.
