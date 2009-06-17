@@ -9,7 +9,7 @@ It works by creating a "filesystem" inside a so-called container file (or in mem
 
 <b>Author</b>: Stephan Beal ([http://wanderinghorse.net/home/stephan/])
 
-<b>License</b>: The code is released in the Public Domain except in jurisdictions which o not recognize Public Domain property, in which case it is released under the MIT license which is about as close as Public Domain as a license can get).
+<b>License</b>: The code is released in the Public Domain except in jurisdictions which do not recognize Public Domain property, in which case it is released under the MIT license (which is about as close as Public Domain as a license can get). The MIT license is compatible for use with GPL'd and commercial software.
 
 =Features=
 
