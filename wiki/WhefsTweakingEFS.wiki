@@ -57,7 +57,7 @@ struct whefs_fs_options
 
 =Compile-time options=
 
-whefs has a few compile-time options which can be tweaked. Some can be passed to the compiler via <tt>-Dxxxx=yyy</tt>, but others require editing a line of the whefs source code (probably in <tt>whefs_config.h</tt>). The options include...
+whefs has a few compile-time options which can be tweaked. Some can be passed to the compiler via <tt>-Dxxxx=yyy</tt>, but others require editing a line of the whefs source code (probably in <tt>[http://code.google.com/p/whefs/source/browse/trunk/include/wh/whefs/whefs_config.h whefs_config.h]</tt>). The options include...
 
 ==<tt>whefs_id_type</tt> and <tt>WHEFS_ID_TYPE_BITS</tt>==
 
