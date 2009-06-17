@@ -86,6 +86,14 @@ static void whefs_file_free( whefs_file * restrict obj )
 #endif /* WHIO_USE_STATIC_MALLOC */
 }
 
+/**
+   Opens a pseudofile in read-only mode. f must be an allocated
+   whefs_file object. This routine initializes f->dev and directs it
+   to the found inode.  Returns whefs_rc.OK on success.
+
+   This routine has an embarassing intimate relationship with
+   whefs_fopen().
+*/
 static int whefs_fopen_ro( whefs_file * restrict f, char const * name )
 {
     whefs_inode n = whefs_inode_init;
@@ -108,6 +116,9 @@ static int whefs_fopen_ro( whefs_file * restrict f, char const * name )
     return rc;
 }
 
+/**
+   Like whefs_fopen_ro(), but sets up f in read/write mode.
+*/
 static int whefs_fopen_rw( whefs_file * restrict f, char const * name )
 {
     if( ! f || ! name ) return whefs_rc.ArgError;
@@ -116,7 +127,7 @@ static int whefs_fopen_rw( whefs_file * restrict f, char const * name )
     int rc = whefs_inode_by_name( f->fs, name, &n );
     if( whefs_rc.OK != rc ) do
     {
-        if(0) WHEFS_DBG("fopen(fs,[%s] found no inode. Trying to create one...",name);
+        //WHEFS_DBG_FYI("whefs_inode_by_name(fs,[%s]) found no inode. Trying to create one...",name);
 	/**
 	   Create new entry...
 	*/
@@ -197,7 +208,7 @@ whio_dev * whefs_dev_open( whefs_fs * fs, char const * name, bool writeMode )
     }
     whefs_inode ino = whefs_inode_init;
     if( whefs_rc.OK != whefs_inode_by_name( fs, name, &ino ) )
-    {
+    { // Try to create one...
 	if( ! writeMode )
 	{
 	    WHEFS_DBG_WARN("Open for read failed: did not find pseudofile named [%s].",name);
@@ -205,6 +216,7 @@ whio_dev * whefs_dev_open( whefs_fs * fs, char const * name, bool writeMode )
 	}
 	if( whefs_rc.OK != whefs_inode_next_free( fs, &ino, true ) )
 	{
+	    WHEFS_DBG_WARN("Opening inode for [%s] failed! EFS is likely full.", name );
 	    return 0;
 	}
 	if( whefs_rc.OK != whefs_inode_name_set( fs, ino.id, name ) )
