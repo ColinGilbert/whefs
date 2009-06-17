@@ -31,7 +31,7 @@
    You can find MUCH more information about this library on its
    home page:
 
-   http://fossil.wanderinghorse.net/repos/whefs/
+   http://code.google.com/p/whefs
 
 */
 
@@ -73,7 +73,7 @@ include all functions or types with the following prefixes:
 
 - whefs_inode
 - whefs_block
-- whefs_fs, UNLESS it is declared in whefs.h (in which case it is public)
+- whefs_file or whefs_fs, UNLESS it is declared in whefs.h (in which case it is public)
 
 The internal API is subject to change at any time, and should never
 be relied upon as a stable interface.

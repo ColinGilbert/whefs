@@ -193,10 +193,12 @@ static const uint32_t whefs_fs_magic_bytes[] = { 2009, 6, 9, WHEFS_ID_TYPE_BITS,
 /** @var whefs_id_type_end
 
    A symbolic constant for the value -1, which is reserved for an
-   error value. We use a full-fledged object here, rather than an enum
-   value, to ensure that the actual value of -1 is correctlt of
-   whefs_id_type values. Remember that -1 is a different numeric value
-   depending on the number of bits in whefs_id_type.
+   error value in contexts where an ID of 0 is valid (in many contexts
+   0 can be used as an error value). We use a full-fledged object
+   here, rather than an enum value, to ensure that the actual value of
+   -1 is correctly of whefs_id_type values. Remember that -1 is a
+   different binary value depending on the number of bits in
+   whefs_id_type.
 */
 extern const whefs_id_type whefs_id_type_end;
 
@@ -225,10 +227,12 @@ enum whefs_constants {
    memory costs of certain operations.
  */
 WHEFS_MAX_FILENAME_LENGTH = 128,
+
 /**
    Newer-style name for WHEFS_MAX_FILENAME_LENGTH.
 */
 whefs_sizeof_max_filename = WHEFS_MAX_FILENAME_LENGTH,
+
 /**
    On-disk encoded size of whefs_id_type objects. This will always be
    one of 1, 2, 4, or 4, depending on the size of whefs_id_type, plus 1
