@@ -2,7 +2,7 @@
 #labels Category-UserDocs,Phase-Deploy
 <wiki:toc max_depth='3'/>
 
-See also: [WhefsAmalgamation]
+See also: [RequirementsAndPlatforms], [WhefsAmalgamation]
 
 =Building and Installing=
 
