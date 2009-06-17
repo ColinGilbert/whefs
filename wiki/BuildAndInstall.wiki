@@ -1,5 +1,6 @@
 #summary Building and installing libwhefs
 #labels Category-UserDocs,Phase-Deploy
+<wiki:toc max_depth='3'/>
 
 =Building and Installing=
 
@@ -35,3 +36,7 @@ To use libwhefs from client code:
 
   * Include the appropriate header file(s) from `<wh/whefs/*.h>` and/or `<wh/whio/*.h>`. If you're using the [WhefsAmalgamation amalgamation build] you'll need to include `whefs_amalgamation.h` _instead of_ the other headers.
   * Link against `-lwhefs`.
+
+=Building the API Documentation=
+
+The public API documentation is in the header files under `include/wh/...`. The [http://www.stack.nl/~dimitri/doxygen/ doxygen tool] can generate HTML versions of the docs. If you have doxygen, then try running `make doc` from the `doc` subdirectory of the source tree. If you have built the [WhefsAmalgamation] then two versions of the API docs will be generated - one with the public API and one with the complete API, including internal/private details.
