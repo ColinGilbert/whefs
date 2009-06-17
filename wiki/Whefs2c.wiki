@@ -1,7 +1,7 @@
 #summary A tool to convert an EFS container into a statically-linked in-memory EFS.
 #labels Category-ToolDocs
 
-whefs2c converts a whefs EFS to C code and create a statically-linked  in-memory EFS for it.
+whefs2c converts a whefs EFS to C code and creates a linkable in-memory EFS for it.
 
 Usage: `whefs2c ObjectName < input.whefs > outfile.c`
 
