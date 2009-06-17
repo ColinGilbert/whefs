@@ -5,6 +5,8 @@ include ../config.make
 
 ifeq (1,$(ENABLE_STATIC_MALLOC))
   CPPFLAGS += -DWHIO_USE_STATIC_MALLOC=1
+else
+  CPPFLAGS += -DWHIO_USE_STATIC_MALLOC=0
 endif
 
 
