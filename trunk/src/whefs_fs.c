@@ -700,8 +700,14 @@ static void whefs_fs_check_fileno( whefs_fs * restrict fs )
    (if writeMode is 0) and assigns fs->dev to that device. Returns the new
    whio_dev object, which is owned by fs. Any existing fs->dev object
    is destroyed. On error, 0 is returned.
+
+   If createIt is true and writeMode is true and we cannot open the
+   file in "r+" mode then it will be created using "w+" mode. createIt
+   is ignored if !writeMode or if the file can be opened using "r+"
+   mode.
 */
-static whio_dev * whefs_open_FILE( char const * filename, whefs_fs * restrict fs, bool writeMode )
+static whio_dev * whefs_open_FILE( char const * filename, whefs_fs * restrict fs,
+                                   bool writeMode, bool createIt )
 {
     if( ! filename || !fs ) return 0;
     if( fs->dev )
@@ -710,7 +716,7 @@ static whio_dev * whefs_open_FILE( char const * filename, whefs_fs * restrict fs
 	fs->dev = 0;
     }
     fs->dev = whio_dev_for_filename( filename, writeMode ? "r+b" : "rb" );
-    if( writeMode && !fs->dev )
+    if( writeMode && createIt && !fs->dev )
     { /* didn't exist (we assume), so try to create it */
 	WHEFS_DBG_WARN("Opening [%s] with 'r+' failed. Trying 'w+'...", filename );
 	fs->dev = whio_dev_for_filename( filename, "w+b" );
@@ -1131,7 +1137,7 @@ int whefs_mkfs( char const * filename, whefs_fs_options const * opt, whefs_fs **
 	    return whefs_rc.AllocError; /* we're guessing here. */
 	}
     }
-    else if( ! whefs_open_FILE( filename, fs, true ) )
+    else if( ! whefs_open_FILE( filename, fs, true, true ) )
     {
 	whefs_fs_finalize(fs);
 	return whefs_rc.AccessError;
@@ -1339,7 +1345,7 @@ int whefs_openfs( char const * filename, whefs_fs ** tgt, bool writeMode )
     if( ! fs ) return whefs_rc.AllocError;
     *fs = whefs_fs_init;
     fs->flags = (writeMode ? WHEFS_FLAG_ReadWrite : WHEFS_FLAG_Read);
-    if( ! whefs_open_FILE( filename, fs, writeMode ) )
+    if( ! whefs_open_FILE( filename, fs, writeMode, false ) )
     {
 	WHEFS_DBG_WARN("Could not open file [%s] in %s mode.",
 		       filename, writeMode ? "read/write" : "read-only" );
