@@ -61,7 +61,7 @@ whefs has a few compile-time options which can be tweaked. Some can be passed to
 
 ==<tt>whefs_id_type</tt> and <tt>WHEFS_ID_TYPE_BITS</tt>==
 
-In order to squeeze out a few more bytes of memory, the maximum number of inodes and blocks in a VFS can be restricted to an unsigned integer type with 8, 16, 32, or 64 bits. For reasons explained fully in the API docs, the default is 16. Rather than repeat those docs, they are pasted in below (the most current version is in whefs_config.h):
+In order to squeeze out a few more bytes of memory, the maximum number of inodes and blocks in a VFS can be restricted to an unsigned integer type with 8, 16, 32, or 64 bits. For reasons explained fully in the API docs, the default is 16. Rather than repeat those docs, they are pasted in below (the most current version is in [http://code.google.com/p/whefs/source/browse/trunk/include/wh/whefs/whefs_config.h whefs_config.h]):
 
 {{{
 
@@ -119,7 +119,7 @@ format specifier which no longer matches after changing this value.
 #define WHEFS_ID_TYPE_BITS 16
 }}}
 
-Depending on the value of WHEFS_ID_TYPE_BITS, the type whefs_id_type is defined differently. Here's a shortened version of what can be found in whefs.h:
+Depending on the value of WHEFS_ID_TYPE_BITS, the type whefs_id_type is defined differently. Here's a shortened version of what can be found in [http://code.google.com/p/whefs/source/browse/trunk/include/wh/whefs/whefs.h whefs.h]:
 
 {{{
 #if WHEFS_ID_TYPE_BITS == 8
