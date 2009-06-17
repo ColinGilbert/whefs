@@ -61,6 +61,16 @@ char const * whefs_data_format_version_string()
 }
 
 
+#if 0
+struct whefs_id_links
+{
+    whefs_id_type id;
+    whefs_id_type parent;
+    whefs_id_type next;
+    whefs_id_type prev;
+};
+typedef struct whefs_id_links whefs_id_links;
+int whefs_id_link( whefs_id_links * tgt, whefs_id_type const * parent, whefs_id_type const * next, whefs_id_type const * prev );
 int whefs_id_link( whefs_id_links * tgt, whefs_id_type const * parent, whefs_id_type const * next, whefs_id_type const * prev )
 {
     if( ! tgt ) return whefs_rc.ArgError;
@@ -69,6 +79,7 @@ int whefs_id_link( whefs_id_links * tgt, whefs_id_type const * parent, whefs_id_
     if( prev ) tgt->parent = *prev;
     return whefs_rc.OK;
 }
+#endif
 
 #include "whefs_details.c" // only for debug stuff :(
 void whefs_setup_debug( FILE * ostream, unsigned int flags )

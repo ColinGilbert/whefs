@@ -582,7 +582,7 @@ struct whefs_file
     */
     whefs_id_type inode;
     /** Unfortunate. Should go away. */
-    whefs_string name;
+    //whefs_string name;
 };
 /** Empty initialization object. */
 extern const whefs_file whefs_file_init;

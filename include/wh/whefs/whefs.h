@@ -1021,7 +1021,7 @@ int whefs_file_name_set( whefs_file * restrict f, char const * newName );
 
 /**
    Returns the given file's current name, or 0 if !f or on some weird
-   internal error. The memory for the string is owned by the vfs
+   internal error. The memory for the string is owned by the efs
    internals and will be deallocated when the last handle to the file
    is closed (or possibly before then, if the internals are
    reallocated for some reason). The caller is advised to copy it if
@@ -1030,11 +1030,8 @@ int whefs_file_name_set( whefs_file * restrict f, char const * newName );
    The returned string is guaranteed to be no longer than
    whefs_fs_options_get(whefs_file_fs(f))->filename_length
    characters (not including the trailing null).
-
-   Maintenance note: f is non-const because of an unsightly
-   implementation detail involving how f's name is stored.
 */
-char const * whefs_file_name_get( whefs_file * restrict f );
+char const * whefs_file_name_get( whefs_file const * restrict f );
 
 /**
    Returns a static string with the URL of the whefs home page.
@@ -1157,17 +1154,6 @@ struct whefs_fs_entry
 };
 #endif
 
-#if 1
-struct whefs_id_links
-{
-    whefs_id_type id;
-    whefs_id_type parent;
-    whefs_id_type next;
-    whefs_id_type prev;
-};
-typedef struct whefs_id_links whefs_id_links;
-int whefs_id_link( whefs_id_links * tgt, whefs_id_type const * parent, whefs_id_type const * next, whefs_id_type const * prev );
-#endif
 
 #ifdef __cplusplus
 } /* extern "C" */

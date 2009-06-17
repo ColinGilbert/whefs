@@ -9,7 +9,7 @@
 #include <stdlib.h> /* realloc() and friends. */
 #include "whefs_details.c"
 
-//#include <wh/whio/whio_dev.h> /* for whio_dev_sizeof_uint32 */
+//#include "whio_dev.h" /* for whio_dev_sizeof_uint32 */
 
 #include <time.h> /* gettimeofday() */
 #include <sys/time.h>
@@ -119,6 +119,7 @@ int whefs_inode_name_set( whefs_fs * fs, whefs_id_type nid, char const * name )
        we can replace its hashvalue in the cache. If we don't do this we end
        up with stale/useless entries in the cache.
     */
+    whefs_inode * nop = 0;
     whefs_hashid * H = 0;
     char const * nameCheck = name;
     enum { bufSize = WHEFS_MAX_FILENAME_LENGTH + 1 };
@@ -134,6 +135,12 @@ int whefs_inode_name_set( whefs_fs * fs, whefs_id_type nid, char const * name )
         if( *buf && (0==strcmp(buf,name))) return whefs_rc.OK;
         if( *buf ) nameCheck = ncheck.string;
     }
+#if 1
+    if( whefs_rc.OK == whefs_inode_search_opened( fs, nid, &nop ) )
+    { // FIXME: this is unfortunate. TODO: remove whefs_inode::name altogether.
+        whefs_string_copy_cstring( &nop->name, name );
+    }
+#endif
 
     WHEFS_DBG_CACHE("inode-name-set searching for [old=%s][new=%s][check=%s].",ncheck.string,name,nameCheck);
     whefs_id_type ndx = whefs_inode_hash_cache_search_ndx( fs, nameCheck );
@@ -166,6 +173,10 @@ int whefs_inode_name_set( whefs_fs * fs, whefs_id_type nid, char const * name )
         //fs->cache.hashes->isSorted = false;
         whefs_hashid_list_sort( fs->cache.hashes );
         WHEFS_DBG_CACHE("Replacing hashcode for file [%s].",name);
+        if( nop )
+        {
+            rc = whefs_string_copy_cstring( &nop->name, name );
+        }
     }
     if( whefs_rc.OK != rc ) return rc;
     whefs_string_cache_set( &fs->cache.strings, nid-1, name );
@@ -246,6 +257,7 @@ int whefs_inode_id_read( whefs_fs * fs, whefs_id_type nid, whefs_inode * tgt )
             if( tgt != nop )
             {
                 *tgt = *nop;
+                tgt->name = whefs_string_init; // prevent client from cleaning it.
             }
             //WHEFS_DBG("whefs_inode_id_read() found opened entry #%"WHEFS_ID_TYPE_PFMT" to read.", n->id);
             return whefs_rc.OK;
@@ -505,6 +517,13 @@ int whefs_inode_open( whefs_fs * fs, whefs_id_type nodeID, whefs_inode ** tgt, v
 	WHEFS_DBG_ERR("Opening inode #%"WHEFS_ID_TYPE_PFMT" FAILED - whefs_inode_id_read() returned %d", ent->inode.id, rc );
 	return rc;
     }
+    rc = whefs_inode_name_get( fs, ent->inode.id, &ent->inode.name );
+    if( whefs_rc.OK != rc )
+    {
+        whefs_inode_list_free(ent);
+	WHEFS_DBG_ERR("Opening inode #%"WHEFS_ID_TYPE_PFMT" FAILED - whefs_inode_name_get() returned %d", ent->inode.id, rc );
+	return rc;
+    }
     //WHEFS_DBG("Opened inode #%"WHEFS_ID_TYPE_PFMT" with name [%s]", ent->inode.id, ent->inode.name.string );
     x = &ent->inode;
     x->writer = writer;
@@ -584,6 +603,7 @@ int whefs_inode_close( whefs_fs * fs, whefs_inode * src, void const * writer )
     {
 	if(0) WHEFS_DBG_FYI("REALLY closing inode #%"WHEFS_ID_TYPE_PFMT": Use count=%u, data size=%u",
 			    src->id, src->open_count, src->data_size );
+	whefs_string_clear( &np->name, false );
 	if( li == fs->opened_nodes ) fs->opened_nodes = (li->next ? li->next : li->prev);
 	if( li->prev ) li->prev->next = li->next;
 	if( li->next ) li->next->prev = li->prev;
