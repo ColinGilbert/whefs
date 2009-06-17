@@ -1,4 +1,5 @@
 #summary Summary of platform/environment requirements for using whefs
+#labels Category-UserDocs,Phase-Requirements
 
 <h1>Requirements/Prerequisites for compiling whefs</h1>
 
