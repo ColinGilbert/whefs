@@ -1,7 +1,8 @@
 #summary The main/home wiki page.
 #labels Featured,Category-UserDocs
 <wiki:toc max_depth='3'/>
-<h1>whefs: the !WanderingHorse.net Embedded Filesystem Library for C</h1>
+
+=whefs: the !WanderingHorse.net Embedded Filesystem Library for C=
 
 whefs is a Free/Open Source C library implementing an embedded virtual filesystem.
 It works by creating a "filesystem" inside a so-called container file (or in memory), called an EFS. This API can then treat that container similarly to a filesystem. In essence this is similar to conventional archives (e.g. zip files), except that this library provides random-access read/write support to the filesystem via an API similar to the conventional fopen(), fread(), fwrite() and friends.
@@ -10,7 +11,7 @@ It works by creating a "filesystem" inside a so-called container file (or in mem
 
 <b>License</b>: The code is released in the Public Domain except in jurisdictions which o not recognize Public Domain property, in which case it is released under the MIT license which is about as close as Public Domain as a license can get).
 
-<h1>Features</h1>
+=Features=
 
    *  Provides features to create and open embedded/virtual filesystems, which is basically a filesystem which lives inside of a single file (or in memory), and to access "pseudofiles" within those filesystems.
    *  i'm a documentation maniac - whefs comes with over 150k of API documentation and another 100k+ of docs in this site's wiki.
@@ -25,7 +26,7 @@ It works by creating a "filesystem" inside a so-called container file (or in mem
    *  Designed to be easy to copy directly into a client source tree. See [WhefsAmalgamation the amalgamation page] for details.
    *  Fairly rigorous consistency and bounds checking - it bails out of it finds the slightest hint of foul play. (Just remember to check the error codes! They're there for a reason!)
 
-<h1>Misfeatures</h1>
+=Misfeatures=
 
    *  Some parts of the public API need fleshing out.
    *  Still needs lots more testing before i'm comfortable calling it "ready for use."
@@ -37,11 +38,11 @@ It works by creating a "filesystem" inside a so-called container file (or in mem
    *  Until the software stabilizes, the file format may change from version to version. It is however always possible to export the data from an old VFS (using an older version of whefs) and re-import it using a newer version.
 
 
-<h1>Requirements and Platforms</h1>
+=Requirements and Platforms=
 
 See [RequirementsAndPlatforms].
 
-<h1>Current status</h1>
+=Current status=
 
 "It works for me!"
 
@@ -49,15 +50,15 @@ Very Beta. It "seems to work", but the nature of the problem means there is lots
 
 That said, most of the basics are in place and working. There is plenty of cleaning up and refactoring to do, however.
 
-<h1>Significant TODOs</h1>
+=Significant TODOs=
 
 See [ToDos] for the list of more pressing TODOs.
 
-<h2>News</h2>
+=News=
 
 See [WhefsNews the news page].
 
-<h1>Want to help?</h1>
+=Want to Help?=
 
 whefs has some notable limitations and could be improved in some significant ways. Any feedback or assistance is always appreciated. You can reach me via [http://wanderinghorse.net/home/stephan/]. Anyone who shows an interest and submits a patch or two will gladly be given write access to the code repository.
 
