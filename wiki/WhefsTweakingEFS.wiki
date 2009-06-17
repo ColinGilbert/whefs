@@ -1,13 +1,13 @@
 #summary Notes about tweaking certain internals of libwhefs.
 #labels Category-Internals
-
-<h1>Tweaking a VFS</h1>
+<wiki:toc max_depth='3'/>
+=Tweaking an EFS=
 
 (See also: [WhefsPerformance] [WhefsFilesystem])
 
 whefs offers several different ways to tweak a filesystem's characteristics. Some are compile-time options (for whefs, not the client) and some are configurable by client code.
 
-<h2>Client-configurable options</h2>
+=Client-configurable Options=
 
 The options which can be configured by the client are described by the struct <tt>whefs_fs_options</tt>, which is shown in its entirety below. An options object is used when creating a filesystem. The <tt>whefs_id_type</tt> type is a configurable unsigned integer type explained later on.
 
@@ -55,11 +55,11 @@ struct whefs_fs_options
 };
 }}}
 
-<h2>Compile-time options</h2>
+=Compile-time options=
 
 whefs has a few compile-time options which can be tweaked. Some can be passed to the compiler via <tt>-Dxxxx=yyy</tt>, but others require editing a line of the whefs source code (probably in <tt>whefs_config.h</tt>). The options include...
 
-<h3><tt>whefs_id_type</tt> and <tt>WHEFS_ID_TYPE_BITS</tt></h3>
+==<tt>whefs_id_type</tt> and <tt>WHEFS_ID_TYPE_BITS</tt>==
 
 In order to squeeze out a few more bytes of memory, the maximum number of inodes and blocks in a VFS can be restricted to an unsigned integer type with 8, 16, 32, or 64 bits. For reasons explained fully in the API docs, the default is 16. Rather than repeat those docs, they are pasted in below (the most current version is in whefs_config.h):
 
@@ -137,7 +137,7 @@ Depending on the value of WHEFS_ID_TYPE_BITS, the type whefs_id_type is defined 
 
 We use integer types with fixed standard sizes, instead of types like size_t (which can differ in size). Not doing so has been known to Cause Grief in unexpected places when the size of a type changes (e.g. size_t can be 32 or 64 bits).
 
-<h3><tt>WHEFS_MAX_FILENAME_LENGTH</tt></h3>
+==<tt>WHEFS_MAX_FILENAME_LENGTH</tt>==
 
 WHEFS_MAX_FILENAME_LENGTH is a constant number (an enum value) which is explained fully in the API docs:
 
@@ -160,7 +160,7 @@ WHEFS_MAX_FILENAME_LENGTH = 128,
 
 The relatively low value of WHEFS_MAX_FILENAME_LENGTH is largely historic in nature. A value of 512 or 1024 is being considered, and may be necessary as long as whefs does not support directories.
 
-<h3><tt>WHIO_USE_STATIC_MALLOC</tt></h3>
+==<tt>WHIO_USE_STATIC_MALLOC</tt>==
 
 This macro is inherited from the [http://fossil.wanderinghorse.net/repos/whio/ whio library] which whefs uses for the i/o support. This macro can be defined at library compile time to enable "static allocators" for most of the library types. The static allocators are routines which "allocate" objects from a pre-initialized list in static memory, falling back to malloc() if the list fills up. These allocators are not strictly thread safe (the deallocators are, curiously enough), but neither is whefs, so unless you plan on using the whio code in other threads of your app for purposes other than whefs (or want to run multiple VFSes in multiple threads), there's little reason not to turn it on. It will increase the size of the overall binary by a relatively small amount, but with this option turned on the vast majority of the calls to malloc() go away. A typical use case (one VFS and two opened pseudofiles) can go from, e.g. 15 calls to malloc() down to 3 (and one of those 3 happens in fopen(), so we can't avoid it).
 
