@@ -11,10 +11,10 @@ ifneq (1,$(VERSION_CHECK))
 $(error Your version of Make ($(MAKE_VERSION)) is too old to use this code!)
 endif
 
-ShakeNMake.MAKEFILE = $(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
+ShakeNMake.MAKEFILE := $(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 $(ShakeNMake.MAKEFILE):# avoid breaking some deps checks if someone renames this file (been there, done that)
 
-PACKAGE.MAKEFILE = $(firstword $(MAKEFILE_LIST))# normally either Makefile or GNUmakefile
+PACKAGE.MAKEFILE := $(firstword $(MAKEFILE_LIST))# normally either Makefile or GNUmakefile
 $(PACKAGE.MAKEFILE):
 
 ########################################################################
@@ -36,6 +36,7 @@ $(PACKAGE.MAKEFILE):
 ShakeNMake.CALL.FIND_BIN = $(firstword $(wildcard $(addsuffix /$(1),$(subst :, ,$(2) $(PATH)))))
 ########################################################################
 ShakeNMake.BINS.AR := $(call ShakeNMake.CALL.FIND_BIN,$(AR))
+ShakeNMake.BINS.GCC := $(call ShakeNMake.CALL.FIND_BIN,gcc)
 
 
 ifneq (,$(COMSPEC))
@@ -109,9 +110,11 @@ endef
 ########################################################################
 
 ########################################################################
-# ShakeNMake.EVAL.RULES.DLL builds builds $(1)$(ShakeNMake.EXTENSIONS.DLL) from object files
-# defined by $(1).DLL.OBJECTS and $(1).DLL.SOURCES. Flags passed on
-# to the linker include:
+# ShakeNMake.EVAL.RULES.DLL builds builds
+# $(1)$(ShakeNMake.EXTENSIONS.DLL) from object files defined by
+# $(1).DLL.OBJECTS and $(1).DLL.SOURCES. Flags passed on to the shared
+# library linker ($(CXX)) include:
+#
 #   LDFLAGS, $(1).DLL.LDFLAGS, LDADD, -shared -export-dynamic
 #   $(1).DLL.OBJECTS
 #
@@ -126,7 +129,7 @@ CLEAN_FILES += $$($(1).DLL)
 $$($(1).DLL): $$($(1).DLL.SOURCES) $$($(1).DLL.OBJECTS)
 	@test x = "x$$($(1).DLL.OBJECTS)$$($(1).DLL.SOURCES)" && { \
 	echo "$(1).DLL.OBJECTS and/or $(1).DLL.SOURCES are/is undefined!"; exit 1; }; \
-	$(call ShakeNMake.CALL.SETX,"CXX [$$@] ..."); \
+	$(call ShakeNMake.CALL.SETX,"LD [$$@] ..."); \
 	 $$(CXX) -o $$@ -shared -rdynamic $$(LDFLAGS) \
 		$$($(1).DLL.LDFLAGS) $$($(1).DLL.OBJECTS) \
 		$$($(1).DLL.CXXFLAGS)
@@ -178,4 +181,44 @@ define ShakeNMake.CALL.RULES.BINS
 $(foreach bin,$(1),$(eval $(call ShakeNMake.EVAL.RULES.BIN,$(bin))))
 endef
 # end ShakeNMake.CALL.RULES.BIN and friends
+########################################################################
+
+########################################################################
+# Automatic dependencies generation for C/C++ code...
+# To disable deps generation, set ShakeNMake.USE_MKDEPS=0 *before*
+# including this file.
+ifeq (,$(ShakeNMake.BINS.GCC))
+ShakeNMake.USE_MKDEPS ?= 0
+else
+ShakeNMake.USE_MKDEPS ?= 1
+endif
+#$(warning ShakeNMake.USE_MKDEPS=$(ShakeNMake.USE_MKDEPS));
+ifeq (1,$(ShakeNMake.USE_MKDEPS))
+ShakeNMake.CISH_SOURCES ?= $(wildcard *.cpp *.c *.c++ *.h *.hpp *.h++ *.hh)
+#$(warning ShakeNMake.CISH_SOURCES=$(ShakeNMake.CISH_SOURCES))
+ifneq (,$(ShakeNMake.CISH_SOURCES))
+ShakeNMake.CISH_DEPS_FILE := .make.c_deps
+ShakeNMake.BINS.MKDEP = gcc -E -MM $(CPPFLAGS) $(INCLUDES)
+CLEAN_FILES += $(ShakeNMake.CISH_DEPS_FILE)
+$(ShakeNMake.CISH_DEPS_FILE): $(PACKAGE.MAKEFILE) $(ShakeNMake.MAKEFILE) $(ShakeNMake.CISH_SOURCES)
+	@touch $@; test x = "x$(ShakeNMake.CISH_SOURCES)" && exit 0; \
+	$(ShakeNMake.BINS.MKDEP) $(ShakeNMake.CISH_SOURCES) 2>/dev/null > $@
+# normally we also want:
+#  || $(ShakeNMake.BINS.RM) -f $@ 2>/dev/null
+# because we don't want a bad generated makefile to kill the build, but gcc -E
+# is returning 1 when some generated files do not yet exist.
+deps: $(ShakeNMake.CISH_DEPS_FILE)
+
+ifneq (,$(strip $(filter distclean clean,$(MAKECMDGOALS))))
+# $(warning Skipping C/C++ deps generation.)
+# ABSOLUTEBOGO := $(shell $(ShakeNMake.BINS.RM) -f $(ShakeNMake.CISH_DEPS_FILE))
+else
+#$(warning Including C/C++ deps.)
+-include $(ShakeNMake.CISH_DEPS_FILE)
+endif
+
+endif
+# ^^^^ ifneq(,$(ShakeNMake.CISH_SOURCES))
+endif
+# ^^^^ end $(ShakeNMake.USE_MKDEPS)
 ########################################################################

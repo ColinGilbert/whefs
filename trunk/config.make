@@ -11,11 +11,11 @@ TOP_SRCDIR := $(realpath $(TOP_SRCDIR_REL))
 TOP_INCDIR := $(TOP_SRCDIR_REL)/include
 INCLUDES += -I. -I$(TOP_INCDIR)
 CPPFLAGS += $(INCLUDES)
-CLEAN_FILES += $(wildcard *.o *~)
 
 ########################################################################
 # You can touch these:
 ########################################################################
+CLEAN_FILES += $(wildcard *.o *~)
 
 ########################################################################
 # Set ENABLE_DEBUG to 1 to enable whefs debugging.
@@ -66,7 +66,12 @@ endif
 
 ########################################################################
 LIBWHEFS.LIBDIR := $(TOP_SRCDIR)/src
-LIBWHEFS.A := $(LIBWHEFS.DIR)/libwhefs.a
+LIBWHEFS.A := $(LIBWHEFS.LIBDIR)/libwhefs.a
 $(LIBWHEFS.A):
-LIBWHEFS.DLL := $(LIBWHEFS.DIR)/libwhefs.so
+LIBWHEFS.DLL := $(LIBWHEFS.LIBDIR)/libwhefs.so
 $(LIBWHEFS.DLL):
+
+AMALGAMATION_H := $(TOP_SRCDIR_REL)/whefs_amalgamation.h
+AMALGAMATION_C := $(TOP_SRCDIR_REL)/whefs_amalgamation.c
+
+DISTCLEAN_FILES += $(AMALGAMATION_C) $(AMALGAMATION_H)
