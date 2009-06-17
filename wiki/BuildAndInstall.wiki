@@ -2,6 +2,8 @@
 #labels Category-UserDocs,Phase-Deploy
 <wiki:toc max_depth='3'/>
 
+See also: [WhefsAmalgamation]
+
 =Building and Installing=
 
 ==Unixish Platforms==
