@@ -1,3 +1,5 @@
+########################################################################
+# This file should be included by all other Makefiles in the project.
 default: all
 all:
 
@@ -8,6 +10,7 @@ $(CONFIG.MAKEFILE):
 TOP_SRCDIR_REL := $(dir $(CONFIG.MAKEFILE))
 #TOP_SRCDIR := $(shell cd -P $(TOP_SRCDIR_REL) && pwd)
 TOP_SRCDIR := $(realpath $(TOP_SRCDIR_REL))
+#$(error TOP_SRCDIR_REL=$(TOP_SRCDIR_REL)   TOP_SRCDIR=$(TOP_SRCDIR))
 TOP_INCDIR := $(TOP_SRCDIR_REL)/include
 INCLUDES += -I. -I$(TOP_INCDIR)
 CPPFLAGS += $(INCLUDES)

@@ -187,6 +187,7 @@ endef
 # Automatic dependencies generation for C/C++ code...
 # To disable deps generation, set ShakeNMake.USE_MKDEPS=0 *before*
 # including this file.
+#ShakeNMake.USE_MKDEPS := 1
 ifeq (,$(ShakeNMake.BINS.GCC))
 ShakeNMake.USE_MKDEPS ?= 0
 else
@@ -222,3 +223,30 @@ endif
 endif
 # ^^^^ end $(ShakeNMake.USE_MKDEPS)
 ########################################################################
+
+########################################################################
+# Deps, Tromey's Way:
+# $(call make-depend,source-file,object-file,depend-file)
+ifeq (0,1)
+.dfiles.list = $(wildcard *.o.d)
+ifneq (,$(.dfiles.list))
+# $(error include $(.dfiles.list))
+include $(.dfiles.list)
+endif
+
+define make-depend
+$(ShakeNMake.BINS.GCC) -MM \
+	-MF $3         \
+	-MP            \
+	-MT $2         \
+	$(CFLAGS)      \
+	$(CPPFLAGS)    \
+	$(TARGET_ARCH) \
+	$1
+endef
+
+CLEAN_FILES += $(wildcard *.o.d)
+%.o: %.c
+	$(call make-depend,$<,$@,$(@).d)
+	$(COMPILE.c) $(OUTPUT_OPTION) $<
+endif # Tromey's Way
