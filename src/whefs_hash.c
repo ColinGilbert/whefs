@@ -191,7 +191,7 @@ int whefs_hashid_list_add( whefs_hashid_list * tgt, whefs_hashid const * restric
 
 whefs_id_type whefs_hashid_list_index_of( whefs_hashid_list const * src, whefs_hashval_type val )
 {
-    if( ! src || !src->count ) return whefs_id_type_end;
+    if( ! src || !src->count ) return whefs_rc.IDTypeEnd;
     if( ! src->isSorted )
     { // horrible special case to avoid having to re-sort on every inode name-set
 #if 1
@@ -206,13 +206,13 @@ whefs_id_type whefs_hashid_list_index_of( whefs_hashid_list const * src, whefs_h
                 return i;
             }
         }
-        return whefs_id_type_end;
+        return whefs_rc.IDTypeEnd;
 #endif
     }
     whefs_hashid hv = whefs_hashid_init;
     hv.hash = val;
     void const * f = bsearch( &hv, src->list, src->count, sizeof(whefs_hashid), whefs_hashid_cmp );
-    if( ! f ) return whefs_id_type_end;
+    if( ! f ) return whefs_rc.IDTypeEnd;
     whefs_id_type ndx = (((unsigned char const *)f) -((unsigned char const *)src->list)) / sizeof(whefs_hashid);
     while( ndx && (src->list[ndx-1].hash == val) ) --ndx;
     // FIXME: check leftwards for more matches.
@@ -297,7 +297,7 @@ whefs_id_type whefs_hashid_list_search( whefs_hashid_list const * src,
                                         )
 {
     whefs_id_type ndx = whefs_hashid_list_index_of( src, hash );
-    if( whefs_id_type_end == ndx ) return ndx;
+    if( whefs_rc.IDTypeEnd == ndx ) return ndx;
     whefs_hashid const * h = &src->list[ndx];
     while( 1 )
     {
@@ -306,6 +306,6 @@ whefs_id_type whefs_hashid_list_search( whefs_hashid_list const * src,
         if( src->list[ndx].hash != h->hash ) break;
         h = &src->list[ndx];
     }
-    return whefs_id_type_end;
+    return whefs_rc.IDTypeEnd;
 }
 #endif // unused code

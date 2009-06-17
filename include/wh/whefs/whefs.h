@@ -233,13 +233,15 @@ typedef struct whefs_rc_t
     int InternalError;
 
     /**
-       An out-of-range error. e.g. wrong size or value.
+       An out-of-range error. e.g. wrong size or value. Also often
+       used for "no item found", as in "not found in the current range
+       of possibilities."
     */
     int RangeError;
 
     /**
-       Signals that a vfs is filled, either it has run out
-       of inodes or free blocks.
+       Signals that the EFS appears to be filled, either it has run
+       out of inodes or free blocks.
     */
     int FSFull;
 
@@ -270,6 +272,17 @@ typedef struct whefs_rc_t
        need an error value for a whio_size_t object.
     */
     whio_size_t SizeTError;
+
+    /**
+       This is equivalent to (whefs_id_type)-1, and is used by routines which
+       need an error value for a whefs_id_type object. Some types/routines
+       can use 0 for an error value, but search routines cannot because 0 might
+       be a valid search result index.
+
+       Remember that -1 is a different binary value depending on the
+       number of bits in whefs_id_type.
+    */
+    whefs_id_type IDTypeEnd;
 } whefs_rc_t;
 /**
    A shared instance of whefs_rc_t which contains the "official"

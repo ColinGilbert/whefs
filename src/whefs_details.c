@@ -741,7 +741,7 @@ int whefs_inode_hash_cache( whefs_fs * fs, whefs_id_type id, char const * name )
 whefs_id_type whefs_inode_hash_cache_search_id(whefs_fs * fs, char const * name );
 /**
    If a cached entry is found with the same hashcode as name, the index
-   of that entry in the cache is returned, else whefs_id_type_end.
+   of that entry in the cache is returned, else whefs_rc.IDTypeEnd.
 */
 whefs_id_type whefs_inode_hash_cache_search_ndx(whefs_fs * fs, char const * name );
 

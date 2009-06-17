@@ -254,10 +254,10 @@ whefs_id_type whefs_inode_hash_cache_search_ndx(whefs_fs * fs, char const * name
         whefs_inode_hash_cache_sort(fs);
     }
     return ( ! fs->cache.hashes )
-        ? whefs_id_type_end
+        ? whefs_rc.IDTypeEnd
         : whefs_hashid_list_index_of( fs->cache.hashes, fs->cache.hashfunc(name) );
 #else
-    return whefs_id_type_end;
+    return whefs_rc.IDTypeEnd;
 #endif //DISABLE_NAME_CACHE
 }
 
@@ -266,7 +266,7 @@ whefs_id_type whefs_inode_hash_cache_search_id(whefs_fs * fs, char const * name 
 #if !DISABLE_NAME_CACHE
     if( ! fs->cache.hashes ) return 0;
     whefs_id_type n = whefs_inode_hash_cache_search_ndx( fs, name );
-    return ( n == whefs_id_type_end )
+    return ( n == whefs_rc.IDTypeEnd )
         ? 0
         : fs->cache.hashes->list[n].id;
 #else
@@ -291,7 +291,7 @@ void whefs_inode_name_uncache(whefs_fs * fs, char const * name )
 #if !DISABLE_NAME_CACHE
     if( !fs->cache.hashes || ! name || !*name  ) return;
     const whefs_id_type ndx = whefs_inode_hash_cache_search_ndx( fs, name );
-    if( whefs_id_type_end != ndx )
+    if( whefs_rc.IDTypeEnd != ndx )
     {
         fs->cache.hashes->list[ndx] = whefs_hashid_init;
         fs->cache.hashes->isSorted = false;
@@ -322,7 +322,7 @@ int whefs_inode_hash_cache( whefs_fs * fs, whefs_id_type id, char const * name )
     whefs_hashval_type h = fs->cache.hashfunc( name );
 #if 1
     const whefs_id_type ndx = whefs_hashid_list_index_of( fs->cache.hashes, h );
-    if( whefs_id_type_end != ndx )
+    if( whefs_rc.IDTypeEnd != ndx )
     {
         if(0) WHEFS_DBG("CHECKING: name cache count[%"WHEFS_ID_TYPE_PFMT"], alloced=[%"WHEFS_ID_TYPE_PFMT"], hash [%"WHEFS_HASHVAL_TYPE_PFMT"] for name [%s], ndx=[%"WHEFS_ID_TYPE_PFMT"]",
                         fs->cache.hashes->count, fs->cache.hashes->alloced, h, name, ndx );

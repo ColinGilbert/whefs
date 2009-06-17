@@ -176,7 +176,7 @@ int whefs_hashid_list_wipe_index( whefs_hashid_list * li, whefs_id_type ndx );
 /**
    Searches src for an item matching the given hash value. On success
    it returns the index of the left-most item with that hash value. On
-   error, or no result found, it returns whefs_id_type_end.
+   error, or no result found, it returns whefs_rc.IDTypeEnd.
 
    Search results are undefined if src is not sorted by ascending hash
    value.
@@ -257,7 +257,7 @@ typedef int (*whefs_hashid_list_search_cmp)( whefs_hashval_type, whefs_id_type i
    hashcode, cmp() is called. This process is repeated until the list
    is exhausted or it encounters an item where (hash!=item.hash).
 
-   If no item is found, whefs_id_type_end is returned.
+   If no item is found, whefs_rc.IDTypeEnd is returned.
 */
 whefs_id_type whefs_hashid_list_search( whefs_hashid_list const * src,
                                         whefs_hashval_type hash,
