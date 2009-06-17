@@ -144,7 +144,7 @@ int whefs_inode_name_set( whefs_fs * fs, whefs_id_type nid, char const * name )
 
     WHEFS_DBG_CACHE("inode-name-set searching for [old=%s][new=%s][check=%s].",ncheck.string,name,nameCheck);
     whefs_id_type ndx = whefs_inode_hash_cache_search_ndx( fs, nameCheck );
-    if( ndx != whefs_id_type_end )
+    if( ndx != whefs_rc.IDTypeEnd )
     {
         WHEFS_DBG_CACHE("inode-name-set found an existing entry for [%s].",nameCheck);
         H = &fs->cache.hashes->list[ndx];
@@ -693,7 +693,7 @@ int whefs_inode_by_name( whefs_fs * fs, char const * name, whefs_inode * tgt )
 #endif
     char const * cname = 0; // cached name entry
     whefs_id_type i = whefs_hashid_list_index_of( fs->cache.hashes, nameHash );
-    if( whefs_id_type_end == i )
+    if( whefs_rc.IDTypeEnd == i )
     { // no cached record. Start from the beginning.
         i = 2; // 2 = first client-usable inode.
     }

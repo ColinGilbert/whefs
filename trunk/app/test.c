@@ -383,7 +383,7 @@ int test_hash()
 #define SEARCH(X) hashval = HASH(X); \
     ndx = whefs_hashid_list_index_of( li, hashval );                  \
     MARKER("search for hash [%"WHEFS_HASHVAL_TYPE_PFMT"] = ndx [%"WHEFS_ID_TYPE_PFMT"] ",hashval,ndx); \
-    if( whefs_id_type_end != ndx ) \
+    if( whefs_rc.IDTypeEnd != ndx ) \
         printf("id=[%"WHEFS_ID_TYPE_PFMT"], hits=[%"PRIu16"]",\
                li->list[ndx].id,li->list[ndx].hits);    \
     putchar('\n');

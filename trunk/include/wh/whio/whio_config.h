@@ -88,7 +88,7 @@ extern "C" {
    perform much better).
 */
 #if !defined(WHIO_USE_STATIC_MALLOC)
-#  define WHIO_USE_STATIC_MALLOC 1
+#  define WHIO_USE_STATIC_MALLOC 0
 #endif
 
 #if defined(WHIO_SIZE_T_BITS)

@@ -18,7 +18,6 @@ char const * whefs_home_page_url()
     return "http://code.google.com/p/whefs";
 }
 
-const whefs_id_type whefs_id_type_end = (whefs_id_type)-1;
 const whefs_rc_t whefs_rc =
     {
     0, /* OK */
@@ -33,7 +32,8 @@ const whefs_rc_t whefs_rc =
     9, /* ConsistencyError */
     10, /* NYIError */
     11, /* UnsupportedError */
-    (whio_size_t)-1 /* SizeTError */
+    (whio_size_t)-1 /* SizeTError */,
+    (whefs_id_type)-1 /* IDTypeEnd */
     };
 
 const whefs_magic whefs_magic_default = WHEFS_MAGIC_DEFAULT;

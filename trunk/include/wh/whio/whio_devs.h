@@ -426,7 +426,7 @@ typedef struct whio_blockdev
     } blocks;
     /**
        Implementation details which the client should neither touch
-       not look at.
+       nor look at.
     */
     struct impl
     {

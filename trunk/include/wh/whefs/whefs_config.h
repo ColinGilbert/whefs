@@ -81,7 +81,7 @@ realistic limit.
 In theory, 64-bit IDs are also okay, but (A) for this particular use
 case that is way overkill, (B) it's a huge waste of memory (8 bytes
 where we realistically don't need more than 2), and (C) the filesystem
-model itself is not scalable to that level of use (e.g. millions of
+model itself is not scalable to that level of use (e.g. billions of
 files). inode/block IDs are always sequential, starting at 1, and by
 the time we hit that number of blocks or inodes, the computer's memory
 would almost certainly be filled.
@@ -90,17 +90,17 @@ i would strongly prefer to have WHEFS_ID_TYPE_BITS as an enum constant
 instead of a macro value, but we unfortunately need some conditional
 compilation based on the bit count.
 
-If this constant is changed, all whefs client code which depends on
-it must be recompiled and all filesystems written using the old value
+If this constant is changed, all whefs client code which depends on it
+must be recompiled and all filesystems written using the old value
 will not be readable. That is the reason it is not set up with an
 ifndef guard, so clients cannot blithely change it. If you are copying
-whefs directly into another project, feel free to change the value
-all you want, but be aware of the compatibility ramifications. Doing so
-may also screw up any printf() (or similar) commands which have a hard-coded
-format specifier which no longer matches after changing this value. To work
-around this, the constant WHEFS_ID_TYPE_PFMT gets defined (dependent on the
-value of WHEFS_ID_TYPE_BITS), can be used in place of hard-coding the
-printf format specifier.
+whefs directly into another project, feel free to change the value all
+you want, but be aware of the compatibility ramifications. Doing so
+may also screw up any printf() (or similar) commands which have a
+hard-coded format specifier which no longer matches after changing
+this value. To work around this, the constant WHEFS_ID_TYPE_PFMT gets
+defined (dependent on the value of WHEFS_ID_TYPE_BITS) and can be used
+in place of hard-coding the printf format specifier.
 
     @see WHEFS_ID_TYPE_PFMT
     @see WHEFS_ID_TYPE_SFMT
@@ -190,17 +190,6 @@ static const uint32_t whefs_fs_magic_bytes[] = { 2009, 6, 9, WHEFS_ID_TYPE_BITS,
 #else
 #  error "WHEFS_ID_TYPE_BITS must be one of: 8, 16, 32, 64"
 #endif
-/** @var whefs_id_type_end
-
-   A symbolic constant for the value -1, which is reserved for an
-   error value in contexts where an ID of 0 is valid (in many contexts
-   0 can be used as an error value). We use a full-fledged object
-   here, rather than an enum value, to ensure that the actual value of
-   -1 is correctly of whefs_id_type values. Remember that -1 is a
-   different binary value depending on the number of bits in
-   whefs_id_type.
-*/
-extern const whefs_id_type whefs_id_type_end;
 
 /** @def WHEFS_MAGIC_STRING
 
@@ -215,8 +204,10 @@ extern const whefs_id_type whefs_id_type_end;
 enum whefs_constants {
 /**
    WHEFS_MAX_FILENAME_LENGTH defines the hard maximum string length
-   for filenames in a vfs, not including the null terminator. This
-   does not include the names of any parent directories.
+   for filenames in an EFS, not including the null terminator. Since
+   the filesystem namespace is flat, this DOES include the names of
+   any parent "directories" (which aren't really directories, as far
+   as the EFS is concerned).
 
    whefs_fs_options::filename_length must not be greater than this
    number.
@@ -245,12 +236,6 @@ whefs_sizeof_max_filename = WHEFS_MAX_FILENAME_LENGTH,
    doesn't give us that.
 */
 whefs_sizeof_encoded_id_type = ((WHEFS_ID_TYPE_BITS/8)+1),
-
-/**
-   The maximum value of a whefs_id_type object, used for
-   overflow checks.
-*/
-whefs_id_type_end_val = (whefs_id_type)-1,
 
 /**
    The length of the whefs_fs_magic_bytes array, not including the
@@ -300,7 +285,7 @@ when some form of thread locking is enabled.
 #if !defined(DOXYGEN)
 #  define WHEFS_MACROIZE_SMALL_CHECKS 0
 #else
-#  define WHEFS_MACROIZE_SMALL_CHECKS 0
+#  define WHEFS_MACROIZE_SMALL_CHECKS 1
 #endif
 
 /**
@@ -322,7 +307,7 @@ when some form of thread locking is enabled.
 
    FIXME: make this runtime-togglable.
 */
-#define WHEFS_CONFIG_ENABLE_STRINGS_CACHE 1
+#define WHEFS_CONFIG_ENABLE_STRINGS_CACHE 0
 
 #ifdef __cplusplus
 } /* extern "C" */
