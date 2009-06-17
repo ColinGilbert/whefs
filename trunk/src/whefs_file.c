@@ -14,8 +14,7 @@
     0, /* fs */ \
     0, /* flags */ \
     0, /* dev */ \
-        0, /* inode */                          \
-        whefs_string_init_m /*name*/ \
+    0 /* inode */ \
     }
 
 const whefs_file whefs_file_init = WHEFS_FILE_INIT;
@@ -82,7 +81,6 @@ static void whefs_file_free( whefs_file * restrict obj )
 	return;
     }
 #else
-    whefs_string_clear( &obj->name, false );
     *obj = whefs_file_init;
     free(obj);
 #endif /* WHIO_USE_STATIC_MALLOC */
@@ -154,7 +152,7 @@ static int whefs_fopen_rw( whefs_file * restrict f, char const * name )
 
 whefs_file * whefs_fopen( whefs_fs * fs, char const * name, char const * mode )
 {
-    if( ! fs || !name || !*name || !mode ) return 0;
+    if( ! fs || !name || !*name || !mode || !*mode ) return 0;
     unsigned int flags = 0;
     if( 0 && (0 != strchr( mode, 'w' )) )
     { // FIXME: add support for mode 'w' and 'w+'
@@ -173,6 +171,7 @@ whefs_file * whefs_fopen( whefs_fs * fs, char const * name, char const * mode )
     }
     whefs_file * f = whefs_file_alloc();
     if( ! f ) return 0;
+    *f = whefs_file_init;
     f->fs = fs;
     f->flags = flags;
     int rc = whefs_rc.IOError;
@@ -185,12 +184,7 @@ whefs_file * whefs_fopen( whefs_fs * fs, char const * name, char const * mode )
 	whefs_fclose( f );
 	f = 0;
     }
-    else
-    {
-        WHEFS_FIXME("Get rid of whefs_file::name! file=[%s]. mode=%s, flags=%08x", name, mode, f->flags );
-        whefs_string_copy_cstring( &f->name, name );
-        //WHEFS_DBG_FYI("opened whefs_file [%s]. mode=%s, flags=%08x", name, mode, f->flags );
-    }
+    //WHEFS_DBG("opened whefs_file [%s]. mode=%s, flags=%08x", name, mode, f->flags );
     return f;
 }
 
@@ -433,10 +427,9 @@ int whefs_file_name_set( whefs_file * restrict f, char const * newName )
     return whefs_rc.OK;
 }
 
-char const * whefs_file_name_get( whefs_file * restrict f )
+char const * whefs_file_name_get( whefs_file const * restrict f )
 {
     if( ! f ) return 0;
-#if 0
     whefs_inode * ino = 0;
     int rc = whefs_inode_search_opened( f->fs, f->inode, &ino );
     if( whefs_rc.OK != rc )
@@ -446,10 +439,6 @@ char const * whefs_file_name_get( whefs_file * restrict f )
 	return 0;
     }
     return ino->name.string;
-#else
-    whefs_inode_name_get( f->fs, f->inode, &f->name );
-    return f->name.string;
-#endif
 }
 
 whio_size_t whefs_fsize( whefs_file const * restrict f )

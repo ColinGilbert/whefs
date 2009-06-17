@@ -145,7 +145,7 @@ typedef struct whefs_inode
     */
     whefs_block_list blocks;
     /** Transient string used only by opened nodes. */
-    //whefs_string name;
+    whefs_string name;
 } whefs_inode;
 
 /** Empty inode initialization object. */
@@ -157,8 +157,8 @@ typedef struct whefs_inode
         0, /* mtime */ \
         0, /* open_count */ \
         0, /* writer */ \
-	whefs_block_list_init_m /*blocks */ \
-            /* whefs_string_init_m name */   \
+	whefs_block_list_init_m /*blocks */, \
+        whefs_string_init_m /* name */ \
     }
 
 /** Empty inode initialization object. */

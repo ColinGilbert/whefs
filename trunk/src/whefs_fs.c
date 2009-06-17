@@ -307,10 +307,8 @@ void whefs_fs_finalize( whefs_fs * restrict fs )
     if( fs->opened_nodes )
     {
 	WHEFS_DBG_WARN("We're closing with opened inodes! Closing them...");
-	whefs_inode_list * l = fs->opened_nodes;
         while( fs->opened_nodes )
         {
-            l = fs->opened_nodes->next;
             WHEFS_DBG_WARN("Auto-closing inode #"WHEFS_ID_TYPE_PFMT", but leaking its whefs_file or whio_dev handle (if any).");
             whefs_inode_close( fs, &fs->opened_nodes->inode, fs->opened_nodes->inode.writer );
 	}
