@@ -1,7 +1,10 @@
 #summary Recent whefs news items.
-#labels Category-UserDocs
+#labels Category-UserDocs,Phase-Support
 
 <h1>whefs News (most recent items at the top)</h1>
+
+*16/17 June 2009:*
+   * Ported the project over to Google Code. i miss the ability to download a snapshot zip of the source repo, but the wiki/issues/downloads maintenance is much simpler on Google Code.
 
 <b>13 June 2009:</b>
    *  Added a heavier-weight name caching supplement, which allows us to search for an inode by name without search-related i/o once it has been traversed. Its memory cost becomes arguably too high for EFSs with lots of files, especially those with high maximum filename length limits. It is currently always on but a toggle will eventually provided, as the memory cost becomes prohibitive on very small systems 
