@@ -165,26 +165,12 @@ porting to machines with different size_t sizes.
    and other compilers which warn when void pointers are used
    in addition.
 */
+#  define WHIO_VOID_PTR_ADD(VP,PLUS) ((void*)((unsigned char *)(VP)+(PLUS)))
 /** @def WHIO_VOID_CPTR_ADD()
    Equivalent to WHIO_VOID_PTR_ADD() but applies to a const void
    pointer.
 */
-#if 1
-/*
-  Enable this if you want to build with -pedantic.
-
-  Thanks to the guys at:
-
-  http://groups.google.com/group/comp.lang.c/browse_thread/thread/fc1c48419f4d858d#
-
-  for their assistance on this.
-*/
-#  define WHIO_VOID_PTR_ADD(VP,PLUS) ((void*)((unsigned char const *)(VP)+(PLUS)))
 #  define WHIO_VOID_CPTR_ADD(VP,PLUS) ((void const*)((unsigned char const *)(VP)+(PLUS)))
-#else
-#  define WHIO_VOID_PTR_ADD(VP,PLUS) ((VP)+(PLUS))
-#  define WHIO_VOID_CPTR_ADD(VP,PLUS) ((VP)+(PLUS))
-#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
