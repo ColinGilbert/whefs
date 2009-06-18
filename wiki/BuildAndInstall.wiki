@@ -52,5 +52,7 @@ The source tree is intentionally kept very simple in structure, to simplify supp
 || `<top>/include/wh/whio` || Public headers for the `whio` API (the i/o API on which whefs is built). ||
 || `<top>/include/wh/whefs` || libwhefs PUBLIC API headers. The private ones are under `<top>/src`. ||
 || `<top>/src` || All sources for libwhefs, including the whio layer. whio actually has [http://fossil.wanderinghorse.net/repos/whio its own source repo], and changes are synched now and then between the whefs and whio. ||
+|| `<top>/app` || The various [WhefsTools whefs-* tools] plus some other test code. ||
+|| `<top>/doc` || Documentation for the library. ||
 
 The project has several compile-time configurable options in `<wh/whio/whio_config.h>` and `<wh/whefs/whefs_config.h>`. However, in the interest of build tree simplicity those files are manually edited and not automatically generated. Some of the options can be overridden by passing `-Dxxxx` to the compiler, but some of them need to be set directly in the header file, to ensure that the core library and all clients have the same values.
