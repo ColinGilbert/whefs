@@ -29,7 +29,7 @@ ENABLE_DEBUG := 1
 # gcc needs -std=c99. Other compilers need other args. SunStudio:
 # -xc99=all, tcc: none
 ifeq (cc,$(CC))
-  CFLAGS += -std=c99
+  CFLAGS += -std=c99 -pedantic -Wall
 endif
 ifeq (gcc,$(CC))
   CFLAGS += -std=c99

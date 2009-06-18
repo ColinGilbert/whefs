@@ -30,7 +30,7 @@
 #include "whefs_hash.h"
 #include "whefs_cache.h"
 
-#if WHEFS_ENABLE_THREADS
+#if WHEFS_CONFIG_ENABLE_THREADS
 #include <pthread.h>
 #endif
 
@@ -265,7 +265,7 @@ struct whefs_fs
     /** Holder for threading-related data. */
     struct thread_info
     {
-#if WHEFS_ENABLE_THREADS
+#if WHEFS_CONFIG_ENABLE_THREADS
         int placeholder;
 #else
         int placeholder;

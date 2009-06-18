@@ -246,9 +246,9 @@ whefs_fs_magic_bytes_len = (sizeof(whefs_fs_magic_bytes)
 
 };
 
-/** @def WHIO_FS_USE_FCNTL
+/** @def WHEFS_CONFIG_ENABLE_FCNTL
 
-If WHIO_FS_USE_FCNTL is true then some features for doing
+If WHEFS_CONFIG_ENABLE_FCNTL is true then some features for doing
 POSIX-style fcntl() advisory locks are added. The locking
 code is far from complete and should not be relied upon
 for concurrency purposes.
@@ -261,16 +261,16 @@ used for certain operations.
 Maintenance reminder: if this is true be sure to include fcntl.h in
 the files which need it.
 */
-#define WHIO_FS_USE_FCNTL 1
+#define WHEFS_CONFIG_ENABLE_FCNTL 1
 
-/** @def WHEFS_ENABLE_THREADS
+/** @def WHEFS_CONFIG_ENABLE_THREADS
 
-WHEFS_ENABLE_THREADS doesn't yet do anything. It is reserved for
+WHEFS_CONFIG_ENABLE_THREADS doesn't yet do anything. It is reserved for
 when some form of thread locking is enabled.
 
 */
-#if !defined(WHEFS_ENABLE_THREADS)
-#  define WHEFS_ENABLE_THREADS 0
+#if !defined(WHEFS_CONFIG_ENABLE_THREADS)
+#  define WHEFS_CONFIG_ENABLE_THREADS 0
 #endif
 
 /** @def WHEFS_MACROIZE_SMALL_CHECKS
@@ -282,7 +282,8 @@ when some form of thread locking is enabled.
    remove them altogether if we ensure that consistency checks are put in all
    entryways.
 */
-#if !defined(DOXYGEN)
+#if defined(DOXYGEN)
+  /* we do this so that doxygen can pick up the non-macroized funcs. */
 #  define WHEFS_MACROIZE_SMALL_CHECKS 0
 #else
 #  define WHEFS_MACROIZE_SMALL_CHECKS 1

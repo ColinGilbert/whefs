@@ -4,11 +4,9 @@
   Author: Stephan Beal (http://wanderinghorse.net/home/stephan/
 
   License: Public Domain
-*/
 
-/**
-   This file contains the whefs_inode parts of the whefs
-   private/internal API.
+  This file contains the whefs_inode parts of the whefs
+  private/internal API.
 */
 #include <wh/whefs/whefs.h>
 #include <wh/whefs/whefs_string.h>
@@ -20,8 +18,8 @@ extern "C" {
 
 /** @struct whefs_block
 
-whefs_block holds the metadata for the data blocks of an EFS, but do
-not actually hold the data.
+whefs_block holds the metadata for the data blocks of an EFS, but does
+not actually hold the client data.
 */
 struct whefs_block
 {
@@ -29,7 +27,7 @@ struct whefs_block
        Sequential id number. Value of 0 is reserved for "invalid block".
     */
     whefs_id_type id;
-    /* id of next block */
+    /** id of next block */
     whefs_id_type next_block;
     /**
        Internal flags.
@@ -48,9 +46,9 @@ typedef struct whefs_block whefs_block;
  */
 #define whefs_block_init_m  \
     { \
-    0, /* id */ \
-    0, /* next_block */                     \
-    0 /* flags */ \
+    0U, /* id */ \
+    0U, /* next_block */                     \
+    0U /* flags */ \
     }
 
 /** Empty initialization object for whefs_block objects. */
@@ -353,34 +351,34 @@ int whefs_inode_by_name( whefs_fs * fs, char const * name, whefs_inode * tgt );
 #define whefs_inode_id_is_valid_m( FS,NID ) ( \
     ( (FS) && (NID) && \
       ((NID) <= (FS)->options.inode_count)     \
-      && ((FS)->dev) ) ? true : false)
-/**
-   Returns true if nid is a valid inode for the given fs. That is, it
-   has a non-zero id in a range legal for the given fs object.
-*/
-#if WHEFS_MACROIZE_SMALL_CHECKS
-#define whefs_inode_id_is_valid(FS,NID) whefs_inode_id_is_valid_m(FS,NID)
-#else
-bool whefs_inode_id_is_valid( whefs_fs const * restrict fs, whefs_id_type nid );
-#endif
+      ) ? true : false)
 
 /** @def whefs_inode_is_valid_m
 
    Internal implementation of the more public whefs_inode_is_valid().
 
-   Evaluates to true if inode BL (a const pointer to a whefs_inode) is
-   valid for the given fs. That is, it has a non-zero id in a range
-   legal for the given fs object.
+   Evaluates to true if inode INO (a const pointer to a whefs_inode)
+   is valid for the given fs (a const whefs_fs pointer). That is, it
+   has a non-zero id in a range legal for the given fs object.
  */
 #define whefs_inode_is_valid_m(FS,INO) ((INO) ? (whefs_inode_id_is_valid(FS,(INO)->id)) : false)
 
-/**
+#if WHEFS_MACROIZE_SMALL_CHECKS
+#define whefs_inode_id_is_valid(FS,NID) whefs_inode_id_is_valid_m(FS,NID)
+#define whefs_inode_is_valid(FS,INO) whefs_inode_is_valid_m(FS,INO)
+#else
+/** @fn bool whefs_inode_id_is_valid( whefs_fs const * restrict fs, whefs_id_type nid )
+
+   Returns true if nid is a valid inode for the given fs. That is, it
+   has a non-zero id in a range legal for the given fs object.
+*/
+bool whefs_inode_id_is_valid( whefs_fs const * restrict fs, whefs_id_type nid );
+
+/** @fn bool whefs_inode_is_valid( whefs_fs const * restrict fs, whefs_inode const * n )
+
    Returns true if n is "valid" - has a non-zero id in a range legal
    for the given fs object.
 */
-#if WHEFS_MACROIZE_SMALL_CHECKS
-#define whefs_inode_is_valid(FS,INO) whefs_inode_is_valid_m(FS,INO)
-#else
 bool whefs_inode_is_valid( whefs_fs const * restrict fs, whefs_inode const * n );
 #endif
 

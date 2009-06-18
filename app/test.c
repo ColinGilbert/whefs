@@ -14,7 +14,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <assert.h>
-#include <unistd.h> /* sleep() */
+//#include <unistd.h> /* sleep() */
 #include <wh/whefs/whefs.h>
 #include <wh/whefs/whefs_client_util.h>
 
