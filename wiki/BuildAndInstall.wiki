@@ -18,7 +18,7 @@ To build the tree on Unixish platforms:
 # ~> make CC=tcc CXX=tcc
 }}}
 
-Just for fun, try holding your breath while it builds. It'll only takes 2-3 seconds to build the library and supporting tools on a reasonably fast machine (and much faster with tcc - 0.85 seconds on my box using a non-parallel build).
+It takes only 2-3 seconds to build the library and supporting tools using gcc on a reasonably fast machine, or about 12 seconds on a 1.6GHz netbook with a slow hard drive.
 
 *To install it:*
 
