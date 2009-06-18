@@ -55,6 +55,8 @@ The source tree is intentionally kept very simple in structure, to simplify supp
 || `<top>/app` || The various [WhefsTools whefs-* tools] plus some other test code. ||
 || `<top>/doc` || Documentation for the library. ||
 
+==Configuration files==
+
 The project has several compile-time configurable options in `<wh/whio/whio_config.h>` and `<wh/whefs/whefs_config.h>`. However, in the interest of build tree simplicity those files are manually edited and not automatically generated. Some of the options can be overridden by passing `-Dxxxx` to the compiler, but some of them need to be set directly in the header file, to ensure that the core library and all clients have the same values.
 
 The client-configurable files include:
