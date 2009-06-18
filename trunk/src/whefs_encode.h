@@ -8,8 +8,9 @@
 
 #include <wh/whefs/whefs_config.h>
 #include <stddef.h> /* size_t on my box */
-/**
-   This file contains the whefs_inode parts of the whefs
+/** @file whefs_encode.h
+
+   This file contains the encoding/decoding parts of the whefs
    private/internal API.
 */
 
@@ -62,6 +63,19 @@ whefs_sizeof_encoded_uint16 = 3,
 */
 whefs_sizeof_encoded_uint8 = 2,
 
+/** @var whefs_sizeof_encoded_id_type
+   On-disk encoded size of whefs_id_type objects. This will always be
+   one of 1, 2, 4, or 4, depending on the size of whefs_id_type, plus 1
+   tag byte used by the encoding/decoding bits for consistency
+   checking.
+
+   Maintenance reminder: we use (WHEFS_ID_TYPE_BITS/8) here instead of
+   sizeof(whefs_id_type), because we need a specific guaranteed size
+   for each supported value of WHEFS_ID_TYPE_BITS, and sizeof()
+   doesn't give us that.
+*/
+whefs_sizeof_encoded_id_type = ((WHEFS_ID_TYPE_BITS/8)+1),
+
 /** @var whefs_size_cstring
 
    whefs_size_cstring is the encoded length of a C-style string,
@@ -113,7 +127,12 @@ whefs_sizeof_encoded_inode_name = 1 /* tag bytes */
 whefs_sizeof_encoded_block = 1 /* tag char */
     + whefs_sizeof_encoded_id_type /* bl->id */
     + whefs_sizeof_encoded_uint16 /* bl->flags */
-    + whefs_sizeof_encoded_id_type /* bl->next_block */
+    + whefs_sizeof_encoded_id_type /* bl->next_block */,
+
+/**
+   Newer-style name for WHEFS_MAX_FILENAME_LENGTH.
+*/
+whefs_sizeof_max_filename = WHEFS_MAX_FILENAME_LENGTH
 
 };
 
@@ -252,7 +271,7 @@ size_t whefs_cstring_encode( unsigned char * dest, char const * s, uint32_t n );
 
 /**
    The converse of whefs_cstring_encode(), this routine tries to
-   decode a string from the current location in the device.
+   decode a string from the given source memory.
 
    src must contain at least (whefs_sizeof_encoded_cstring + N) bytes,
    where N is the number which is encoded in the first part of the data.
@@ -289,7 +308,6 @@ if( whio_rc.OK != rc ) ... error ...
 ... use str ...
 free(str);
 @endcode
-
 
    @see whefs_cstring_encode()
 */

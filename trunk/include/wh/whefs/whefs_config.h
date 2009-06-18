@@ -30,8 +30,8 @@
 */
 #  define __STDC_FORMAT_MACROS 1
 #endif
-#include <stdint.h>
-#include <inttypes.h>
+#include <stdint.h> /* standardized fixed-size integer types */
+#include <inttypes.h> /* printf/scanf format specifiers. */
 #include "whefs_license.h"
 
 #ifdef __cplusplus
@@ -218,24 +218,6 @@ enum whefs_constants {
    memory costs of certain operations.
  */
 WHEFS_MAX_FILENAME_LENGTH = 128,
-
-/**
-   Newer-style name for WHEFS_MAX_FILENAME_LENGTH.
-*/
-whefs_sizeof_max_filename = WHEFS_MAX_FILENAME_LENGTH,
-
-/**
-   On-disk encoded size of whefs_id_type objects. This will always be
-   one of 1, 2, 4, or 4, depending on the size of whefs_id_type, plus 1
-   tag byte used by the encoding/decoding bits for consistency
-   checking.
-
-   Maintenance reminder: we use (WHEFS_ID_TYPE_BITS/8) here instead of
-   sizeof(whefs_id_type), because we need a specific guaranteed size
-   for each supported value of WHEFS_ID_TYPE_BITS, and sizeof()
-   doesn't give us that.
-*/
-whefs_sizeof_encoded_id_type = ((WHEFS_ID_TYPE_BITS/8)+1),
 
 /**
    The length of the whefs_fs_magic_bytes array, not including the
