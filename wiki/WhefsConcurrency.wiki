@@ -32,7 +32,7 @@ The engine currently supports only the most basic file locking:
    *  For read-only mode, it locks the whole file with a read lock. Multiple reader processes can use the filesystem safely.
    *  The locking is only advisory, relying on <tt>fcntl()</tt> to do the dirty work. Bugs in whefs could cause a lock to be violated.
 
-There needs to be more granularity in this (record- or pseudofile-level locking, instead of container-level), but that is going to take a large effort and a larger amount of testing to ensure that it works as advertised.
+There needs to be more granularity in this (record- or pseudofile-level locking, instead of container-level), but that is going to take a large effort and a larger amount of testing to ensure that it works as advertised. It also raises questions such as "how do we do an 'ls' if one of the inodes is write-locked at the time?"
 
 <h2>Specific problems vis-a-vis threading</h2>
 
