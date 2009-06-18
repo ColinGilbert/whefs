@@ -42,3 +42,15 @@ To use libwhefs from client code:
 =Building the API Documentation=
 
 The public API documentation is in the header files under `include/wh/...`. The [http://www.stack.nl/~dimitri/doxygen/ doxygen tool] can generate HTML versions of the docs. If you have doxygen, then try running `make doc` from the `doc` subdirectory of the source tree. If you have built the [WhefsAmalgamation] then two versions of the API docs will be generated - one with the public API and one with the complete API, including internal/private details.
+
+=Source Tree Overview=
+
+The source tree is intentionally kept very simple in structure, to simplify supporting arbitrary build platforms. It looks a bit like this:
+
+|| `<top>/include` ||All PUBLIC header files go under here. PRIVATE headers MAY be in here, but are more likely to be in `<top>/src`||
+|| `<top>/include/wh` || Headers belonging to the "whXXX" family of code go here.  ("wh" = "!WanderingHorse.net", my home domain.) ||
+|| `<top>/include/wh/whio` || Public headers for the `whio` API (the i/o API on which whefs is built). ||
+|| `<top>/include/wh/whefs` || libwhefs PUBLIC API headers. The private ones are under `<top>/src`. ||
+|| `<top>/src` || All sources for libwhefs, including the whio layer. whio actually has [http://fossil.wanderinghorse.net/repos/whio its own source repo], and changes are synched now and then between the whefs and whio. ||
+
+The project has several compile-time configurable options in `<wh/whio/whio_config.h>` and `<wh/whefs/whefs_config.h>`. However, in the interest of build tree simplicity those files are manually edited and not automatically generated. Some of the options can be overridden by passing `-Dxxxx` to the compiler, but some of them need to be set directly in the header file, to ensure that the core library and all clients have the same values.
