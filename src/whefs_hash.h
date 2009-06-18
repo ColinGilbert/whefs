@@ -39,8 +39,16 @@ struct whefs_hashid
     /**
        Routines which visit this object via search results should increment this number.
        We may use it later for dropping least-used items from the list.
+
+       Changing this to uint32_t actually costs 6 bytes on my box, as the sizeof()
+       comes out to 12 (if whefs_id_type is uint16_t as well). With uint16_t i
+       get a sizeof(8).
+
+       Note that we can easily overflow with a 16-bit counter, but for
+       the purposes we're using this number for that won't hurt us. The
+       extra bytes for uint32_t aren't worth it here.
     */
-    uint32_t hits;
+    uint16_t hits;
 };
 typedef struct whefs_hashid whefs_hashid;
 /**
@@ -64,10 +72,8 @@ extern const whefs_hashid whefs_hashid_init;
    as long as the list has fewer items in use than are actually
    allocated.
 
-   Potential uses in whefs:
- 
-    - Hashing used inodes by name.
-    - Storing block chains?
+   Currently this is used to map inode name hashes to inode IDs
+   to speed up lookups by name.
  */
 struct whefs_hashid_list
 {
@@ -148,8 +154,8 @@ void whefs_hashid_list_free( whefs_hashid_list * tgt );
    sort it before adding any new items. This will cost a sort but avoid
    a re-alloc if at least as many items are removed as were added.
 
-   The current usage of this object does not account for duplicate
-   hash keys, so ensure that you don't add dupes.
+   The current usage of the whefs_hashid_list class does not account
+   for duplicate hash keys, so ensure that you don't add dupes.
 */
 int whefs_hashid_list_add( whefs_hashid_list * tgt, whefs_hashid const * restrict val );
 

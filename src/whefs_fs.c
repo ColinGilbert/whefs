@@ -282,7 +282,7 @@ void whefs_fs_caches_names_clear( whefs_fs * restrict fs )
         for( i = 0; i < fs->cache.hashes->count; ++i )
         {
             h = &fs->cache.hashes->list[i];
-            WHEFS_DBG_CACHE("inode #%"WHEFS_ID_TYPE_PFMT" cache entry hits: %"PRIu32, h->id, h->hits);
+            WHEFS_DBG_CACHE("inode #%"WHEFS_ID_TYPE_PFMT" cache entry hits: %"PRIu16, h->id);
         }
         whefs_hashid_list_alloc( &fs->cache.hashes, 0 );// reminder: we keep fs->cache.hashes itself until finalization.
     }
