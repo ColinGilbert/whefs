@@ -20,7 +20,7 @@
 #include "whefs_details.c"
 #include <wh/whglob.h>
 
-#if WHIO_FS_USE_FCNTL
+#if WHEFS_CONFIG_ENABLE_FCNTL
 #  include <fcntl.h>
 #endif
 
@@ -33,7 +33,7 @@ and is complicated by the voodoo we use to store the strings inside whefs_fs::ca
 */
 #endif
 
-#if WHIO_ENABLE_THREADS
+#if WHEFS_CONFIG_ENABLE_THREADS
 /**
    WHEFS_FS_STRUCT_THREAD_INFO is the initializer for whefs_fs.threads.
 */
@@ -161,7 +161,7 @@ static void whefs_fs_free( whefs_fs * obj )
 
 int whefs_fs_lock( whefs_fs * restrict fs, bool writeLock, off_t start, int whence, off_t len )
 {
-#if WHIO_FS_USE_FCNTL
+#if WHEFS_CONFIG_ENABLE_FCNTL
     if( ! fs ) return whefs_rc.ArgError;
     //WHEFS_DBG_FYI("whefs_fs_lock(%p [fileno=%d],%d,%ld,%d,%ld)",fs,fs->fileno,writeLock,start,whence,len);
     if( fs->fileno < 1 ) return whefs_rc.UnsupportedError;
@@ -183,7 +183,7 @@ int whefs_fs_lock( whefs_fs * restrict fs, bool writeLock, off_t start, int when
 
 int whefs_fs_unlock( whefs_fs * restrict fs, off_t start, int whence, off_t len )
 {
-#if WHIO_FS_USE_FCNTL
+#if WHEFS_CONFIG_ENABLE_FCNTL
     if( ! fs ) return whefs_rc.ArgError;
     if( fs->fileno < 1 ) return whefs_rc.UnsupportedError;
     else
