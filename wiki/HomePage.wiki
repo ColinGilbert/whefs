@@ -32,7 +32,7 @@ It works by creating a "filesystem" inside a so-called container file (or in mem
    *  Still needs lots more testing before i'm comfortable calling it "ready for use."
    *  Very little support for concurrency - see [WhefsConcurrency] for details.
    *  Optimised for ease of use/maintenance and memory consumption, not speed. Typical use requires only a few KB of dynamically allocated memory (for the minimal caching it does). Despite the minimalism, however, it is surprisingly performant. Versions as of 20090613 will use significantly more memory for inode name caching, but if the EFS is kept within "reasonable bounds" the memory consumption stays small.
-   *  Does not currently support directory hierarchies. See ticket `#[10857664fa]` for info on that.
+   *  Does not currently support directory hierarchies. See issue #3 for more thoughts on that.
    *  Doesn't abstract enough away to support standard filesystems (e.g. VFAT) inside the container file. It uses its own custom filesystem implementation (my very first attempt at such) which may be suitable for small use cases but will certainly not scale well (performance-wise) into the thousands of files range.
    *  A signal, crash, propagated C++ exception, or similar interruption while the FS is writing or holding unflushed file information can leave the pseudofile contents in an inconsistent state.
    *  Until the software stabilizes, the file format may change from version to version. It is however always possible to export the data from an old VFS (using an older version of whefs) and re-import it using a newer version.
