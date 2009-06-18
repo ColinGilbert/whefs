@@ -35,7 +35,7 @@ extern "C" {
    The policies which implementations need to follow are:
 
    - arg is an implementation-specific pointer (may be 0) which is
-   passed to vappendf. whprintfv() doesn't know what this argument is
+   passed to whprintf(). whprintfv() doesn't know what this argument is
    but passes it to its whprintf_appender. Typically it will be an
    object or resource handle to which string data is pushed or output.
 
@@ -96,7 +96,7 @@ typedef long (*whprintf_appender)( void * arg,
 
  CURRENT (documented) PRINTF EXTENSIONS:
 
- %%z works like %%s, but takes a non-const (char *) and vappendf
+ %%z works like %%s, but takes a non-const (char *) and whprintf()
  deletes the string (using free()) after appending it to the output.
 
  %%h (HTML) works like %s but converts certain characters (like '<' and '&' to
@@ -121,7 +121,7 @@ typedef long (*whprintf_appender)( void * arg,
  implementation's sqlite3 genes.)
 
  These extensions may be disabled by setting certain macros when
- compiling vappendf.c (see that file for details).
+ compiling whprintf.c (see that file for details).
 */
 long whprintfv(
   whprintf_appender pfAppend,          /* Accumulate results here */
