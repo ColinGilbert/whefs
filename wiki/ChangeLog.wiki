@@ -3,5 +3,8 @@
 
 This is the informal change list for whefs releases. Newest items are at the top. Only an overview is provided here - the exact list of changes is tracked only via the source repository.
 
+----
+
 *19 June 2009*
+  * Added public `whefs_fs_entry` type and `whefs_fs_entry_foreach()` to iterate over all in-use EFS entries.
   *  First packaged release.
