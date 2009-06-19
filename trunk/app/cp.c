@@ -48,7 +48,7 @@ static int cp_import( char const *fname )
 	return ErrOpenFailed;
 
     }
-    int rc = whefs_import( WHEFSApp.fs, inf, fname, true );
+    int rc = whefs_import_dev( WHEFSApp.fs, inf, fname, true );
     size_t sz = whio_dev_size( inf );
     inf->api->finalize(inf);
     if( rc != whefs_rc.OK )
