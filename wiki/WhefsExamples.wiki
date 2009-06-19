@@ -97,3 +97,5 @@ Node ID:        First block:    Size:       Timestamp:      Name:
 10              9               40960       1245435778      fileI
 11              10              40960       1245435778      fileJ
 }}}
+
+The foreach code carefully manages the memory for the name string of each entry, and does not need to allocate any dynamic memory (except possibly as a side-effect of caching, if it's enabled). Thus looping this way has a constant memory cost regardless of the number of inodes. This is in contrast to `whefs_ls()`, which costs memory relative to the number of entries.
