@@ -348,7 +348,7 @@ int whefs_inode_foreach( whefs_fs * fs, whefs_inode_predicate_f where, void * wh
     int rc = whefs_rc.OK;
     for( ; i <= fs->options.inode_count; ++i )
     {
-	int rc = whefs_inode_id_read( fs, i, &n );
+	rc = whefs_inode_id_read( fs, i, &n );
 	if( whefs_rc.OK != rc ) return rc;
 	if( n.id != i )
 	{
@@ -425,13 +425,9 @@ int whefs_inode_update_mtime( whefs_fs * fs, whefs_inode * n )
     if( ! n ) return whefs_rc.ArgError;
     struct timeval tv;
     gettimeofday( &tv, 0 );
-    if( n->mtime != tv.tv_sec )
-    {
-	n->mtime = (uint32_t)tv.tv_sec;
-    }
+    n->mtime = (uint32_t)tv.tv_sec;
     return whefs_rc.OK;
 }
-
 
 int whefs_inode_search_opened( whefs_fs * fs, whefs_id_type nodeID, whefs_inode ** tgt )
 {
