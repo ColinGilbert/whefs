@@ -16,15 +16,39 @@ support for directories, longer strings may sometimes be needed.
 typedef uint16_t whefs_string_size_t;
 
 /** @struct whefs_string
+
    whefs_string is a type for storing strings. Routines in the whefs
    library which perform string operations may use this type, as
-   opposed to a simple string, so because it allows us to re-use the
-   string's bytes at times instead of using malloc for every string.
+   opposed to a simple string, because it allows us to re-use the
+   string's bytes at certain times instead of using malloc for every
+   string.
 
    One way to free the memory owned by these objects is
    whefs_string_clear(). Alternately, one may pass the string member
-   to free(), then set the length and alloced members to 0. If the object
-   is part of a chain, the caller must free each object in the chain.
+   to free() (assuming it was created using malloc()), then set the
+   length and alloced members to 0. If the object is part of a chain,
+   the caller must free each object in the chain.
+
+   If the maximum size of a set of strings is known in advance it is
+   possible to avoid any allocation by using this approach:
+
+   @code
+   enum { bufSize = MaxPossibleSizeOfStrings + 1 }; // +1 for the trailing NULL
+   char buf[bufSize];
+   memset( buf, 0, bufSize );
+   whefs_string s = whefs_string_init;
+   s.string = buf;
+   s.alloced = bufSize;
+   whefs_string_copy_cstring( &s, sourceString );
+   assert( (s.string == buf) );
+   @endcode
+
+   Use this approach ONLY when working with strings with a known fixed
+   upper length, or else the whefs_string API might try to realloc()
+   the static buffer and will likely segfault in doing so. e.g. in
+   whefs we know the maximum length of filenames at compile time, and
+   can optimize out some calls to malloc() by using stack-allocated
+   buffers.
 */
 struct whefs_string
 {
