@@ -348,6 +348,12 @@ int whefs_inode_foreach( whefs_fs * fs, whefs_inode_predicate_f where, void * wh
     int rc = whefs_rc.OK;
     for( ; i <= fs->options.inode_count; ++i )
     {
+#if WHEFS_FS_BITSET_CACHE_ENABLED
+	if( fs->bits.i_loaded && !WHEFS_ICACHE_IS_USED(fs,i) )
+	{
+	    continue;
+	}
+#endif
 	rc = whefs_inode_id_read( fs, i, &n );
 	if( whefs_rc.OK != rc ) return rc;
 	if( n.id != i )
