@@ -1,9 +1,10 @@
 #summary Brief examples of using libwhefs
-#labels Category-UserDocs,Featured
+#labels Featured
 
+<wiki:toc max_depth=3/>
 See also: [WhefsTools]
 
-<h1>Example #1</h1>
+=Hello, world!=
 
 Here's the "Hello, world!" of whefs...
 
@@ -32,4 +33,67 @@ printf( "Read back: %s", buf );
 // Clean up:
 whefs_fclose( fi );
 whefs_fs_finalize( fs );
+}}}
+
+=Iterating over all used inodes=
+
+We can use `whefs_fs_entry_foreach()` to loop over in-use inodes. The public API does
+not provide access to unused inodes (though this may be added someday, to allow clients to write lower-level routines).
+
+
+Here's an example which implements something like [WhefsLs whefs-ls]:
+
+{{{
+#include <wh/whefs/whefs_client_util.h> // the whefs_fs_entry type
+
+/** A private type to hold data we want to keep across iterations
+of whefs_fs_entry_foreach().
+*/
+typedef struct
+{
+    size_t pos;
+} ForEachData;
+static const ForEachData ForEachDataInit = {0};
+
+/** Callback for use with whefs_fs_entry_foreach(). */
+int my_foreach( whefs_fs * fs, whefs_fs_entry const * ent, void * data )
+{
+    ForEachData * fd = (ForEachData *)data;
+    if( 1 == ++fd->pos )
+    {
+        printf("%-16s%-16s%-12s%-16s%-16s\n",
+               "Node ID:","First block:", "Size:", "Timestamp:","Name:" );
+    }
+    printf("%-16"WHEFS_ID_TYPE_PFMT"%-16"WHEFS_ID_TYPE_PFMT"%-12u%-16u%s\n",
+           ent->inode_id,
+           ent->block_id,
+           ent->size,
+           ent->mtime,
+           ent->name.string );
+
+    return whefs_rc.OK;
+}
+
+/** Example of how to use whefs_fs_entry_foreach(). */
+void do_foreach( whefs_fs * fs )
+{
+    ForEachData d = ForEachDataInit;
+    whefs_fs_entry_foreach( fs, my_foreach, &d );
+}
+}}}
+
+Now calling `do_foreach(myFS)` will cause `my_foreach()` to be called for each entry. From there we simply output the info associated with the entry, which might look something like this:
+
+{{{
+Node ID:        First block:    Size:       Timestamp:      Name:           
+2               1               40960       1245435778      fileA
+3               2               40960       1245435778      fileB
+4               3               40960       1245435778      fileC
+5               4               40960       1245435778      fileD
+6               5               40960       1245435778      fileE
+7               6               40960       1245435778      fileF
+8               7               40960       1245435778      fileG
+9               8               40960       1245435778      fileH
+10              9               40960       1245435778      fileI
+11              10              40960       1245435778      fileJ
 }}}
