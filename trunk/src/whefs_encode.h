@@ -127,12 +127,7 @@ whefs_sizeof_encoded_inode_name = 1 /* tag bytes */
 whefs_sizeof_encoded_block = 1 /* tag char */
     + whefs_sizeof_encoded_id_type /* bl->id */
     + whefs_sizeof_encoded_uint16 /* bl->flags */
-    + whefs_sizeof_encoded_id_type /* bl->next_block */,
-
-/**
-   Newer-style name for WHEFS_MAX_FILENAME_LENGTH.
-*/
-whefs_sizeof_max_filename = WHEFS_MAX_FILENAME_LENGTH
+    + whefs_sizeof_encoded_id_type /* bl->next_block */
 
 };
 
