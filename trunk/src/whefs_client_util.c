@@ -267,6 +267,12 @@ int whefs_fs_entry_foreach( whefs_fs * fs, whefs_fs_entry_foreach_f func, void *
     ent.name.alloced = bufSize;
     for( ; i <= fs->options.inode_count; ++i )
     {
+#if WHEFS_FS_BITSET_CACHE_ENABLED
+	if( fs->bits.i_loaded && !WHEFS_ICACHE_IS_USED(fs,i) )
+	{
+	    continue;
+	}
+#endif
 	rc = whefs_inode_id_read( fs, i, &n );
 	if( whefs_rc.OK != rc ) break;
 	if( n.id != i )
