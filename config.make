@@ -8,6 +8,7 @@ all:
 CONFIG.MAKEFILE := $(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST))
 $(CONFIG.MAKEFILE):
 TOP_SRCDIR_REL := $(dir $(CONFIG.MAKEFILE))
+TOP_SRCDIR_REL := $(patsubst %/,%,$(TOP_SRCDIR_REL))# horrible kludge
 #TOP_SRCDIR := $(shell cd -P $(TOP_SRCDIR_REL) && pwd)
 TOP_SRCDIR := $(realpath $(TOP_SRCDIR_REL))
 #$(error TOP_SRCDIR_REL=$(TOP_SRCDIR_REL)   TOP_SRCDIR=$(TOP_SRCDIR))
