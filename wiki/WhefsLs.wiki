@@ -6,7 +6,7 @@ whefs-ls is a tool similar to the conventional <tt>ls</tt> command. It lists the
 
 Usage: whefs-ls `[flags]` VFS_file `[filter_pattern]`
 
-Aside from the [whefs-tools|common command flags], whefs-ls supports these flags:
+Aside from the [WhefsTools common command flags], whefs-ls supports these flags:
 
    *  -i = Show the inode (file) list. This is the default operation.
    *  -b = Show blocks owned by each inode. Use with -v to show more information.
