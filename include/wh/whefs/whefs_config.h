@@ -220,6 +220,11 @@ enum whefs_constants {
 WHEFS_MAX_FILENAME_LENGTH = 128,
 
 /**
+   Newer-style name for WHEFS_MAX_FILENAME_LENGTH.
+*/
+whefs_sizeof_max_filename = WHEFS_MAX_FILENAME_LENGTH,
+
+/**
    The length of the whefs_fs_magic_bytes array, not including the
    tailing 0 entry.
 */
