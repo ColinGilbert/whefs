@@ -1,0 +1,6 @@
+#summary Overview of changes from one version to the next
+
+This is the informal change list for whefs releases. Newest items are at the top. Only an overview is provided here - the exact list of changes is tracked only via the source repository.
+
+*19 June 2009*
+  *  First packaged release.
