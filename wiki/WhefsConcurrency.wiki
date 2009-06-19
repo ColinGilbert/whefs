@@ -1,7 +1,9 @@
 #summary Notes about whefs vs. concurrency
 #labels Phase-Implementation,Category-Internals
 
-<h1>Concurrency: multi-process and multi-thread access</h1>
+<wiki:toc max_depth=3/>
+
+=Concurrency: multi-process and multi-thread access=
 
 <strong>whefs currently has only the most basic support for concurrency! Multiple processes can acquire locks (see below), but multiple threads which access the same EFS <em>will</em> cause corruption or other failure at some point!</strong>
 
@@ -18,13 +20,13 @@ Some skeleton code is in place to support fcntl() locks, but there is still much
 
 Work on multi-threading support is still far, far away. The fcntl() locks are considered more important for this particular case, and threading scares the hell out of me, so that feature is going to have to wait.
 
-<h2>Why do we need concurrency support?</h2>
+==Why do we need concurrency support?==
 
 First, file/record-level locks can keep multiple (cooperating) processes from hosing each other while they work on an EFS file. Threading support is of course necessary for modern applications in general.
 
-One of the more interesting uses for file-level locks is that we could use whefs as a data store for CGI applications, in the same way that sqlite3 acts as an encapsulated data store for a fossil repository. This bypasses a number of problems related to file ownership and access rights when running over CGI. It may also allow us to safely implement SWIG-based wrappers for languages like PHP. A PHP wrapper could get the same benefits as a CGI apps - a safe data store which isn't going to have incorrect access rights when new files are created via the web interface.
+One of the more interesting uses for file-level locks is that we could use whefs as a data store for CGI applications, in the same way that sqlite3 acts as an encapsulated data store for a [http://fossil-scm.org Fossil repository]. This bypasses a number of problems related to file ownership and access rights when running over CGI. This level of concurrency would also allow us to safely implement SWIG-based wrappers for languages like PHP. A PHP wrapper could get the same benefits as a CGI apps - a safe data store which isn't going to have incorrect access rights when new files are created via the web interface.
 
-<h2>File locking (new as of 20090322, commit `#a373df92f8`)</h2>
+==File locking (new as of 20090322, commit `#a373df92f8`)==
 
 The engine currently supports only the most basic file locking:
 
@@ -34,7 +36,7 @@ The engine currently supports only the most basic file locking:
 
 There needs to be more granularity in this (record- or pseudofile-level locking, instead of container-level), but that is going to take a large effort and a larger amount of testing to ensure that it works as advertised. It also raises questions such as "how do we do an 'ls' if one of the inodes is write-locked at the time?"
 
-<h2>Specific problems vis-a-vis threading</h2>
+==Specific problems vis-a-vis threading==
 
 On the surface it would seem that we can lock a set of EFS operations using a mechanism like this:
 
