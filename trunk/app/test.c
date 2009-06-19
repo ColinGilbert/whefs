@@ -33,6 +33,37 @@ struct app_data {
     whefs_fs_options fsopts;
 } ThisApp;
 
+typedef struct
+{
+    size_t pos;
+} ForEachData;
+static const ForEachData ForEachDataInit = {0};
+
+int fs_entry_foreach( whefs_fs * fs, whefs_fs_entry const * ent, void * data )
+{
+    ForEachData * fd = (ForEachData *)data;
+    if( 1 == ++fd->pos )
+    {
+        printf("%-16s%-16s%-12s%-16s%-16s\n",
+               "Node ID:","First block:", "Size:", "Timestamp:","Name:" );
+    }
+    printf("%-16"WHEFS_ID_TYPE_PFMT"%-16"WHEFS_ID_TYPE_PFMT"%-12u%-16u%s\n",
+           ent->inode_id,
+           ent->block_id,
+           ent->size,
+           ent->mtime,
+           ent->name.string );
+
+    return whefs_rc.OK;
+}
+
+void do_foreach( whefs_fs * fs )
+{
+    ForEachData d = ForEachDataInit;
+    whefs_fs_entry_foreach( fs, fs_entry_foreach, &d );
+}
+
+
 int test_one()
 {
     MARKER("starting test\n");
@@ -238,6 +269,8 @@ int test_multiple_files()
     whefs_fclose( F );
 #endif
 
+    do_foreach(fs);
+
     whefs_fs_finalize( fs );
     MARKER("ending test\n");
     return 0;
@@ -294,6 +327,7 @@ int test_truncate()
     assert( whefs_fsize( F ) == (3 + truncSize) );
     whefs_fclose(F);
 
+    do_foreach(fs);
     whefs_fs_finalize( fs );
     MARKER("ending test\n");
     return 0;
@@ -550,7 +584,7 @@ int test_caching()
     printf("\n%u whefs_file objects were opened and closed, doing %u writes of %u bytes each.\n",objCount,writeCount,bufSize);
     //whefs_inode_hash_cache_chomp_lv(fs);
 #endif
-
+    do_foreach(fs);
     if( ! toFile )
     {
         fname = defaultFile;

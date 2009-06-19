@@ -132,7 +132,7 @@ int whefs_fs_dump_to_FILE( whefs_fs * fs, FILE * out )
     return rc;
 }
 
-int whefs_import( whefs_fs * fs, whio_dev * src, char const * fname, bool overwrite )
+int whefs_import_dev( whefs_fs * fs, whio_dev * src, char const * fname, bool overwrite )
 {
     if( ! fs || !src || !fname || !*fname ) return whefs_rc.ArgError;
     int rc = whefs_rc.OK;
@@ -220,6 +220,7 @@ int whefs_import( whefs_fs * fs, whio_dev * src, char const * fname, bool overwr
     const size_t impSize = whio_dev_size( imp );
     imp->api->finalize(imp);
     imp = 0;
+
     rc = whefs_rc.OK;
     if( totalR != totalW )
     {
@@ -251,8 +252,48 @@ int whefs_fs_dump_to_filename( whefs_fs * fs, char const * filename )
     return rc;
 }
 
+const whefs_fs_entry whefs_fs_entry_init = whefs_fs_entry_init_m;
+int whefs_fs_entry_foreach( whefs_fs * fs, whefs_fs_entry_foreach_f func, void * foreachData )
+{
+    if( ! fs || !func ) return whefs_rc.ArgError;
+    whefs_id_type i = 2;// skip root inode
+    whefs_inode n = whefs_inode_init;
+    int rc = whefs_rc.OK;
+    whefs_fs_entry ent = whefs_fs_entry_init;
+    enum { bufSize = whefs_sizeof_max_filename + 1 };
+    char buf[bufSize];
+    memset(buf,0,bufSize);
+    ent.name.string = buf;
+    ent.name.alloced = bufSize;
+    for( ; i <= fs->options.inode_count; ++i )
+    {
+	rc = whefs_inode_id_read( fs, i, &n );
+	if( whefs_rc.OK != rc ) break;
+	if( n.id != i )
+	{
+	    assert( 0 && "node id mismatch after whefs_inode_id_read()" );
+	    WHEFS_FIXME("Node id mismatch after successful whefs_inode_id_read(). Expected %"WHEFS_ID_TYPE_PFMT" but got %"WHEFS_ID_TYPE_PFMT".", i, n.id );
+	    rc = whefs_rc.InternalError;
+            break;
+	}
+        if( !( n.flags & WHEFS_FLAG_Used ) ) continue;
+        ent.inode_id = i;
+        ent.mtime = n.mtime;
+        ent.block_id = n.first_block;
+        ent.size = n.data_size;
+        rc = whefs_inode_name_get( fs, i, &ent.name );
+        if( whefs_rc.OK != rc ) break;
+        rc = func( fs, &ent, foreachData );
+        if( whefs_rc.OK != rc ) break;
+    }
+    assert( (ent.name.string == buf) && "Internal error: illegal (re)alloc on string bytes!");
+    return rc;
+}
+
+
 whefs_string * whefs_ls( whefs_fs * fs, char const * pattern, whefs_id_type * count  )
 {
+    // FIXME: reimplement in terms of whefs_fs_entry_foreach().
     if( ! fs ) return 0;
     const whefs_id_type nc = whefs_fs_options_get(fs)->inode_count;
     whefs_id_type id = 2; /* ID 1 is reserved for root node entry. */

@@ -1153,19 +1153,6 @@ bool whefs_fs_is_rw( whefs_fs const * restrict fs );
 int whefs_inode_hash_cache_chomp_lv( whefs_fs * fs );
 
 
-#if 0
-/**
-   Don't use yet - experimental.
-
-   This class will eventually be the public interface into filesystem entries.
-*/
-struct whefs_fs_entry
-{
-    whefs_id_type inode_id;
-    whefs_id_type first_block;
-    //whefs_string name;
-};
-#endif
 
 
 #ifdef __cplusplus
