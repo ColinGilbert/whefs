@@ -29,12 +29,13 @@ ENABLE_DEBUG := 1
 # The code is C99. How that's enabled/forced is compiler-dependent.
 # gcc needs -std=c99. Other compilers need other args. SunStudio:
 # -xc99=all, tcc: none
-ifeq (cc,$(CC))
+ifeq (cc,$(CC))# assume this is gcc (or compatible)
   CFLAGS += -std=c99 -pedantic -Wall
 endif
 ifeq (gcc,$(CC))
   CFLAGS += -std=c99
 endif
+CFLAGS += -Wimplicit-function-declaration
 
 
 ########################################################################
@@ -45,7 +46,7 @@ endif
 # unless you need to create whio_dev and/or whefs_fs-related objects
 # in multiple threads or you need to use multiple VFSs in separate
 # threads.
-ENABLE_STATIC_MALLOC := 1
+ENABLE_STATIC_MALLOC := 0
 
 ########################################################################
 # If WHIO_ENABLE_ZLIB is 1 then certain features requiring libz will
