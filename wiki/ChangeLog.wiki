@@ -5,6 +5,10 @@ This is the informal change list for whefs releases. Newest items are at the top
 
 ----
 
+*20 June 2009*
+  * Added `whefs_stream_open()` to provide sequential-only access to a pseudofile. This simplifies using pseudofiles together with `whio_stream_gzip()`, `whio_stream_copy()`, etc.
+  * Fixed Issue #6, where closing an EFS while there are open pseudofiles would leak a file/device handle. They are now closed automatically during `whefs_fs_finalize()` if the client fails to close them beforehand.
+
 *19 June 2009*
   * Added public `whefs_fs_entry` type and `whefs_fs_entry_foreach()` to iterate over all in-use EFS entries.
   *  First packaged release.
