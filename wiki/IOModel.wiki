@@ -1,7 +1,9 @@
 #summary Overview of the i/o model used by whefs.
 #labels Phase-Design,Category-Internals
 
-<h1>whefs' I/O Model</h1>
+<wiki:toc max_depth=3/>
+
+=Overview of whefs' I/O Model=
 
 whefs is, at its heart, all about input and output. It deals with i/o at two distinctly different levels:
 
@@ -19,3 +21,13 @@ Once whefs was refactored to use whio to abstract away the back-end storage, it 
 As mentioned above, there's nothing new or exciting about the i/o interface in and of itself. The exciting part is the freedom of storage options which it provides to whefs. As whio_dev wrappers are written for new storage types, whefs can immediately make use of them.
 
 Another benefit of using a generic i/o library for storage is that we can take advantage of "added value" features which that library provides. For example, whio provides some routines for compressing and decompressing <em>sequential</em> streams using gzip compression. In whio, sequential-access devices are modelled in a class called whio_stream, which is basically the same as whio_dev but stripped of features which require random access. whio provides a whio_stream implementation which can proxy any whio_dev into a sequential-access stream. Such a stream object can then be used with, e.g., the de/compression routines. This indirection allows us to compress pseudofiles using that same API, without requiring a single line of code in the whefs library. For example, it is trivial to write a program which reads from standard input (or some other source) and writes a gzip-compressed stream directly to a pseudofile. It is fairly simple to create new whio_stream classes to provide custom filtering, and as those are created they can be used with pseudofiles in the same manner as any other stream.
+
+=Abstract Costs of the I/O Model=
+
+Almost any time a proverbial "level of abstraction" is added, there is a cost associated with it, especially if the abstraction is overly-generic. In whefs the more prominent "abstraction penalties" related to the I/O model can be summarized as follows:
+
+  * The library performs many more `seek()` operations than would be necessary if we optimized for a single storage interface (e.g. `FILE` handles). The object-oriented nature of the I/O API requires that we do many `seek()` and `tell()` operations to ensure consistency in the underlying device cursor across API calls in the whefs kernel. Every `write()` operation on an EFS has at least two seeks associated with it, and possibly more.
+  * There can be no unified interface for integrating device-dependent features, such as file locking. The I/O API contains an `ioctl()`-like interface for activating device-specific features, but the whefs kernel cannot assume that any given device supports a specific feature.
+  * We cannot rely on any given underlying I/O device to support thread-private cursor data, which may complicate the implementation of any eventual thread-locking mechanisms in whefs.
+
+The whio API has very low memory costs, so we won't count that as a penalty. The obvious exceptions to that rule are in-memory I/O devices, which need RAM for their storage and can be arbitrarily large.
