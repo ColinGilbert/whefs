@@ -24,7 +24,8 @@
 #include <wh/whefs/whefs.h>
 #include "whefs_inode.h"
 #include "whdbg.h"
-#include <wh/whio/whio_devs.h>
+#include <wh/whio/whio_dev.h>
+#include <wh/whio/whio_stream.h>
 #include "whbits.h"
 #include "whefs_encode.h"
 #include "whefs_hash.h"
@@ -129,6 +130,122 @@ WHEFS_SZ_OPTIONS,
 WHEFS_SZ_COUNT /* must be the last entry! */
 };
 
+/**
+   For use with whefs_fs_closer_list::type.
+*/
+enum whefs_fs_closer_types {
+/** Type flag for whefs_file objects. */
+WHEFS_CLOSE_TYPE_FILE = 'f',
+/** Type flag for whio_dev objects. */
+WHEFS_CLOSE_TYPE_DEV = 'd',
+/** Type flag for whio_stream objects. */
+WHEFS_CLOSE_TYPE_STREAM = 's'
+};
+/** @struct whefs_fs_closer_list
+
+   A type for holding a list of "opened objects" which refer to
+   underlying opened inodes.  We have this list only so that
+   whefs_fs_finalize() can clean up opened handles if the client did
+   not do so before finalizing the fs.
+
+   How to safely close an object depends on how it was opened,
+   i.e. what type it is. The factory function responsible for
+   associating i/o-related objects with inodes must add their
+   objects to fs->closers when they are opened and remove
+   them from fs->closers when they are closed. If the fs is
+   shut down before the client closes the objects in that list
+   then whefs_fs_finalize() closes them all.
+   
+*/
+struct whefs_fs_closer_list
+{
+    /** Value from enum whefs_fs_closer_types. */
+    char type;
+    /**
+       The object pointed to by this object. It MUST be properly set
+       to the same object type set in the 'type' member. See the
+       whefs_fs_closer_types enum.
+    */
+    union
+    {
+        whio_dev * dev;
+        whio_stream * stream;
+        whefs_file * file;
+    } item;
+    /** Next entry in the list. */
+    struct whefs_fs_closer_list * next;
+    /** Previous entry in the list. */
+    struct whefs_fs_closer_list * prev;
+};
+typedef struct whefs_fs_closer_list whefs_fs_closer_list;
+
+/** Empty initialize object for whefs_fs_closer_list instances. */
+#define whefs_fs_closer_list_init_m { 0/*type*/,{/*item*/NULL},NULL/*next*/}
+
+/** Empty initialize object for whefs_fs_closer_list instances. */
+extern const whefs_fs_closer_list whefs_fs_closer_list_init;
+
+/**
+   Allocates a new whefs_fs_closer_list instance containing
+   zero-initialized values.
+*/
+whefs_fs_closer_list * whefs_fs_closer_list_alloc();
+
+/**
+   Frees x and re-links its neighbors to one-another.
+*/
+void whefs_fs_closer_list_free( whefs_fs_closer_list * x );
+
+/**
+   Closes the item referenced by head. If right is true then
+   all items to the right of head are also closed.
+*/
+int whefs_fs_closer_list_close( whefs_fs_closer_list * head, bool right );
+
+/**
+   Adds f to fs's close-at-shutdown list. Since a whefs_file is
+   just a small wrapper around a whio_dev specialization,
+   this routine requires that an entry already exists for
+   f->dev in fs->closers. If that entry is found then it is
+   "promoted" to a WHEFS_CLOSE_TYPE_FILE entry, so that
+   whefs_fclose() will be used to free the entry (which includes
+   the f->dev).
+
+   Returns whefs_rc.OK on success.
+*/
+int whefs_fs_closer_file_add( whefs_fs * fs, whefs_file * f );
+
+/**
+   Removes f from fs's close-at-shutdown list.
+
+   Returns whefs_rc.OK on success. Not finding an entry is considered
+   success because this is normal behaviour when the close-list is
+   cleaned up as part of the shutdown process.
+*/
+int whefs_fs_closer_file_remove( whefs_fs * fs, whefs_file * f );
+
+/**
+   Adds d to fs's close-at-shutdown list.
+*/
+int whefs_fs_closer_dev_add( whefs_fs * fs, whio_dev * d );
+/**
+   Removes d from fs's close-at-shutdown list.
+
+   See whefs_fs_closer_file_remove() for more info.
+*/
+int whefs_fs_closer_dev_remove( whefs_fs * fs, whio_dev * d );
+
+/**
+   Adds s to fs's close-at-shutdown list.
+*/
+int whefs_fs_closer_stream_add( whefs_fs * fs, whio_stream * s );
+
+/**
+   Removes s from fs's close-at-shutdown list.
+
+   See whefs_fs_closer_file_remove() for more info.
+*/
+int whefs_fs_closer_stream_remove( whefs_fs * fs, whio_stream * s );
 
 /**
    Main filesystem structure.
@@ -178,6 +295,7 @@ struct whefs_fs
        All "opened" inodes are store in this linked list.
     */
     whefs_inode_list * opened_nodes;
+    whefs_fs_closer_list * closers;
     /**
        IFF the fs thinks that it is using file-based storage it may
        try to enable some locking features. This is the file number of

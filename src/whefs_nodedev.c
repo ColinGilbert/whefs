@@ -839,6 +839,7 @@ static bool whio_dev_inode_close( whio_dev * dev )
 	whio_dev_inode_meta * meta = (whio_dev_inode_meta*)dev->impl.data;
 	if( meta )
 	{
+            whefs_fs_closer_dev_remove( meta->fs, dev );
 	    dev->impl.data = 0;
             if( meta->rw ) dev->api->flush(dev);
 	    if(0) WHEFS_DBG_FYI("Closing i/o %s device for inode #%u. "
@@ -940,6 +941,7 @@ whio_dev * whefs_dev_for_inode( whefs_fs * fs, whefs_id_type nid, bool writeMode
 	whefs_inode_flush( fs, meta->inode ); /* make sure on-disk matches */
     }
 #endif
+    whefs_fs_closer_dev_add( fs, dev );
     return dev;
 }
 
