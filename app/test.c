@@ -265,11 +265,13 @@ int test_multiple_files()
 
 
 
-#if 1//set this to 0 to test a leak:
-    whefs_fclose( F );
-#endif
-
     do_foreach(fs);
+
+#if 1//set this to 0 to test fs' close-on-shutdown anti-leak check:
+    whefs_fclose( F );
+#else
+    MARKER("You may see a warning next regarding unclosed objects. This is to test a memory leak.\n");
+#endif
 
     whefs_fs_finalize( fs );
     MARKER("ending test\n");
@@ -597,6 +599,46 @@ int test_caching()
 }
 
 
+int test_streams()
+{
+    whefs_fs_options fopt = whefs_fs_options_default;
+    whefs_fs * fs = 0;
+    char const * fname = "streams.whefs";
+    int rc = whefs_mkfs( fname, &fopt, &fs );
+    MARKER("mkfs([%s]) rc=%d\n",fname,rc);
+    assert((rc == whefs_rc.OK) && "mkfs failed :(" );
+    whefs_fs_dump_info( fs, stdout );
+    MARKER("mkfs([%s]) worked.\n",fname);
+
+    char const * pfile = "astream.out";
+
+    whio_stream * out = whefs_stream_open( fs, pfile, true, false );
+    assert(out);
+    char const * str = "Hi, world!";
+    size_t slen = strlen(str);
+    out->api->write( out, str, slen );
+    out->api->finalize(out);
+    do_foreach(fs);
+    out = whefs_stream_open( fs, pfile, true, true );
+    out->api->write( out, str, slen );
+    out->api->flush(out);
+#if 0
+    out->api->finalize(out);
+#else
+    MARKER("You may see a warning next regarding unclosed objects. This is to test a memory leak.\n");
+#endif
+
+    whio_dev * dev = whefs_dev_open( fs, pfile, false );
+    assert(dev);
+    assert( (2*slen) == whio_dev_size(dev) );
+    dev->api->finalize( dev );
+
+    do_foreach(fs);
+
+    whefs_fs_finalize(fs);
+    return 0;
+}
+
 int main( int argc, char const ** argv )
 {
     WHEFSApp.usageText = "[flags]";
@@ -615,6 +657,7 @@ int main( int argc, char const ** argv )
     if(!rc) rc = test_one();
     if(!rc) rc =  test_ramfs();
     if(!rc) rc =  test_multiple_files();
+    if(!rc) rc = test_streams();
     if(!rc) rc =  test_truncate();
     if(!rc) rc =  test_caching();
     printf("Done rc=%d=[%s].\n",rc,
