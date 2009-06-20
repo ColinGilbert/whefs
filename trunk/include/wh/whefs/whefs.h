@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <wh/whio/whio_dev.h>
+#include <wh/whio/whio_stream.h>
 
 //Doxygen won't allow us to have both @page and @mainpage, which is problematic
 //when we re-use headers in different projects which also use doxygen.
@@ -560,6 +561,22 @@ whefs_file * whefs_fopen( whefs_fs * restrict fs, char const * name, char const 
    @see whefs_dev_close()
 */
 whio_dev * whefs_dev_open( whefs_fs * restrict fs, char const * name, bool writeMode );
+
+/**
+   Similar to whefs_dev_open(), but returns a whio_stream object
+   instead of a whio_object. If writeMode is true and append is true
+   then the pseudofile's cursor is placed at the end of the file,
+   otherwise the append argument is ignored.
+
+   Unlike whefs_fopen(), there is no way to get a handle to the
+   underlying random-access i/o device. If you need access to both a
+   streaming and random-access for a given pseudofile, you can open it
+   using whefs_dev_open() or whefs_fopen(), then pass the device
+   object to whio_stream_for_dev(). Note, however, that mixing random
+   and sequential access that way may lead to confusing or incorrect
+   results, as the objects share an underlying file cursor.
+*/
+whio_stream * whefs_stream_open( whefs_fs * fs, char const * name, bool writeMode, bool append );
 
 /**
    Returns the i/o device associated with f, or 0 if !f. 
