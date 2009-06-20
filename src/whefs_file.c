@@ -8,7 +8,7 @@
 #include <stdlib.h> /* malloc() and friends */
 #include <string.h> /* strchr() */
 #include "whefs_details.c"
-
+#include <wh/whio/whio_streams.h> /* whio_stream_for_dev() */
 
 #define WHEFS_FILE_INIT { \
     0, /* fs */ \
@@ -239,6 +239,66 @@ whio_dev * whefs_dev_open( whefs_fs * fs, char const * name, bool writeMode )
     }
     return dev;
 }
+
+
+/**
+   Internal type to allow us to properly disconnect a whio_stream
+   object from close-at-shutdown without needing to add a custom
+   whio_stream implementation.
+*/
+typedef struct
+{
+    whefs_fs * fs;
+    whio_stream const * stream;
+} whefs_stream_closer_kludge;
+
+/** v must be-a populated whefs_stream_closer_kludge.
+    Removes v->stream from fs' closer list and frees
+    v.
+*/
+static void whefs_stream_closer_kludge_dtor( void * v )
+{
+    if(0) whefs_stream_closer_kludge_dtor(0); /* avoid "static func defined but not used" warning. */
+    if(v)
+    {
+        //WHEFS_DBG("Removing whio_stream from closer list.");
+        whefs_stream_closer_kludge * k = (whefs_stream_closer_kludge*)v;
+        whefs_fs_closer_stream_remove( k->fs, k->stream );
+        free( k );
+    }
+}
+
+whio_stream * whefs_stream_open( whefs_fs * fs, char const * name, bool writeMode, bool append )
+{
+    whio_dev * d = whefs_dev_open( fs, name, writeMode );
+    if( ! d ) return 0;
+    if( writeMode && append )
+    {
+        d->api->seek( d, 0L, SEEK_END );
+    }
+    whefs_stream_closer_kludge * k = (whefs_stream_closer_kludge*)malloc(sizeof(whefs_stream_closer_kludge));
+    if( ! k )
+    {
+        d->api->finalize(d);
+        return 0;
+    }
+    whio_stream * s = whio_stream_for_dev( d, true );
+    if( ! s )
+    {
+        free(k);
+        d->api->finalize(d);
+    }
+    else
+    {
+        k->fs = fs;
+        k->stream = s;
+        whefs_fs_closer_stream_add( fs, s, d );
+        d->client.data = k;
+        d->client.dtor = whefs_stream_closer_kludge_dtor;
+    }
+    return s;
+}
+
 
 whio_dev * whefs_fdev( whefs_file * restrict f )
 {

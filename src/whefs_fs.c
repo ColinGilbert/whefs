@@ -86,7 +86,7 @@ static int whefs_fs_closer_remove( whefs_fs * fs, char type, void const * obj )
 {
     if( ! fs || ! obj ) return whefs_rc.ArgError;
     whefs_fs_closer_list * li = fs->closers;
-    if( ! li ) return whefs_rc.InternalError;
+    if( ! li ) return whefs_rc.RangeError;
     while( li->prev ) li = li->prev;
     int rc = whefs_rc.OK;
     bool foundOne = false;
@@ -179,7 +179,7 @@ int whefs_fs_closer_file_add( whefs_fs * fs, whefs_file * f )
     return whefs_rc.OK;
 }
 
-int whefs_fs_closer_file_remove( whefs_fs * fs, whefs_file * f )
+int whefs_fs_closer_file_remove( whefs_fs * fs, whefs_file const * f )
 {
     return whefs_fs_closer_remove( fs, WHEFS_CLOSE_TYPE_FILE, f );
 }
@@ -192,20 +192,41 @@ int whefs_fs_closer_dev_add( whefs_fs * fs, whio_dev * d )
     li->item.dev = d;
     return whefs_rc.OK;
 }
-int whefs_fs_closer_dev_remove( whefs_fs * fs, whio_dev * d )
+int whefs_fs_closer_dev_remove( whefs_fs * fs, whio_dev const * d )
 {
     return whefs_fs_closer_remove( fs, WHEFS_CLOSE_TYPE_DEV, d );
 }
 
-int whefs_fs_closer_stream_add( whefs_fs * fs, whio_stream * s )
+int whefs_fs_closer_stream_add( whefs_fs * fs, whio_stream * s, whio_dev const * d )
 {
-    if( ! fs || ! s ) return whefs_rc.ArgError;
-    whefs_fs_closer_list * li = whefs_fs_closer_add(fs);
-    li->type = WHEFS_CLOSE_TYPE_STREAM;
-    li->item.stream = s;
+    if( ! fs || ! s || !d ) return whefs_rc.ArgError;
+    whefs_fs_closer_list * li = fs->closers;
+    if( li )
+    { /** If we find f->dev in the list then we
+          promote the entry to type WHEFS_CLOSE_TYPE_STREAM.
+      */
+        while( li->prev ) li = li->prev;
+        for( ; li ; li = li->next )
+        {
+            if( li->type != WHEFS_CLOSE_TYPE_DEV ) continue;
+            if( d != li->item.dev ) continue;
+            li->type = WHEFS_CLOSE_TYPE_STREAM;
+            li->item.stream = s;
+            break;
+        }
+        if( ! li ) return whefs_rc.RangeError;
+    }
+    else
+    { /* re-evaluate this. Is this sane? */
+        whefs_fs_closer_list * li = whefs_fs_closer_add(fs);
+        if( ! li ) return whefs_rc.AllocError /* that's a guess */;
+        li->type = WHEFS_CLOSE_TYPE_STREAM;
+        li->item.stream = s;
+    }
     return whefs_rc.OK;
 }
-int whefs_fs_closer_stream_remove( whefs_fs * fs, whio_stream * s )
+
+int whefs_fs_closer_stream_remove( whefs_fs * fs, whio_stream const * s )
 {
     return whefs_fs_closer_remove( fs, WHEFS_CLOSE_TYPE_STREAM, s );
 }

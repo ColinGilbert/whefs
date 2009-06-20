@@ -222,7 +222,7 @@ int whefs_fs_closer_file_add( whefs_fs * fs, whefs_file * f );
    success because this is normal behaviour when the close-list is
    cleaned up as part of the shutdown process.
 */
-int whefs_fs_closer_file_remove( whefs_fs * fs, whefs_file * f );
+int whefs_fs_closer_file_remove( whefs_fs * fs, whefs_file const * f );
 
 /**
    Adds d to fs's close-at-shutdown list.
@@ -233,19 +233,21 @@ int whefs_fs_closer_dev_add( whefs_fs * fs, whio_dev * d );
 
    See whefs_fs_closer_file_remove() for more info.
 */
-int whefs_fs_closer_dev_remove( whefs_fs * fs, whio_dev * d );
+int whefs_fs_closer_dev_remove( whefs_fs * fs, whio_dev const * d );
 
 /**
-   Adds s to fs's close-at-shutdown list.
+   Adds s to fs's close-at-shutdown list. s MUST be a proxy for the
+   whio_dev d and d MUST have been added to fs via
+   whefs_fs_closer_dev_add(), or results are undefined.
 */
-int whefs_fs_closer_stream_add( whefs_fs * fs, whio_stream * s );
+int whefs_fs_closer_stream_add( whefs_fs * fs, whio_stream * s, whio_dev const * d );
 
 /**
    Removes s from fs's close-at-shutdown list.
 
    See whefs_fs_closer_file_remove() for more info.
 */
-int whefs_fs_closer_stream_remove( whefs_fs * fs, whio_stream * s );
+int whefs_fs_closer_stream_remove( whefs_fs * fs, whio_stream const * s );
 
 /**
    Main filesystem structure.
