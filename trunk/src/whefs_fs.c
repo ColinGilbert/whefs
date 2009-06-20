@@ -24,6 +24,194 @@
 #  include <fcntl.h>
 #endif
 
+const whefs_fs_closer_list whefs_fs_closer_list_init = whefs_fs_closer_list_init_m;
+
+whefs_fs_closer_list * whefs_fs_closer_list_alloc()
+{
+    whefs_fs_closer_list * x = (whefs_fs_closer_list*)malloc(sizeof(whefs_fs_closer_list));
+    if( x ) *x = whefs_fs_closer_list_init;
+    return x;
+}
+
+/**
+   Unlinks x from its neighbors.
+*/
+static void whefs_fs_closer_list_unlink( whefs_fs_closer_list * x )
+{
+    if( x->prev ) { x->prev->next = x->next; x->prev = 0; }
+    if( x->next ) { x->next->prev = x->prev; x->next = 0; }
+}
+void whefs_fs_closer_list_free( whefs_fs_closer_list * x )
+{
+    if( ! x ) return;
+    whefs_fs_closer_list_unlink( x );
+    *x = whefs_fs_closer_list_init;
+    free(x);
+}
+
+int whefs_fs_closer_list_close( whefs_fs_closer_list * head, bool right )
+{
+    if( ! head ) return whefs_rc.ArgError;
+    int rc = whefs_rc.OK;
+    whefs_fs_closer_list * x = head;
+    for( ; x; head = x )
+    {
+        x = head->next;
+        switch( head->type )
+        {
+          case WHEFS_CLOSE_TYPE_FILE:
+              whefs_fs_closer_list_unlink(head);
+              whefs_fclose( head->item.file );
+              break;
+          case WHEFS_CLOSE_TYPE_DEV:
+              whefs_fs_closer_list_unlink(head);
+              head->item.dev->api->finalize( head->item.dev );
+              break;
+          case WHEFS_CLOSE_TYPE_STREAM:
+              whefs_fs_closer_list_unlink(head);
+              head->item.stream->api->finalize( head->item.stream );
+              break;
+          default:
+              WHEFS_DBG_ERR("Internal error whefs_fs_closer_list entry does not have a supported type field. Possibly leaking an object here!");
+              rc = whefs_rc.InternalError;
+              break;
+        };
+        whefs_fs_closer_list_free(head);
+        if( ! right ) break;
+    }
+    return rc;
+}
+
+static int whefs_fs_closer_remove( whefs_fs * fs, char type, void const * obj )
+{
+    if( ! fs || ! obj ) return whefs_rc.ArgError;
+    whefs_fs_closer_list * li = fs->closers;
+    if( ! li ) return whefs_rc.InternalError;
+    while( li->prev ) li = li->prev;
+    int rc = whefs_rc.OK;
+    bool foundOne = false;
+    for( ; li ; li = li->next )
+    {
+        if( li->type != type ) continue;
+        switch( type )
+        {
+          case WHEFS_CLOSE_TYPE_FILE:
+              if( (void const *)li->item.file != obj ) continue;
+              foundOne = true;
+              break;
+          case WHEFS_CLOSE_TYPE_DEV:
+              if( (void const *)li->item.dev != obj ) continue;
+              foundOne = true;
+              break;
+          case WHEFS_CLOSE_TYPE_STREAM:
+              if( (void const *)li->item.stream != obj ) continue;
+              foundOne = true;
+              break;
+          default:
+              WHEFS_DBG_ERR("Internal error whefs_fs_closer_list entry does not have a supported type field.");
+              rc = whefs_rc.InternalError;
+              break;
+        };
+        if( foundOne )
+        {
+            if( fs->closers == li )
+            {
+                fs->closers = li->prev ? li->prev : li->next;
+            }
+            whefs_fs_closer_list_free( li );
+            li = 0;
+            break;
+        }
+    }
+    return rc;
+}
+
+
+/**
+   Creates a new, empty whefs_fs_closer_list object and
+   appends it to fs->closers.
+*/
+static whefs_fs_closer_list * whefs_fs_closer_add( whefs_fs * fs )
+{
+    if( ! fs ) return NULL;
+    whefs_fs_closer_list * li = whefs_fs_closer_list_alloc();
+    if( ! li ) return NULL;
+    if( ! fs->closers )
+    {
+        fs->closers = li;
+    }
+    else
+    {
+        whefs_fs_closer_list * tail = fs->closers;
+        while( tail->next ) tail = tail->next;
+        tail->next = li;
+        li->prev = tail;
+    }
+    return li;
+}
+
+
+int whefs_fs_closer_file_add( whefs_fs * fs, whefs_file * f )
+{
+    if( ! fs || ! f ) return whefs_rc.ArgError;
+    whefs_fs_closer_list * li = fs->closers;
+    if( li )
+    { /** If we find f->dev in the list then we
+          promote the entry to type WHEFS_CLOSE_TYPE_FILE.
+      */
+        while( li->prev ) li = li->prev;
+        for( ; li ; li = li->next )
+        {
+            if( li->type != WHEFS_CLOSE_TYPE_DEV ) continue;
+            if( li->item.dev != f->dev ) continue;
+            li->type = WHEFS_CLOSE_TYPE_FILE;
+            li->item.file = f;
+            break;
+        }
+    }
+    else
+    {
+        whefs_fs_closer_list * li = whefs_fs_closer_add(fs);
+        if( ! li ) return whefs_rc.AllocError /* that's a guess */;
+        li->type = WHEFS_CLOSE_TYPE_FILE;
+        li->item.file = f;
+    }
+    return whefs_rc.OK;
+}
+
+int whefs_fs_closer_file_remove( whefs_fs * fs, whefs_file * f )
+{
+    return whefs_fs_closer_remove( fs, WHEFS_CLOSE_TYPE_FILE, f );
+}
+
+int whefs_fs_closer_dev_add( whefs_fs * fs, whio_dev * d )
+{
+    if( ! fs || ! d ) return whefs_rc.ArgError;
+    whefs_fs_closer_list * li = whefs_fs_closer_add(fs);
+    li->type = WHEFS_CLOSE_TYPE_DEV;
+    li->item.dev = d;
+    return whefs_rc.OK;
+}
+int whefs_fs_closer_dev_remove( whefs_fs * fs, whio_dev * d )
+{
+    return whefs_fs_closer_remove( fs, WHEFS_CLOSE_TYPE_DEV, d );
+}
+
+int whefs_fs_closer_stream_add( whefs_fs * fs, whio_stream * s )
+{
+    if( ! fs || ! s ) return whefs_rc.ArgError;
+    whefs_fs_closer_list * li = whefs_fs_closer_add(fs);
+    li->type = WHEFS_CLOSE_TYPE_STREAM;
+    li->item.stream = s;
+    return whefs_rc.OK;
+}
+int whefs_fs_closer_stream_remove( whefs_fs * fs, whio_stream * s )
+{
+    return whefs_fs_closer_remove( fs, WHEFS_CLOSE_TYPE_STREAM, s );
+}
+
+
+
 #define WHEFS_LOAD_CACHES_ON_OPEN 1 /* make sure and test whefs-cp and friends if setting this to 0. */
 #if ! WHEFS_LOAD_CACHES_ON_OPEN
 #  warning "(0==WHEFS_LOAD_CACHES_ON_OPEN) is is known to cause bugs. Fix it!"
@@ -89,6 +277,7 @@ and is complicated by the voodoo we use to store the strings inside whefs_fs::ca
     true, /* ownsDev */ \
     0, /* filesize */ \
     0, /* opened_nodes */ \
+    0, /* closers */ \
     0, /* fileno */ \
     WHEFS_FS_STRUCT_BITS,    \
     WHEFS_FS_STRUCT_HINTS,   \
@@ -304,6 +493,17 @@ void whefs_fs_finalize( whefs_fs * restrict fs )
 {
     if( ! fs ) return;
     whefs_fs_flush(fs);
+    if( fs->closers )
+    {
+	WHEFS_DBG_WARN("We're closing with opened objects! Closing them...");
+        while( fs->closers->prev )
+        {
+            fs->closers = fs->closers->prev;
+        }
+        whefs_fs_closer_list * x = fs->closers;
+        fs->closers = 0;
+        whefs_fs_closer_list_close( x, true );
+    }
     if( fs->opened_nodes )
     {
 	WHEFS_DBG_WARN("We're closing with opened inodes! Closing them...");
@@ -1383,6 +1583,7 @@ void whefs_fs_dump_info( whefs_fs const * restrict fs, FILE * out )
     X(whefs_block),
     X(whefs_hashid),
     X(whefs_hashid_list),
+    X(whefs_fs_closer_list),
     {0,0}
     };
 #undef X

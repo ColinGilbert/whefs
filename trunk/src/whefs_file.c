@@ -195,6 +195,10 @@ whefs_file * whefs_fopen( whefs_fs * fs, char const * name, char const * mode )
 	whefs_fclose( f );
 	f = 0;
     }
+    else
+    {
+        whefs_fs_closer_file_add( fs, f );
+    }
     //WHEFS_DBG("opened whefs_file [%s]. mode=%s, flags=%08x", name, mode, f->flags );
     return f;
 }
@@ -273,7 +277,8 @@ int whefs_fclose( whefs_file * restrict f )
     int rc = f ? whefs_rc.OK : whefs_rc.ArgError;
     if( whefs_rc.OK == rc )
     {
-	if( WHEFS_FILE_ISOPENED(f) ) whefs_fs_flush( f->fs );
+        whefs_fs_closer_file_remove( f->fs, f );
+	if( WHEFS_FILE_ISRW(f) && WHEFS_FILE_ISOPENED(f) ) whefs_fs_flush( f->fs );
 	if( f->dev ) f->dev->api->finalize(f->dev);
 	whefs_file_free(f);
     }
