@@ -25,6 +25,7 @@ It works by creating a "filesystem" inside a so-called container file (or in mem
    *  Has very liberal, non-viral licensing conditions, unhindered by licensing restrictions (or warranties, for that matter!). Googling has revealed little open-source work on embedded filesystems (but lots of commercial products), and i have been unable to find a comparable library released under non-restrictive (or non-viral) licensing terms.
    *  Designed to be easy to copy directly into a client source tree. See [WhefsAmalgamation the amalgamation page] for details.
    *  Fairly rigorous consistency and bounds checking - it bails out of it finds the slightest hint of foul play. (Just remember to check the error codes! They're there for a reason!)
+   *  It gets run through [http://www.valgrind.org/ Valgrind] often to ensure that it doesn't leak memory.
 
 =Misfeatures=
 
