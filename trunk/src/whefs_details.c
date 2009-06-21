@@ -707,6 +707,10 @@ struct whefs_file
        inode ID. To be phased out.
     */
     whefs_id_type inode;
+    /** This is only so whefs_file_name_get() will work. It
+        may go away.
+    */
+    whefs_string name;
 };
 /** Empty initialization object. */
 extern const whefs_file whefs_file_init;

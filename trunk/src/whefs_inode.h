@@ -143,7 +143,7 @@ typedef struct whefs_inode
     */
     whefs_block_list blocks;
     /** Transient string used only by opened nodes. */
-    whefs_string name;
+    //whefs_string name;
 } whefs_inode;
 
 /** Empty inode initialization object. */
@@ -155,10 +155,8 @@ typedef struct whefs_inode
         0, /* mtime */ \
         0, /* open_count */ \
         0, /* writer */ \
-	whefs_block_list_init_m /*blocks */, \
-        whefs_string_init_m /* name */ \
+	whefs_block_list_init_m /*blocks */ \
     }
-
 /** Empty inode initialization object. */
 extern const whefs_inode whefs_inode_init;
 
@@ -200,14 +198,15 @@ extern const whefs_inode_list whefs_inode_list_init;
    WARNING: if nid is already opened, then tgt is overwritten with a
    copy of that object (possibly getting older data if the inode
    hasn't been flushed recently). This means that updates to
-   tgt->open_count and tgt->name will not be accurately synced between
-   tgt and the original copy, which can lead to bugs if updates are
-   made directly to tgt. If you want to update an opened inode, use
-   whefs_inode_search_opened() to see if the node is opened.
+   tgt->open_count, tgt->blocks (which is NOT copied), etc. will not
+   be accurately synced between tgt and the original copy, which can
+   lead to bugs if updates are made directly to tgt. If you want to
+   update an opened inode, use whefs_inode_search_opened() to see if
+   the node is opened.
 
-   The name of the inode is not copied to tgt because it would require
-   (A) a malloc() and (B) that the client clean it up (and most calls
-   to the routine do not use the name). To fetch the name, use
+   The name of the inode is not fetched because it would require (A) a
+   malloc() and (B) that the client clean it up (and most callers of
+   this routine do not use the name). To fetch the name, use
    whefs_inode_name_get().
 
    @see whefs_inode_name_get()
@@ -324,19 +323,13 @@ int whefs_inode_flush( whefs_fs * fs, whefs_inode const * n );
 int whefs_inode_next_free( whefs_fs * restrict fs, whefs_inode * restrict tgt, bool markUsed );
 
 /**
-   Searches fs for an inode with the given name. On success, tgt is updated to
-   that inode's state and whefs_rc.OK is returned, otherwise some other value
-   is returned.
+   Searches fs for an inode with the given name. On success, tgt is
+   updated to (a copy of) that inode's state and whefs_rc.OK is
+   returned, otherwise some other value is returned.
 
    Bugs:
 
    - Directory structures are not yet supported.
-
-   Maybe bugs:
-
-   - tgt->name is NOT populated. The reason is because it's too easy to
-   leak the memory if its allocated from here. To get the name use
-   whefs_inode_name_get().
 */
 int whefs_inode_by_name( whefs_fs * fs, char const * name, whefs_inode * tgt );
 

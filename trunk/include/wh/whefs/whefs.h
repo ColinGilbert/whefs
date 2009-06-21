@@ -1062,8 +1062,13 @@ int whefs_file_name_set( whefs_file * restrict f, char const * newName );
    The returned string is guaranteed to be no longer than
    whefs_fs_options_get(whefs_file_fs(f))->filename_length
    characters (not including the trailing null).
+
+
+   Maintenance reminder: f is only non-const for very silly
+   internal reasons (namely whefs_file::name, which needs
+   to go away).
 */
-char const * whefs_file_name_get( whefs_file const * restrict f );
+char const * whefs_file_name_get( whefs_file * restrict f );
 
 /**
    Returns a static string with the URL of the whefs home page.
