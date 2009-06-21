@@ -170,6 +170,8 @@ WHEFS_MAX_FILENAME_LENGTH = 128,
 
 The relatively low value of WHEFS_MAX_FILENAME_LENGTH is largely historic in nature. A value of 512 or 1024 is being considered, and may be necessary as long as whefs does not support directories.
 
+This value is used quite often in the library for allocating string buffers on the stack (which can be used to avoid a `malloc()` in many cases), so it should not be set to a huge value.
+
 ==WHIO_CONFIG_ENABLE_STATIC_MALLOC and WHEFS_CONFIG_ENABLE_STATIC_MALLOC==
 
 These macros are defined in [http://code.google.com/p/whefs/source/browse/trunk/include/wh/whio/whio_config.h whio_config.h] and [http://code.google.com/p/whefs/source/browse/trunk/include/wh/whefs/whefs_config.h whefs_config.h], respectively, but can be set by the client at library compile time.
