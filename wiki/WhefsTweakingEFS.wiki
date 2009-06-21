@@ -145,7 +145,7 @@ WHEFS_MAX_FILENAME_LENGTH is a constant number (an enum value) which is explaine
 /**
    WHEFS_MAX_FILENAME_LENGTH defines the hard maximum string length
    for filenames in a vfs, not including the null terminator. This
-   does not include the names of any parent directories.
+   currently includes the names of any parent directories.
 
    whefs_fs_options::filename_length must not be greater than this
    number.
