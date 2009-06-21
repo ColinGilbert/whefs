@@ -59,7 +59,7 @@ typedef struct whio_dev_subdev_meta
     }
 static const whio_dev_subdev_meta whio_dev_subdev_meta_init = WHIO_DEV_SUBDEV_META_INIT;
 
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
 enum {
 /**
    The number of elements to statically allocate
@@ -77,7 +77,7 @@ static struct
 whio_dev_subdev_meta * whio_dev_subdev_meta_alloc()
 {
     whio_dev_subdev_meta * obj = 0;
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
     size_t i = 0;
     for( ; i < whio_dev_subdev_meta_alloc_count; ++i )
     {
@@ -88,14 +88,14 @@ whio_dev_subdev_meta * whio_dev_subdev_meta_alloc()
 	//WHIO_DEBUG("Allocated device #%u @0x%p\n", i, (void const *)obj );
 	break;
     }
-#endif /* WHIO_USE_STATIC_MALLOC */
+#endif /* WHIO_CONFIG_ENABLE_STATIC_MALLOC */
     if( ! obj ) obj = (whio_dev_subdev_meta *) malloc( sizeof(whio_dev_subdev_meta) );
     return obj;
 }
 
 void whio_dev_subdev_meta_free( whio_dev_subdev_meta * obj )
 {
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
     if( (obj < &whio_dev_subdev_meta_alloc_slots.objs[0]) ||
 	(obj > &whio_dev_subdev_meta_alloc_slots.objs[whio_dev_subdev_meta_alloc_count-1]) )
     { /* it does not belong to us */
@@ -124,7 +124,7 @@ void whio_dev_subdev_meta_free( whio_dev_subdev_meta * obj )
     }
 #else
     free(obj);
-#endif /* WHIO_USE_STATIC_MALLOC */
+#endif /* WHIO_CONFIG_ENABLE_STATIC_MALLOC */
 }
 
 

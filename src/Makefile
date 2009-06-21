@@ -4,9 +4,11 @@ include ../config.make
 
 
 ifeq (1,$(ENABLE_STATIC_MALLOC))
-  CPPFLAGS += -DWHIO_USE_STATIC_MALLOC=1
+whio.o whio%.o: CPPFLAGS+=-DWHIO_CONFIG_ENABLE_STATIC_MALLOC=1
+whefs.o whefs%.o: CPPFLAGS+=-DWHEFS_CONFIG_ENABLE_STATIC_MALLOC=1
 else
-  CPPFLAGS += -DWHIO_USE_STATIC_MALLOC=0
+whio.o whi%.o: CPPFLAGS+=-DWHIO_CONFIG_ENABLE_STATIC_MALLOC=0
+whefs.o whefs%.o: CPPFLAGS+=-DWHEFS_CONFIG_ENABLE_STATIC_MALLOC=0
 endif
 
 
@@ -37,6 +39,7 @@ WHEFS_SOURCES := \
 	whefs_encode.c \
 	whefs_file.c \
 	whefs_fs.c \
+	whefs_fs_closer.c \
 	whefs_hash.c \
 	whefs_inode.c \
 	whefs_nodedev.c \

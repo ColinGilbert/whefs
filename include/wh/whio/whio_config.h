@@ -58,12 +58,12 @@ extern "C" {
 #endif
 
 
-/** @def WHIO_USE_STATIC_MALLOC
+/** @def WHIO_CONFIG_ENABLE_STATIC_MALLOC
    Changing this only has an effect when building this library
    or when building extensions which want to follow these
    conventions...
 
-   If WHIO_USE_STATIC_MALLOC is true then certain operations
+   If WHIO_CONFIG_ENABLE_STATIC_MALLOC is true then certain operations
    which are normally done via malloc() and free() are instead
    done first via a static list of pre-allocated objects and then
    (if the list is all used up) fall back malloc()/free().
@@ -87,8 +87,8 @@ extern "C" {
    this option can potentially save many calls to malloc() (and should
    perform much better).
 */
-#if !defined(WHIO_USE_STATIC_MALLOC)
-#  define WHIO_USE_STATIC_MALLOC 0
+#if !defined(WHIO_CONFIG_ENABLE_STATIC_MALLOC)
+#  define WHIO_CONFIG_ENABLE_STATIC_MALLOC 0
 #endif
 
 #if defined(WHIO_SIZE_T_BITS)

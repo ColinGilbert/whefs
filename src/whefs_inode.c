@@ -20,11 +20,11 @@ const whefs_inode_list whefs_inode_list_init = whefs_inode_list_init_m;
 
 
 /**
-   If WHIO_USE_STATIC_MALLOC is true then we statically allocate
+   If WHEFS_CONFIG_ENABLE_STATIC_MALLOC is true then we statically allocate
    whefs_inode_list_alloc_count whefs_inode_list objects to dole out via
    whefs_inode_list_alloc(), falling back to malloc() if the list is full.
 */
-#if WHIO_USE_STATIC_MALLOC
+#if WHEFS_CONFIG_ENABLE_STATIC_MALLOC
 enum {
 /**
    The number of elements to statically allocate
@@ -43,7 +43,7 @@ static struct
 static whefs_inode_list * whefs_inode_list_alloc()
 {
     whefs_inode_list * obj = 0;
-#if WHIO_USE_STATIC_MALLOC
+#if WHEFS_CONFIG_ENABLE_STATIC_MALLOC
     size_t i = whefs_inode_list_alloc_slots.next;
     for( ; i < whefs_inode_list_alloc_count; ++i )
     {
@@ -53,7 +53,7 @@ static whefs_inode_list * whefs_inode_list_alloc()
 	obj = &whefs_inode_list_alloc_slots.objs[i];
 	break;
     }
-#endif /* WHIO_USE_STATIC_MALLOC */
+#endif /* WHEFS_CONFIG_ENABLE_STATIC_MALLOC */
     if( ! obj ) obj = (whefs_inode_list *) malloc( sizeof(whefs_inode_list) );
     if( obj ) *obj = whefs_inode_list_init;
     return obj;
@@ -63,7 +63,7 @@ static void whefs_inode_list_free( whefs_inode_list * obj )
 {
     if( obj ) *obj = whefs_inode_list_init;
     else return;
-#if WHIO_USE_STATIC_MALLOC
+#if WHEFS_CONFIG_ENABLE_STATIC_MALLOC
     if( (obj < &whefs_inode_list_alloc_slots.objs[0]) ||
 	(obj > &whefs_inode_list_alloc_slots.objs[whefs_inode_list_alloc_count-1]) )
     { /* it does not belong to us */
@@ -79,7 +79,7 @@ static void whefs_inode_list_free( whefs_inode_list * obj )
     }
 #else
     free(obj);
-#endif /* WHIO_USE_STATIC_MALLOC */
+#endif /* WHEFS_CONFIG_ENABLE_STATIC_MALLOC */
 }
 
 

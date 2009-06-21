@@ -74,7 +74,7 @@ typedef struct whio_dev_fileno
     }
 static const whio_dev_fileno whio_dev_fileno_meta_init = WHIO_DEV_fileno_INIT;
 
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
 enum {
 /**
    The number of elements to statically allocate
@@ -92,7 +92,7 @@ struct
 static whio_dev_fileno * whio_dev_fileno_alloc()
 {
     whio_dev_fileno * obj = 0;
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
     size_t i = 0;
     for( ; i < whio_dev_fileno_alloc_count; ++i )
     {
@@ -102,14 +102,14 @@ static whio_dev_fileno * whio_dev_fileno_alloc()
 	obj = &whio_dev_fileno_alloc_slots.objs[i];
 	break;
     }
-#endif /* WHIO_USE_STATIC_MALLOC */
+#endif /* WHIO_CONFIG_ENABLE_STATIC_MALLOC */
     if( ! obj ) obj = (whio_dev_fileno *) malloc( sizeof(whio_dev_fileno) );
     return obj;
 }
 
 static void whio_dev_fileno_free( whio_dev_fileno * obj )
 {
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
     if( (obj < &whio_dev_fileno_alloc_slots.objs[0]) ||
 	(obj > &whio_dev_fileno_alloc_slots.objs[whio_dev_fileno_alloc_count-1]) )
     { /* it does not belong to us */
@@ -125,7 +125,7 @@ static void whio_dev_fileno_free( whio_dev_fileno * obj )
     }
 #else
     free(obj);
-#endif /* WHIO_USE_STATIC_MALLOC */
+#endif /* WHIO_CONFIG_ENABLE_STATIC_MALLOC */
 }
 
 

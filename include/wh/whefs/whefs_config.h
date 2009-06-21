@@ -33,6 +33,7 @@
 #include <stdint.h> /* standardized fixed-size integer types */
 #include <inttypes.h> /* printf/scanf format specifiers. */
 #include "whefs_license.h"
+#include <wh/whio/whio_config.h> /* WHIO_SIZE_T_BITS */
 
 #ifdef __cplusplus
 extern "C" {
@@ -191,6 +192,10 @@ static const uint32_t whefs_fs_magic_bytes[] = { 2009, 6, 9, WHEFS_ID_TYPE_BITS,
 #  error "WHEFS_ID_TYPE_BITS must be one of: 8, 16, 32, 64"
 #endif
 
+#if WHEFS_ID_TYPE_BITS > WHIO_SIZE_T_BITS
+#  error "WHEFS_ID_TYPE_BITS must be <= WHIO_SIZE_T_BITS"
+#endif
+
 /** @def WHEFS_MAGIC_STRING
 
    The default magic cookie string used by the library.
@@ -297,9 +302,18 @@ when some form of thread locking is enabled.
 */
 #define WHEFS_CONFIG_ENABLE_STRINGS_CACHE 0
 
+/** @def WHEFS_CONFIG_ENABLE_STATIC_MALLOC
+
+    See WHIO_CONFIG_ENABLE_STATIC_MALLOC, from whio_config.h, for a full
+    description. The only difference is that this option is used
+    only for certain whefs-specific types.
+*/
+#if !defined(WHEFS_CONFIG_ENABLE_STATIC_MALLOC)
+#define WHEFS_CONFIG_ENABLE_STATIC_MALLOC 0
+#endif
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
-
 
 #endif /* WANDERINGHORSE_NET_WHEFS_CONFIG_H_INCLUDED */

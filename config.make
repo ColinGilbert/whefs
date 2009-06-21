@@ -47,7 +47,7 @@ CFLAGS += -Wimplicit-function-declaration
 # unless you need to create whio_dev and/or whefs_fs-related objects
 # in multiple threads or you need to use multiple VFSs in separate
 # threads.
-ENABLE_STATIC_MALLOC := 0
+ENABLE_STATIC_MALLOC ?= 0
 
 ########################################################################
 # If WHIO_ENABLE_ZLIB is 1 then certain features requiring libz will
