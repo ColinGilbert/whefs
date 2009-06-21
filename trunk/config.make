@@ -23,7 +23,8 @@ CLEAN_FILES += $(wildcard *.o *~)
 
 ########################################################################
 # Set ENABLE_DEBUG to 1 to enable whefs debugging.
-ENABLE_DEBUG := 1
+DEBUG ?= 1
+ENABLE_DEBUG := $(DEBUG)
 
 ########################################################################
 # The code is C99. How that's enabled/forced is compiler-dependent.
