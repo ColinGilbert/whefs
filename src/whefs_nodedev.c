@@ -25,7 +25,7 @@
    This function does not update ino->blocks.count unless count is 0
    (as described above).
 */
-static int whefs_inode_block_list_size( whefs_fs * fs,
+static int whefs_inode_block_list_reserve( whefs_fs * fs,
 					whefs_inode * ino,
 					whefs_id_type count )
 {
@@ -70,7 +70,7 @@ static int whefs_inode_block_list_append( whefs_fs * fs,
     if( ! fs || !ino || !bl ) return whefs_rc.ArgError;
     if( ino->blocks.alloced <= ino->blocks.count )
     {
-	int rc = whefs_inode_block_list_size( fs, ino, (ino->blocks.count ? ino->blocks.count : 4 /* arbitrarily chosen*/) * 2 );
+	int rc = whefs_inode_block_list_reserve( fs, ino, (ino->blocks.count ? ino->blocks.count : 4 /* arbitrarily chosen*/) * 2 );
 	if( whefs_rc.OK != rc ) return rc;
     }
     ino->blocks.list[ino->blocks.count] = *bl;
@@ -84,9 +84,9 @@ static int whefs_inode_block_list_append( whefs_fs * fs,
 	}
 	else if( prev->next_block != bl->id )
 	{
-	    //assert( 0 && "Internal consistency error." );
 	    WHEFS_DBG_ERR("Internal error: previous block (#%"WHEFS_ID_TYPE_PFMT") says its next block is #%"WHEFS_ID_TYPE_PFMT", but request was made to append #%"WHEFS_ID_TYPE_PFMT,
 			  prev->id, prev->next_block, bl->id );
+	    assert( 0 && "Internal consistency error." );
 	    return whefs_rc.InternalError;
 	}
     }
@@ -148,7 +148,7 @@ static int whefs_inode_block_list_load( whefs_fs * fs,
 #if 0
     if( ! ino->blocks.list )
     {
-	rc = whefs_inode_block_list_size( fs, ino, 5 /* arbitrarily chosen */ );
+	rc = whefs_inode_block_list_reserve( fs, ino, 5 /* arbitrarily chosen */ );
 	if( whefs_rc.OK != rc ) return rc;
     }
 #endif
@@ -158,7 +158,7 @@ static int whefs_inode_block_list_load( whefs_fs * fs,
     {
 	rc = whefs_block_read_next( fs, &bl, &bl );
 	if( whefs_rc.OK != rc ) return rc;
-	rc = whefs_inode_block_list_append( fs, ino, &bl );
+        rc = whefs_inode_block_list_append( fs, ino, &bl );
 	if( whefs_rc.OK != rc ) return rc;
     }
     //WHEFS_DBG("Loaded block chain of %u block(s) for inode #%u[%s].", ino->blocks.count, ino->id, ino->name );
