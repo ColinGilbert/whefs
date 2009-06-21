@@ -511,8 +511,9 @@ int whefs_file_name_set( whefs_file * restrict f, char const * newName )
     return whefs_rc.OK;
 }
 
-char const * whefs_file_name_get( whefs_file const * restrict f )
+char const * whefs_file_name_get( whefs_file * restrict f )
 {
+#if 0
     if( ! f ) return 0;
     whefs_inode * ino = 0;
     int rc = whefs_inode_search_opened( f->fs, f->inode, &ino );
@@ -523,6 +524,16 @@ char const * whefs_file_name_get( whefs_file const * restrict f )
 	return 0;
     }
     return ino->name.string;
+#else
+    int rc =whefs_inode_name_get( f->fs, f->inode, &f->name );
+    if( whefs_rc.OK != rc )
+    {
+	WHEFS_DBG_ERR("This should never ever happen: f appears to be a "
+		      "whefs_file, but we could find no associated opened inode!");
+	return 0;
+    }
+    return f->name.string;
+#endif
 }
 
 whio_size_t whefs_fsize( whefs_file const * restrict f )
