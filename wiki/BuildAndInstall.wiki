@@ -20,8 +20,6 @@ To build the tree on Unixish platforms:
 
 It takes only 2-3 seconds to build the library and supporting tools using gcc on a reasonably fast machine, or about 12 seconds on a 1.6GHz netbook with a slow hard drive.
 
-By default the library builds with debug messaging information enabled. This slows down the library a small amount, but is useful for tracking down errors. To build the library without debug message support, run `make DEBUG=0` (for versions newer than 20090620). When building the library using custom tools, simply add `-UNDEBUG` to the preprocessor flags to enable the debug code, or `-DNDEBUG=1` to compile it out.
-
 *To install it:*
 
   * Copy `src/libwhefs.*` to a directory in your library search path.
@@ -33,6 +31,10 @@ Some day i'll add `make install` rules, but the makefile code is intentionally k
 ==Non-Unixish Platforms==
 
 This code is 100% untested on non-Unix platforms. In theory, [WhefsAmalgamation the amalgamation build] should compile on any system which provides C99 support and two or three non-C99 (but POSIX-1.2001) functions used for dealing with file-based EFSes.
+
+=Enabling or Disabling Internal Debug Info=
+
+By default the library builds with debug messaging information enabled. This slows down the library a small amount, but is useful for tracking down errors. To build the library without debug message support, run `make DEBUG=0` (for versions newer than 20090620). When building the library using custom tools, simply add `-UNDEBUG` to the preprocessor flags to enable the debug code, or `-DNDEBUG=1` to compile it out.
 
 =Using whefs from client code=
 
