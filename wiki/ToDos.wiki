@@ -7,7 +7,7 @@ This is my personal list of "immediate" TODOs (in no particular order):
 
    *  Several parts of the public API need to be rounded out.
    *  Once the API settles down i'll provide an OO wrapper API for C++. Adding a stream wrapper for std::i/ostream shouldn't be difficult, either.
-   *  Directories.
+   *  Directories. See Issue #3 for thoughts on that.
    *  Concurrency via advisory locks (POSIX fcntl()). See [WhefsConcurrency].
    *  Concurrency via threads. See [WhefsConcurrency].
    *  Scripting language bindings via [http://www.swig.org SWIG]. i've tinkered with scripting the i/o layer a bit, and i don't think making whio/whefs play nicely with SWIG will be all that difficult to do. We've already got hand-implemented [http://code.google.com/p/v8-juice/wiki/PluginWhefs JavaScript bindings for whefs].
