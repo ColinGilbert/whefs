@@ -9,7 +9,7 @@ See also: [WhefsTweakingEFS Tweaking an EFS]
 
 It goes without saying that a filesystem should be fast. That said, whefs is not blazingly fast. <em>That</em> said, it is actually quite performant for the range of use cases it was initially envisioned for.
 
-whefs represents my first attempt at modeling a filesystem. Most of it is fairly conventional, but one of the early goals was keeping a very lean memory profile, so in some areas it must refer to disk more often than necessary (in particular is must `seek()` a lot). Versions of whefs before 20090108 had particularly poor performance due to a huge i/o overhead (but had almost no dynamic memory costs, and was fast enough for small use cases), but the speed has been improved <em>significantly</em> since then. Right now i'm fairly satisfied with its performance, at least when all of the caching options are turned on (discussed in more detail below).
+whefs represents my first attempt at modeling a filesystem. Most of it is fairly conventional, but one of the early goals was keeping a very lean memory profile, so in some areas it must refer to disk more often than necessary (in particular is must `seek()` a lot). Versions of whefs before 20090108 had particularly poor performance due to a huge i/o overhead (but had almost no dynamic memory costs, and was fast enough for small use cases), but the speed has been improved _significantly_ since then. Right now i'm fairly satisfied with its performance, at least when all of the caching options are turned on (discussed in more detail below).
 
 =Caching...=
 
@@ -17,14 +17,14 @@ whefs has no unified internal caching mechanism. The primary reason is to save m
 
 ==Opened inodes cache==
 
-When an inode is "opened" (e.g. via `whefs_fopen()`), its record is stored in memory. If the file is opened multiple times, each independent file handle shares that same inode copy. This is required for proper synchronization of the inode data (think of it as a detailed file descriptor). The library currently enforces that an inode may only be opened for writing by one caller, but allows any number of readers. Whether or not to allow multiple writers is under consideration. If a use case comes up which can't be done without it, i'll consider adding it, otherwise i'm prone to side-step the potential problems involved.
+When an inode is "opened" (e.g. via `whefs_fopen()`), its record is stored in memory. If the file is opened multiple times, each independent file handle shares that same inode copy. This is required for proper synchronization of the inode data (think of it as a detailed file descriptor) across file handles. The library currently enforces that an inode may only be opened for writing by one caller, but allows any number of readers. Whether or not to allow multiple writers is under consideration. If a use case comes up which can't be done without it, i'll consider adding it, otherwise i'm prone to side-step the potential problems involved.
 
 Anyway...
 
 The opened-inodes cache is used for several things:
 
    *  As mentioned above, each opened file handle for the same inode references a shared copy of the inode.
-   *  When inodes are searched for by name or ID, the opened inodes cache is first checked before referring to disk. The reason is so that the request will pick up any changes made to the inode since the last time the owning writer flushed it (which normally only happens when the file is closed, unless the client explicitly flushes).
+   *  When inodes are searched for in some contexts, the opened inodes cache is first checked before referring to disk. The reason is so that the request will pick up any changes made to the inode since the last time the owning writer flushed it (which normally only happens when the file is closed, unless the client explicitly flushes).
 
 The cache is currently a linked list of entries, so these operations are O(N), but N is normally quite small (1-2 is typical, more than 4 is unusual), being only the number of currently opened inodes. Since N is typically so small in this case, it is expected that a linked list can perform (on average) as well or better than a heavier-weight search mechanism for all but the weirdest use cases (e.g. someone has 10 file handles opened at once). A binary search mechanism has shown to be a poor choice for this case for reasons explained in the next section.
 
@@ -39,18 +39,19 @@ This bitset is optional (it can be disabled at compile time) and requires ((inod
 
 Any items we cannot skip (due to their marking in the appropriate bitset) must be read from disk before we can find out if it matches our search criteria.
 
-These operations are unfortunately O(N), but using the bitset cache allows us to avoid i/o when we know an items cannot meet our search requirements.
+These operations are unfortunately O(N), but using the bitset cache allows us to avoid i/o when we know an items cannot meet our search requirements, so the relative cost of searching is reduced.
 
-Even though using these caches only require addition operations and dereferencing pointers, profiling has shown that these caches actually cost a disproportionately high amount of time compared doing a full search if the underlying storage is particularly fast. e.g. for in-memory EFSes or extremely fast disks this cache can be a slight speed sink. For storage where i/o is relatively costly, however, these caches serves their purpose.
+Even though using these caches only require addition operations and dereferencing pointers, profiling has shown that these caches cost a disproportionately high amount of time compared doing a full search if the underlying storage is particularly fast. e.g. for in-memory EFSes or extremely fast disks this cache can be a slight speed sink. For storage where i/o is relatively costly, however, these caches serves their purpose.
 
 ==Inode Names Cache==
 
-As of 20090611, whefs has a search cache mechanism which allows much faster searches for files by their exact name. Before this change, it was an O(N) search, where N was <em>approximately</em> the number of inodes in the filesystem. (N is somewhat smaller, actually, due to the effects of the in-use inode cache.) This name cache has a much higher cost than the inode/block bitmap caches (about 12 bytes per cached entry), but provides a huge performance boost when searching for files by name.
+As of 20090611, whefs has a search cache mechanism which allows much faster searches for files by their exact name. Before this change, it was an O(N) search, where N was <em>approximately</em> the number of inodes in the filesystem. (N is somewhat smaller, actually, due to the effects of the in-use inode cache.) This name cache has a much higher cost than the inode/block bitmap caches (about 8 bytes per cached entry), but provides a huge performance boost when searching for files by name.
 
-It works by using a sorted array of entries which map the name's hash value to the inode's id. Once this cache is built (it is automatically built during whefs_fopen()), searches by name can be done in average O(log N) time instead of O(N) time.
+It works by using a sorted array of entries which map the name's hash value to the inode's id. Once this cache is built (it is automatically built during whefs_fopen()), searches by name can be done in average O(log N) time instead of O(N) time, by doing a binary search with the hash value of the name as the search key.
 
-The cache is, by default, built when the fs is opened. If it is not, however, (i.e. it is compiled out) it will be built up incrementally as files are searched from and added to the fs, and when an inode is renamed (which requires special handling of the cached key). It grows incrementally, but won't allocate more than it can possibly use (that is, never more than the inode count of the FS). In a worst case, this costs `(inode_count*sizeof(whefs_hashid)[=currently 12])` bytes of memory, plus another 20 bytes or so for the management data structure. So, for 1000 inodes, the cache would cost up to about 12k. That is its peak, however - it will only get that high if it reads enough <em>used</em> in-use inodes to cause it to grow (non-in-use inodes don't take up memory in the cache). 
-Though this cache cuts the search-by-name time by a factor of hundreds over previous code, 1000+ inodes is still considered to be fairly large for whefs' target audience. Then again, the primary reason so many inodes were considered "too many" was because of the time associated with searching for them.
+The cache is, by default, built when the fs is opened. If it is not, however, (i.e. it is compiled out) it will be built up incrementally as files are searched from and added to the fs, and when an inode is renamed (which requires special handling of the cached key). It grows incrementally, but won't allocate more than it can possibly use (that is, never more than the inode count of the FS). In a worst case, this costs `(inode_count*sizeof(whefs_hashid)[=currently 8])` bytes of memory, plus another 20 bytes or so for the management data structure. So, for 1000 _used_ inodes, the cache would cost up to about 8k. That is its peak, however - it will only get that high if it reads enough _in-use_ inodes to cause it to grow (non-in-use inodes don't take up memory in the cache).
+
+Though this cache can cut the search-by-name time by a factor of hundreds over previous code, 1000+ inodes is still considered to be fairly large for whefs' target audience. Then again, the primary reason so many inodes were considered "too many" was because of the time associated with searching for them.
 
 The API will eventually evolve to allow clients to monitor and tune some aspects of this cache. At the moment it has an embarrassingly low-level interface and needs several important optimizations (like optimizing the number of sorts which are performed on the cache).
 
