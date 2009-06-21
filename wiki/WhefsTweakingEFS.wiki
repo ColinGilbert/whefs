@@ -131,7 +131,7 @@ Depending on the value of WHEFS_ID_TYPE_BITS, the type whefs_id_type is defined 
 #elif WHEFS_ID_TYPE_BITS == 64
     typedef uint64_t whefs_id_type;
 #else
-#  error "WHEFS_ID_TYPE_BITS must be one of: 16, 32, 64"
+#  error "WHEFS_ID_TYPE_BITS must be one of: 8, 16, 32, 64"
 #endif
 }}}
 
