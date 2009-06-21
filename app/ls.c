@@ -151,7 +151,7 @@ static int ls_dump_blocks()
 	rc = whefs_inode_read( fs, &ino );
 	if( whefs_rc.OK != rc )
 	{
-	    WHDBG(WHDBG_ERROR)("Error #%d while reading inode #%"WHEFS_ID_TYPE_PFMT"!", rc, id);
+	    APPERR("Error #%d while reading inode #%"WHEFS_ID_TYPE_PFMT"!\n", rc, id);
 	    return rc;
 	}
 	if( ! ino.flags || ! ino.first_block ) continue;
@@ -166,8 +166,8 @@ static int ls_dump_blocks()
 	rc = whefs_block_read( fs, ino.first_block, &bl );
 	if( whefs_rc.OK != rc )
 	{
-	    WHDBG(WHDBG_ERROR)("Error #%d while reading block #%u of inode #%u[%s]!",
-			       rc, ino.first_block, ino.id, name.string );
+	    APPERR("Error #%d while reading block #%u of inode #%u[%s]!\n",
+                   rc, ino.first_block, ino.id, name.string );
 	    whefs_string_clear( &name, false );
 	    return rc;
 	}
@@ -233,7 +233,7 @@ static int ls_dump_blocks_table()
 	rc = whefs_block_read( fs, id, &bl );
 	if( whefs_rc.OK != rc )
 	{
-	    WHDBG(WHDBG_ERROR)("Error #%d while reading block #%u!", rc, id);
+	    APPERR("Error #%d while reading block #%u!\n", rc, id);
 	    return rc;
 	}
 	if( ! bl.flags ) continue;
@@ -351,7 +351,6 @@ int main( int argc, char const ** argv )
     WHEFSApp.helpText =
 	"Lists information about a VFS file and the files contained within it."
 	;
-    whdbg_set_stream( stderr );
     bool gotHelp = false;
     int rc = WHEFSApp_init( argc, argv, WHEFSApp_OpenRO, &gotHelp, LsArgSpec );
     if( (0 != rc) )

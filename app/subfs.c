@@ -16,7 +16,6 @@
 #include <assert.h>
 
 #include <wh/whefs/whefs.h>
-#include "../src/whdbg.h"
 #include <wh/whio/whio_devs.h>
 
 
@@ -35,8 +34,7 @@ static void bogo_printf(char const * fmt, ...) {}
 
 int main( int argc, char const ** argv )
 {
-    whdbg_set_stream( stderr );
-
+    whefs_setup_debug( stderr, (unsigned int)-1 );
     char const * hostFile = "my.whefs";
     whefs_fs * host = 0;
     whefs_openfs( hostFile, &host, true );

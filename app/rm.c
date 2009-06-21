@@ -87,7 +87,6 @@ int main( int argc, char const ** argv )
     WHEFSApp.helpText =
 	"Deletes files within a VFS."
 	;
-    whdbg_set_stream( stderr );
     bool gotHelp = false;
     int rc = WHEFSApp_init( argc, argv, WHEFSApp_OpenRW, &gotHelp, RmArgSpec );
     if( (0 != rc) )
