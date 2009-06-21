@@ -38,16 +38,17 @@ typedef struct ArgSpec
        Name of the command-line argument, e.g. -f or --foo.
     */
     char const * name;
-    /** From ArgSpecTypes enum. */
+    /** MUST be a value from ArgSpecTypes enum. */
     int type;
-    /** Parsed argument will be stored here. Exact requirements depend on type. */
+    /** Parsed argument will be stored here. Exact requirements for
+        this value depend on the value of the type member. */
     void * target;
     /** Help text for this option. */
     char const * help;
     /**
-    Called when WHEFSApp_init() parsed command line arguments. If a match is found
-    for this argument, this callback is called. If it returns non-zero
-    then args processing stops with an error.
+       Called when WHEFSApp_init() parsed command line arguments. If a match is found
+       for this argument, this callback is called. If it returns non-zero
+       then args processing stops with an error.
     */
     int (*callback)( char const * key, char const * val, void const * data );
     /**
@@ -59,11 +60,15 @@ typedef struct ArgSpec
 
 
 /**
-   File entry list.
+   File entry list. Stores the non-flag, non-EFS command-line
+   arguments, which may be names of local files or EFS-side wildcards,
+   depending on the application.
 */
 typedef struct WHEFSApp_fe
 {
+    /** Argument as passed on the command line. Might be a file name or wildcard. */
     char const * name;
+    /** Currently unusued. */
     size_t size;
     struct WHEFSApp_fe * next;
 } WHEFSApp_fe;
@@ -114,18 +119,63 @@ void ArgSpec_show_help( ArgSpec * args )
 {
     char const * dash = 0;
     char const * tail = 0;
+    char const * eq = 0;
     for( ; args && args->name; ++args )
     {
-	dash = (args->name[1] ? "--" : "-");
-	switch( args->type )
+        if( args->name[1] )
+        {
+            dash = "--";
+            eq = "=";
+        }
+        else
+        {
+            dash = "-";
+            eq = "";
+        }
+        switch( args->type )
 	{
-	  case ArgTypeInt: tail = "[=]###"; break;
-	  case ArgTypeSizeT: tail = "[=]###"; break;
-	  case ArgTypeCString: tail = "=string"; break;
+	  case ArgTypeInt:
+              tail = "<#signed integer>";
+              break;
+	  case ArgTypeIDType:
+#if 8 == WHEFS_ID_TYPE_BITS
+              tail = "<#uint8>";
+#elif 16 == WHEFS_ID_TYPE_BITS
+              tail = "<#uint16>";
+#elif 32 == WHEFS_ID_TYPE_BITS
+              tail = "<#uint32>";
+#elif 64 == WHEFS_ID_TYPE_BITS
+              tail = "<#uint64>";
+#endif
+              break;
+	  case ArgTypeUInt32: 
+              tail = "<#uint32>";
+              break;
+	  case ArgTypeUInt16: 
+              tail = "<#uint16>";
+              break;
+	  case ArgTypeIOSizeT:
+#if 8 == WHIO_SIZE_T_BITS
+              tail = "<#uint8>";
+#elif 16 == WHIO_SIZE_T_BITS
+              tail = "<#uint16>";
+#elif 32 == WHIO_SIZE_T_BITS
+              tail = "<#uint32>";
+#elif 64 == WHIO_SIZE_T_BITS
+              tail = "<#uint64>";
+#endif
+              break;
+	  case ArgTypeSizeT:
+              tail = "<#size_t>";
+              break;
+	  case ArgTypeCString:
+              tail = "<string>";
+              break;
 	  default:
 	      tail = "";
+              eq = "";
 	};
-	printf("\t%s%s%s\n\t\t%s\n", dash, args->name, tail, args->help );
+	printf("\t%s%s%s%s\n\t\t%s\n", dash, args->name, eq, tail, args->help );
     }
 }
 
@@ -421,7 +471,7 @@ static ArgSpec WHEFSApp_SharedArgs[] = {
 {"D",  ArgTypeCString, &WHEFSApp.debugFlags, "Same as --debug-flags", 0, 0 },
 {"debug-flags",  ArgTypeCString, &WHEFSApp.debugFlags, "Enables certain libwhefs debug flags. See whefs_setup_debug_arg() in the API docs.", 0, 0 },
 
-{"V",  ArgTypeIgnore, 0, "Show whefs version information.", 0, 0 },
+{"V",  ArgTypeIgnore, 0, "Same as --version.", 0, 0 },
 {"version",  ArgTypeIgnore, 0, "Show whefs version information.", 0, 0 },
 {0}
 };
