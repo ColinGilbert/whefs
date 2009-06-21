@@ -1,3 +1,4 @@
+#define _POSIX_C_SOURCE 1
 /*
   Author: Stephan Beal (http://wanderinghorse.net/home/stephan/)
 
@@ -96,15 +97,22 @@ static bool ls_inode_predicate_name_matches( whefs_fs * fs, whefs_inode const * 
     }
 }
 
+#include <time.h>
 static int ls_inode_foreach_print( whefs_fs * fs, whefs_inode const * ino, void * clientData )
 {
     ls_foreach_info * info = (ls_foreach_info*)clientData;
     ++(info->matchCount);
-    printf("%-16"WHEFS_ID_TYPE_PFMT"%-16"WHEFS_ID_TYPE_PFMT"%-12u%-16u%s\n",
+    time_t mt = (time_t)ino->mtime;
+    struct tm * t = 0;
+    t = localtime( &mt );
+    enum { bufSize = 40 };
+    char buf[bufSize];
+    memset( buf, 0, bufSize );
+    strftime( buf, bufSize-1, "%Y.%m.%d %H:%M:%S", t );
+    printf("%-6"WHEFS_ID_TYPE_PFMT"%9u%22s  %s\n",
            ino->id,
-           ino->first_block,
            ino->data_size,
-           ino->mtime,
+           buf,
            info->name.string );
     info->totalSize += ino->data_size;
     return whefs_rc.OK;
@@ -118,8 +126,8 @@ static int ls_dump_inodes()
     whefs_fs * fs = WHEFSApp.fs;
     int rc = 0;
     puts("List of file entries:\n");
-    printf("%-16s%-16s%-12s%-16s%-16s\n",
-	   "Node ID:","First block:", "Size:", "Timestamp:","Name:" );
+    printf("%-10s%s%19s%10s\n",
+	   "Node ID:","Size:", "Timestamp: (YMD)","Name:" );
     ls_foreach_info foi = ls_foreach_info_init;
     rc = whefs_inode_foreach( fs, ls_inode_predicate_name_matches, &foi, ls_inode_foreach_print, &foi );
     whefs_string_clear( &foi.name, false );
@@ -174,7 +182,7 @@ static int ls_dump_blocks()
 	++used;
 	++bcount;
 	//printf("inode #%u[%s] blocks: %u", ino.id, name.string, bl.id );
-	printf("[%s]:\t(%"WHEFS_ID_TYPE_PFMT"%s", name.string, bl.id,bl.next_block ? "," : "" );
+	printf("#%04"WHEFS_ID_TYPE_PFMT"[%s]:\t(%"WHEFS_ID_TYPE_PFMT"%s", ino.id, name.string, bl.id,bl.next_block ? "," : "" );
 	size_t lbcount = 1;
 	for( ; 0 != bl.next_block; ++lbcount )
 	{
