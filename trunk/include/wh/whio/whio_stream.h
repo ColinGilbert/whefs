@@ -229,7 +229,7 @@ bool whio_stream_getchar( whio_stream * stream, char * tgt );
 /**
    Copies all data from istr to ostr, stopping only when
    istr->api->read() returns fewer bytes than requested. On success
-   whefs_rc.OK is returned, on error some other value.  On error this
+   whio_rc.OK is returned, on error some other value.  On error this
    function unfortunately cannot report whether the failure was at the
    read or write level.
 
