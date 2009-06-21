@@ -272,9 +272,16 @@ whio_stream * whefs_stream_open( whefs_fs * fs, char const * name, bool writeMod
 {
     whio_dev * d = whefs_dev_open( fs, name, writeMode );
     if( ! d ) return 0;
-    if( writeMode && append )
+    if( writeMode )
     {
-        d->api->seek( d, 0L, SEEK_END );
+        if( append )
+        {
+            d->api->seek( d, 0L, SEEK_END );
+        }
+        else
+        {
+            d->api->truncate( d, 0 );
+        }
     }
     whefs_stream_closer_kludge * k = (whefs_stream_closer_kludge*)malloc(sizeof(whefs_stream_closer_kludge));
     if( ! k )

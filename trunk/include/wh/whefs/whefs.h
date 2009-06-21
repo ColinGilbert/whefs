@@ -565,8 +565,10 @@ whio_dev * whefs_dev_open( whefs_fs * restrict fs, char const * name, bool write
 /**
    Similar to whefs_dev_open(), but returns a whio_stream object
    instead of a whio_object. If writeMode is true and append is true
-   then the pseudofile's cursor is placed at the end of the file,
-   otherwise the append argument is ignored.
+   then the pseudofile's cursor is placed at the end of the file. If
+   writeMode is true and append is false then the file is truncated to
+   zero bytes. If writeMode is false then the append argument is
+   ignored.
 
    Unlike whefs_fopen(), there is no way to get a handle to the
    underlying random-access i/o device. If you need access to both a
