@@ -179,3 +179,23 @@ These macros are defined in [http://code.google.com/p/whefs/source/browse/trunk/
 If set to a true value they enable "static allocators" for many of the library types. The static allocators are routines which "allocate" objects from a pre-initialized list in static memory, falling back to malloc() if the list fills up. These allocators are not strictly thread safe (the deallocators are, curiously enough), but neither is whefs, so unless you plan on using the whio code in other threads of your app for purposes other than whefs (or want to run multiple EFSes in multiple threads), there's little reason not to turn it on. It will increase the size of the overall binary by a relatively small amount, but with this option turned on the vast majority of the calls to malloc() go away.
 
 The allocators are believed to perform fairly well. Allocation is O(1) until the list overflows, at which point it will fall back to malloc() and inherit malloc()'s performance characteristics. As items in the list are freed, which may fragment the list, the allocators run between O(1) (best case) and O(N) (worst case), where N is one less than the number of items in the list for that specific allocator (typically 3-10 items). The deallocation routines are always O(1) unless the object they are freeing came from malloc() (because the pool filled up), in which case they have the same performance as free().
+
+Here are some results of dynamic memory allocation made by the library
+under a couple different test cases, using different values for these
+configuration options:
+
+|| *`WHIO_CONFIG_ENABLE_STATIC_MALLOC`* || *`WHEFS_CONFIG_ENABLE_STATIC_MALLOC`* || *`malloc()` calls* || *Total bytes `malloc()`ed* ||
+<tr><td colspan=4>*[WhefsLs whefs-ls] on a small EFS:*</td></tr>
+|| 0 || 0 || 18 || 1055 ||
+|| 1 || 1 || 7 || 651 ||
+|| 0 || 1 || 17 || 843 ||
+|| 1 || 0 || 8 || 863 ||
+<tr><td colspan=4>*Opening and closing a total of 100 pseudofile objects, in groups of 10:*</td></tr>
+|| 0 || 1 || 275 || 8468 ||
+|| 1 || 0 || 506 || 15928 ||
+|| 0 || 0 || 616 || 18120 ||
+|| 1 || 1 || 165 || 6276 ||
+
+(Stats provided by [http://www.valgrind.org Valgrind].)
+
+The bytes of memory reported allocated is the _total_ number which was allocated by the library over the life of the test application, and not the maximum amount which was allocated at any given time (that value is much lower, but unfortunately [http://www.valgrind.org Valgrind] cannot seem to report that value).
