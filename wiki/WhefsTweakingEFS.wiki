@@ -59,6 +59,16 @@ struct whefs_fs_options
 
 whefs has a few compile-time options which can be tweaked. Some can be passed to the compiler via <tt>-Dxxxx=yyy</tt>, but others require editing a line of the whefs source code (probably in <tt>[http://code.google.com/p/whefs/source/browse/trunk/include/wh/whefs/whefs_config.h whefs_config.h]</tt>). The options include...
 
+==Debugging Mode==
+
+If compiled without `NDEBUG` set to any value then the library builds in support for reporting certain debugging messages, to assist in tracking down errors. If `NDEBUG` is defined when the library is compiled, that support is compiled out. Having it enabled is a speed sink, and it should be disabled if it is not particularly needed.
+
+Be aware that building with debugging extensions enabled might also enable some `assert()` calls which would otherwise trigger error codes to be returned.
+
+Also be aware that this has _nothing_ to do with the compiler's debugging mode flags. This affects only whether certain code gets compiled in or not, and not the level of debugging information available to an external debugger.
+
+Enabling or disabling the debugging support does not change binary compatibility for clients dynamically linked to libwhefs, with the _possible_ exception of some of the [WhefsTools whefs-* tools] which blithely use certain inner secrets of the library.
+
 ==<tt>whefs_id_type</tt> and <tt>WHEFS_ID_TYPE_BITS</tt>==
 
 In order to squeeze out a few more bytes of memory, the maximum number of inodes and blocks in a VFS can be restricted to an unsigned integer type with 8, 16, 32, or 64 bits. For reasons explained fully in the API docs, the default is 16. Rather than repeat those docs, they are pasted in below (the most current version is in [http://code.google.com/p/whefs/source/browse/trunk/include/wh/whefs/whefs_config.h whefs_config.h]):
