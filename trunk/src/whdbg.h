@@ -57,7 +57,7 @@ extern "C" {
    compiler out altogether.
 */
 #if !defined(WHDBG_CONFIG_ENABLE)
-#if defined(DEBUG)
+#if !defined(NDEBUG)
 #  define WHDBG_CONFIG_ENABLE 1
 #else
 #  define WHDBG_CONFIG_ENABLE 0
