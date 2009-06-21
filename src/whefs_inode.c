@@ -418,9 +418,13 @@ int whefs_inode_next_free( whefs_fs * restrict fs, whefs_inode * restrict tgt, b
 int whefs_inode_update_mtime( whefs_fs * fs, whefs_inode * n )
 {
     if( ! n ) return whefs_rc.ArgError;
+#if 0
     struct timeval tv;
     gettimeofday( &tv, 0 );
     n->mtime = (uint32_t)tv.tv_sec;
+#else
+    n->mtime = (uint32_t) time(NULL);
+#endif
     return whefs_rc.OK;
 }
 
