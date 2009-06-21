@@ -1,33 +1,36 @@
 #summary Overview of tools for creating and manipulating whefs containers
 #labels Category-ToolDocs
 
-=whefs tools=
+<wiki:toc max_depth=3/>
 
-The source tree comes with several tools for working with whefs filesystems:
+=whefs Tools Overview=
+
+The source tree comes with several tools (under `<top_srcdir>/app`) for working with whefs container files:
 
    *  [WhefsMkfs whefs-mkfs] creates EFS container files.
    *  [WhefsLs whefs-ls] lists the contents of a EFS container.
    *  [WhefsCp whefs-cp] imports files into or exports them from an EFS.
    *  [WhefsRm whefs-rm] deletes files from a EFS.
    *  [WhefsAddblocks whefs-addblocks] adds blocks to an existing EFS.
-   *  [Whefs2c whefs2c] converts a whefs VFS to C code and creates a statically-linked in-memory VFS for it.
+   *  [WhefsCat whefs-cat] exports files from an EFS to standard output.
+   *  [Whefs2c whefs2c] converts an EFS file to C code and creates a statically-linked in-memory EFS for it.
 
-Most of those tools rely on private API routines which most client code won't have access to. Over time the public API will be fleshed out, such that client-side tools have the level of access they would need to implement features like those these tools provide.
+Some of those tools rely on private API routines which most client code won't have access to. Over time the public API will be fleshed out, such that client-side tools will have the level of access they would need to implement features like those these tools provide.
 
-==Common command arguments==
+=Common command arguments=
 
 Most of the whefs tools support the following common arguments:
 
    *  <tt>-?</tt> or <tt>--help</tt> = Show app help and quit.
    *  <tt>-v</tt> or <tt>--verbose</tt>= Enable verbose mode
    *  <tt>-V</tt> or <tt>--version</tt> = Show version information and quit.
-   *  <tt>-D</tt> or <tt>--debug-flags</tt> = Set to a string value describing the whefs debug categories which should be used. See below for more detail.
+   *  `-D<string>` or `--debug-flags=<string>` = Set to a string value describing the whefs debug categories which should be used. See below for more detail.
 
 Most of these tools also require that an EFS file be given as the first non-flag argument on the command line. "Non-flag" means an argument which does not start with '-' or '--'.
 
 ==Debugging flags==
 
-If whefs is built in debug mode (i.e. with the optional debuggering information turned on), the apps can use the <tt>-D</tt> or <tt>--debug-flags</tt> parameter to set send certain debugging messages. The arguments are used like <tt>-Dabc</tt> or <tt>--debug-flags=abc</tt>, where <tt>abc</tt> is one or more of the following letters (case-sensitive), each of which turns on a specific category of message:
+If whefs is built in debug mode (i.e. with the optional debuggering information turned on - see [BuildAndInstall] for more details), the apps can use the <tt>-D</tt> or <tt>--debug-flags</tt> parameter to set send certain debugging messages. The arguments are used like <tt>-Dabc</tt> or <tt>--debug-flags=abc</tt>, where <tt>abc</tt> is one or more of the following letters (case-sensitive), each of which turns on a specific category of message:
 
    *  <tt>'a'</tt> = All messages.
    *  <tt>'c'</tt> = Caching messages.
