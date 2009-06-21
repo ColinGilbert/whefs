@@ -6,7 +6,6 @@
 This is my personal list of "immediate" TODOs (in no particular order):
 
    *  Several parts of the public API need to be rounded out.
-   *  20090609: Add a public interface for iterating over inodes, maybe similar to opendir()/readdir().
    *  Once the API settles down i'll provide an OO wrapper API for C++. Adding a stream wrapper for std::i/ostream shouldn't be difficult, either.
    *  Directories.
    *  Concurrency via advisory locks (POSIX fcntl()). See [WhefsConcurrency].
