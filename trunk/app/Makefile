@@ -5,6 +5,8 @@ include ../config.make
 WHEFS_BINS_LDFLAGS := -L$(LIBWHEFS.LIBDIR) -lwhefs # $(LIBWHEFS_CLIENT_LDFLAGS) 
 WHEFS_BINS_DEPS := $(LIBWHEFS.A) $(LIBWHEFS.DLL) $(ALL_MAKEFILES)
 
+.PHONY: bins
+
 ########################################################################
 # test bin
 test.BIN.OBJECTS := test.o whargv.o
@@ -86,6 +88,16 @@ bins: $(whefs-addblocks.BIN)
 endif
 
 ########################################################################
+# whefs-addblocks
+ifeq (1,1)
+whefs-cat.BIN.OBJECTS := cat.o whargv.o
+whefs-cat.BIN.LDFLAGS := $(WHEFS_BINS_LDFLAGS)
+$(call ShakeNMake.CALL.RULES.BINS,whefs-cat)
+$(whefs-cat.BIN): $(WHEFS_BINS_DEPS)
+bins: $(whefs-cat.BIN)
+endif
+
+########################################################################
 # The subfs demo demonstrates a VFS within a VFS.
 ifeq (1,1)
 subfs.BIN.OBJECTS := subfs.o whargv.o
@@ -117,6 +129,7 @@ endif
 
 all: $(test.BIN) $(bin2c.BIN) \
 	$(whefs-addblocks.BIN) \
+	$(whefs-cat.BIN) \
 	$(whefs-cp.BIN) \
 	$(whefs-ls.BIN) \
 	$(whefs-mkfs.BIN) \
