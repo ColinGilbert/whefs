@@ -2,16 +2,6 @@
 include ../config.make
 
 
-
-ifeq (1,$(ENABLE_STATIC_MALLOC))
-whio.o whio%.o: CPPFLAGS+=-DWHIO_CONFIG_ENABLE_STATIC_MALLOC=1
-whefs.o whefs%.o: CPPFLAGS+=-DWHEFS_CONFIG_ENABLE_STATIC_MALLOC=1
-else
-whio.o whi%.o: CPPFLAGS+=-DWHIO_CONFIG_ENABLE_STATIC_MALLOC=0
-whefs.o whefs%.o: CPPFLAGS+=-DWHEFS_CONFIG_ENABLE_STATIC_MALLOC=0
-endif
-
-
 WHIO_SOURCES := \
 	whio.c \
 	whio_common.c \
@@ -59,6 +49,9 @@ WHEFS_OBJ := $(WHEFS_SOURCES:%.c=%.o)
 
 OBJECTS := $(SOURCES:%.c=%.o)
 $(OBJECTS): $(ALL_MAKEFILES)
+
+whio.o whio%.o: CPPFLAGS+=-DWHIO_CONFIG_ENABLE_STATIC_MALLOC=$(WHIO_ENABLE_STATIC_MALLOC)
+whefs.o whefs%.o: CPPFLAGS+=-DWHEFS_CONFIG_ENABLE_STATIC_MALLOC=$(WHEFS_ENABLE_STATIC_MALLOC)
 
 #liba-whefs.OBJECTS := $(OBJECTS)
 #liba-whefs

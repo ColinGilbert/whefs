@@ -24,7 +24,7 @@ CLEAN_FILES += $(wildcard *.o *~)
 ########################################################################
 # Set ENABLE_DEBUG to 1 to enable whefs debugging.
 DEBUG ?= 1
-ENABLE_DEBUG := $(DEBUG)
+ENABLE_DEBUG ?= $(DEBUG)
 
 ########################################################################
 # The code is C99. How that's enabled/forced is compiler-dependent.
@@ -48,6 +48,9 @@ CFLAGS += -Wimplicit-function-declaration
 # in multiple threads or you need to use multiple VFSs in separate
 # threads.
 ENABLE_STATIC_MALLOC ?= 0
+
+WHIO_ENABLE_STATIC_MALLOC ?= $(ENABLE_STATIC_MALLOC)
+WHEFS_ENABLE_STATIC_MALLOC ?= $(ENABLE_STATIC_MALLOC)
 
 ########################################################################
 # If WHIO_ENABLE_ZLIB is 1 then certain features requiring libz will
