@@ -160,7 +160,7 @@ WHEFS_MAX_FILENAME_LENGTH = 128,
 
 The relatively low value of WHEFS_MAX_FILENAME_LENGTH is largely historic in nature. A value of 512 or 1024 is being considered, and may be necessary as long as whefs does not support directories.
 
-==<tt>WHIO_USE_STATIC_MALLOC</tt>==
+==<tt>WHIO_CONFIG_ENABLE_STATIC_MALLOC</tt>==
 
 This macro is inherited from the [http://fossil.wanderinghorse.net/repos/whio/ whio library] which whefs uses for the i/o support. This macro can be defined at library compile time to enable "static allocators" for most of the library types. The static allocators are routines which "allocate" objects from a pre-initialized list in static memory, falling back to malloc() if the list fills up. These allocators are not strictly thread safe (the deallocators are, curiously enough), but neither is whefs, so unless you plan on using the whio code in other threads of your app for purposes other than whefs (or want to run multiple VFSes in multiple threads), there's little reason not to turn it on. It will increase the size of the overall binary by a relatively small amount, but with this option turned on the vast majority of the calls to malloc() go away. A typical use case (one VFS and two opened pseudofiles) can go from, e.g. 15 calls to malloc() down to 3 (and one of those 3 happens in fopen(), so we can't avoid it).
 

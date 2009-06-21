@@ -13,6 +13,13 @@
 
 /**
    The integral type whefs uses to store hash values.
+
+   Reminder to self: if we'll add support for duplicate hash codes
+   to the inode names hash cache then we can drop this to
+   uint16_t and potentially save significant amounts of memory.
+   The difference is: with uint32_t we can cache 128 inode hashes
+   per 1k of memory. With uint16_t we can cache 170 hashes per
+   1k of memory.
 */
 typedef uint32_t whefs_hashval_type;
 /**
@@ -34,8 +41,10 @@ struct whefs_hashid
 {
     /** Client-defined hash code. */
     whefs_hashval_type hash;
+
     /** Unique ID of client-defined hashed object. */
     whefs_id_type id;
+
     /**
        Routines which visit this object via search results should increment this number.
        We may use it later for dropping least-used items from the list.

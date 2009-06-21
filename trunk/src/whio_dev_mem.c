@@ -80,7 +80,7 @@ typedef struct whio_dev_membuf_meta
 */
 static const whio_dev_membuf_meta whio_dev_membuf_meta_init = WHIO_DEV_MEMBUF_META_INIT;
 
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
 enum {
 /**
    The number of elements to statically allocate
@@ -98,7 +98,7 @@ static struct
 static whio_dev_membuf_meta * whio_dev_membuf_meta_alloc()
 {
     whio_dev_membuf_meta * obj = 0;
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
     size_t i = 0;
     for( ; i < whio_dev_membuf_meta_alloc_count; ++i )
     {
@@ -108,14 +108,14 @@ static whio_dev_membuf_meta * whio_dev_membuf_meta_alloc()
 	obj = &whio_dev_membuf_meta_alloc_slots.objs[i];
 	break;
     }
-#endif /* WHIO_USE_STATIC_MALLOC */
+#endif /* WHIO_CONFIG_ENABLE_STATIC_MALLOC */
     if( ! obj ) obj = (whio_dev_membuf_meta *) malloc( sizeof(whio_dev_membuf_meta) );
     return obj;
 }
 
 static void whio_dev_membuf_meta_free( whio_dev_membuf_meta * obj )
 {
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
     if( (obj < &whio_dev_membuf_meta_alloc_slots.objs[0]) ||
 	(obj > &whio_dev_membuf_meta_alloc_slots.objs[whio_dev_membuf_meta_alloc_count-1]) )
     { /* it does not belong to us */
@@ -131,7 +131,7 @@ static void whio_dev_membuf_meta_free( whio_dev_membuf_meta * obj )
     }
 #else
     free(obj);
-#endif /* WHIO_USE_STATIC_MALLOC */
+#endif /* WHIO_CONFIG_ENABLE_STATIC_MALLOC */
 }
 
 
@@ -502,7 +502,7 @@ typedef struct whio_dev_memmap
 static const whio_dev_memmap whio_dev_memmap_init = WHIO_DEV_MEMMAP_INIT;
 
 
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
 enum {
 /**
    The number of elements to statically allocate
@@ -520,7 +520,7 @@ static struct
 static whio_dev_memmap * whio_dev_memmap_alloc()
 {
     whio_dev_memmap * obj = 0;
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
     size_t i = 0;
     for( ; i < whio_dev_memmap_alloc_count; ++i )
     {
@@ -530,14 +530,14 @@ static whio_dev_memmap * whio_dev_memmap_alloc()
 	obj = &whio_dev_memmap_alloc_slots.objs[i];
 	break;
     }
-#endif /* WHIO_USE_STATIC_MALLOC */
+#endif /* WHIO_CONFIG_ENABLE_STATIC_MALLOC */
     if( ! obj ) obj = (whio_dev_memmap *) malloc( sizeof(whio_dev_memmap) );
     return obj;
 }
 
 static void whio_dev_memmap_free( whio_dev_memmap * obj )
 {
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
     if( (obj < &whio_dev_memmap_alloc_slots.objs[0]) ||
 	(obj > &whio_dev_memmap_alloc_slots.objs[whio_dev_memmap_alloc_count-1]) )
     { /* it does not belong to us */
@@ -553,7 +553,7 @@ static void whio_dev_memmap_free( whio_dev_memmap * obj )
     }
 #else
     free(obj);
-#endif /* WHIO_USE_STATIC_MALLOC */
+#endif /* WHIO_CONFIG_ENABLE_STATIC_MALLOC */
 }
 
 

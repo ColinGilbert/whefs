@@ -10,14 +10,14 @@
 #include "whefs_details.c"
 #include <wh/whio/whio_streams.h> /* whio_stream_for_dev() */
 
-#define WHEFS_FILE_INIT { \
+#define whefs_file_init_m { \
     0, /* fs */ \
     0, /* flags */ \
     0, /* dev */ \
-    0 /* inode */ \
+    0 /* inode_id */                       \
     }
 
-const whefs_file whefs_file_init = WHEFS_FILE_INIT;
+const whefs_file whefs_file_init = whefs_file_init_m;
 #define WHEFS_FILE_ISOPENED(F) ((F) && ((F)->flags & WHEFS_FLAG_Opened))
 #define WHEFS_FILE_ISRO(F) ((F) && ((F)->flags & WHEFS_FLAG_Read))
 #define WHEFS_FILE_ISRW(F) ((F) && ((F)->flags & WHEFS_FLAG_Write))
@@ -25,7 +25,7 @@ const whefs_file whefs_file_init = WHEFS_FILE_INIT;
 #define WHEFS_FILE_SET_ERR(F,ERR) ((F) && ((F)->flags |= WHEFS_FLAG_FileError))
 
 
-#if WHIO_USE_STATIC_MALLOC
+#if WHEFS_CONFIG_ENABLE_STATIC_MALLOC
 enum {
 /**
    The number of elements to statically allocate
@@ -38,13 +38,13 @@ static struct
 {
     whefs_file objs[whefs_file_alloc_count];
     char used[whefs_file_alloc_count];
-} whefs_file_alloc_slots = { {WHEFS_FILE_INIT}, {0} };
+} whefs_file_alloc_slots = { {whefs_file_init_m}, {0} };
 #endif
 
 static whefs_file * whefs_file_alloc()
 {
     whefs_file * obj = 0;
-#if WHIO_USE_STATIC_MALLOC
+#if WHEFS_CONFIG_ENABLE_STATIC_MALLOC
     size_t i = 0;
     for( ; i < whefs_file_alloc_count; ++i )
     {
@@ -54,7 +54,7 @@ static whefs_file * whefs_file_alloc()
 	obj = &whefs_file_alloc_slots.objs[i];
 	break;
     }
-#endif /* WHIO_USE_STATIC_MALLOC */
+#endif /* WHEFS_CONFIG_ENABLE_STATIC_MALLOC */
     if( ! obj )
     {
         obj = (whefs_file *) malloc( sizeof(whefs_file) );
@@ -65,7 +65,7 @@ static whefs_file * whefs_file_alloc()
 
 static void whefs_file_free( whefs_file * restrict obj )
 {
-#if WHIO_USE_STATIC_MALLOC
+#if WHEFS_CONFIG_ENABLE_STATIC_MALLOC
     if( (obj < &whefs_file_alloc_slots.objs[0]) ||
 	(obj > &whefs_file_alloc_slots.objs[whefs_file_alloc_count-1]) )
     { /* it does not belong to us */
@@ -83,7 +83,7 @@ static void whefs_file_free( whefs_file * restrict obj )
 #else
     *obj = whefs_file_init;
     free(obj);
-#endif /* WHIO_USE_STATIC_MALLOC */
+#endif /* WHEFS_CONFIG_ENABLE_STATIC_MALLOC */
 }
 
 /**
@@ -197,6 +197,7 @@ whefs_file * whefs_fopen( whefs_fs * fs, char const * name, char const * mode )
     }
     else
     {
+        
         whefs_fs_closer_file_add( fs, f );
     }
     //WHEFS_DBG("opened whefs_file [%s]. mode=%s, flags=%08x", name, mode, f->flags );
@@ -475,7 +476,6 @@ int whefs_fstat( whefs_file const * f, whefs_file_stats * st )
     if( ! f || !st ) return whefs_rc.ArgError;
     *st = whefs_file_stats_init;
     st->inode = f->inode;
-
     whefs_inode ino = whefs_inode_init;
     ino.id = f->inode;
     int rc = whefs_inode_read( f->fs, &ino );

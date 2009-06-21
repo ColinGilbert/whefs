@@ -66,7 +66,7 @@ typedef struct whio_dev_FILE
     }
 static const whio_dev_FILE whio_dev_FILE_meta_init = WHIO_DEV_FILE_INIT;
 
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
 enum {
 /**
    The number of elements to statically allocate
@@ -84,7 +84,7 @@ struct
 static whio_dev_FILE * whio_dev_FILE_alloc()
 {
     whio_dev_FILE * obj = 0;
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
     size_t i = 0;
     for( ; i < whio_dev_FILE_alloc_count; ++i )
     {
@@ -93,7 +93,7 @@ static whio_dev_FILE * whio_dev_FILE_alloc()
 	obj = &whio_dev_FILE_alloc_slots.objs[i];
 	break;
     }
-#endif /* WHIO_USE_STATIC_MALLOC */
+#endif /* WHIO_CONFIG_ENABLE_STATIC_MALLOC */
     if( ! obj ) obj = (whio_dev_FILE *) malloc( sizeof(whio_dev_FILE) );
     if( obj ) *obj = whio_dev_FILE_meta_init;
     return obj;
@@ -101,7 +101,7 @@ static whio_dev_FILE * whio_dev_FILE_alloc()
 
 static void whio_dev_FILE_free( whio_dev_FILE * obj )
 {
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
     if( (obj < &whio_dev_FILE_alloc_slots.objs[0]) ||
 	(obj > &whio_dev_FILE_alloc_slots.objs[whio_dev_FILE_alloc_count-1]) )
     { /* it does not belong to us */
@@ -117,7 +117,7 @@ static void whio_dev_FILE_free( whio_dev_FILE * obj )
     }
 #else
     free(obj);
-#endif /* WHIO_USE_STATIC_MALLOC */
+#endif /* WHIO_CONFIG_ENABLE_STATIC_MALLOC */
 }
 
 

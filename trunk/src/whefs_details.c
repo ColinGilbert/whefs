@@ -135,11 +135,11 @@ WHEFS_SZ_COUNT /* must be the last entry! */
 */
 enum whefs_fs_closer_types {
 /** Type flag for whefs_file objects. */
-WHEFS_CLOSE_TYPE_FILE = 'f',
+WHEFS_CLOSER_TYPE_FILE = 'f',
 /** Type flag for whio_dev objects. */
-WHEFS_CLOSE_TYPE_DEV = 'd',
+WHEFS_CLOSER_TYPE_DEV = 'd',
 /** Type flag for whio_stream objects. */
-WHEFS_CLOSE_TYPE_STREAM = 's'
+WHEFS_CLOSER_TYPE_STREAM = 's'
 };
 /** @struct whefs_fs_closer_list
 
@@ -159,7 +159,7 @@ WHEFS_CLOSE_TYPE_STREAM = 's'
 */
 struct whefs_fs_closer_list
 {
-    /** Value from enum whefs_fs_closer_types. */
+    /** Must be a value from enum whefs_fs_closer_types. */
     char type;
     /**
        The object pointed to by this object. It MUST be properly set
@@ -168,9 +168,9 @@ struct whefs_fs_closer_list
     */
     union
     {
+        whefs_file * file;
         whio_dev * dev;
         whio_stream * stream;
-        whefs_file * file;
     } item;
     /** Next entry in the list. */
     struct whefs_fs_closer_list * next;
@@ -207,11 +207,13 @@ int whefs_fs_closer_list_close( whefs_fs_closer_list * head, bool right );
    just a small wrapper around a whio_dev specialization,
    this routine requires that an entry already exists for
    f->dev in fs->closers. If that entry is found then it is
-   "promoted" to a WHEFS_CLOSE_TYPE_FILE entry, so that
+   "promoted" to a WHEFS_CLOSER_TYPE_FILE entry, so that
    whefs_fclose() will be used to free the entry (which includes
    the f->dev).
 
    Returns whefs_rc.OK on success.
+
+   Closing f will automatically remove it from the list.
 */
 int whefs_fs_closer_file_add( whefs_fs * fs, whefs_file * f );
 
@@ -226,6 +228,8 @@ int whefs_fs_closer_file_remove( whefs_fs * fs, whefs_file const * f );
 
 /**
    Adds d to fs's close-at-shutdown list.
+
+   Closing d will automatically remove it from the list.
 */
 int whefs_fs_closer_dev_add( whefs_fs * fs, whio_dev * d );
 /**
@@ -239,6 +243,8 @@ int whefs_fs_closer_dev_remove( whefs_fs * fs, whio_dev const * d );
    Adds s to fs's close-at-shutdown list. s MUST be a proxy for the
    whio_dev d and d MUST have been added to fs via
    whefs_fs_closer_dev_add(), or results are undefined.
+
+   Closing s will automatically remove it from the list.
 */
 int whefs_fs_closer_stream_add( whefs_fs * fs, whio_stream * s, whio_dev const * d );
 
@@ -698,11 +704,9 @@ struct whefs_file
     */
     whio_dev * dev;
     /**
-       inode ID.
+       inode ID. To be phased out.
     */
     whefs_id_type inode;
-    /** Unfortunate. Should go away. */
-    //whefs_string name;
 };
 /** Empty initialization object. */
 extern const whefs_file whefs_file_init;

@@ -28,7 +28,7 @@
 
 static const whio_dev whio_dev_empty_init = WHIO_DEV_EMPTY_INIT;
 
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
 enum {
 /**
    The number of elements to statically allocate
@@ -47,7 +47,7 @@ struct
 whio_dev * whio_dev_alloc()
 {
     whio_dev * dev = 0;
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
     size_t i = whio_dev_alloc_slots.next;
     for( ; i < whio_dev_alloc_count; ++i )
     {
@@ -58,7 +58,7 @@ whio_dev * whio_dev_alloc()
 	//WHIO_DEBUG("Allocated device #%u @0x%p\n", i, (void const *)dev );
 	break;
     }
-#endif /* WHIO_USE_STATIC_MALLOC */
+#endif /* WHIO_CONFIG_ENABLE_STATIC_MALLOC */
     if( ! dev ) dev = (whio_dev *) malloc( sizeof(whio_dev) );
     if( dev ) *dev = whio_dev_empty_init;
     return dev;
@@ -68,7 +68,7 @@ void whio_dev_free( whio_dev * dev )
 {
     if( dev ) *dev = whio_dev_empty_init;
     else return;	
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
     if( (dev < &whio_dev_alloc_slots.devs[0]) ||
 	(dev > &whio_dev_alloc_slots.devs[whio_dev_alloc_count-1]) )
     { /* doesn't belong to us. */
@@ -96,7 +96,7 @@ void whio_dev_free( whio_dev * dev )
     }
 #else
     free(dev);
-#endif /* WHIO_USE_STATIC_MALLOC */
+#endif /* WHIO_CONFIG_ENABLE_STATIC_MALLOC */
 }
 
 
@@ -509,7 +509,7 @@ int whio_dev_fetch_free_data( whio_fetch_result * r )
 
 
 const whio_blockdev whio_blockdev_init = whio_blockdev_init_m;
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
 enum {
 /**
    The number of elements to statically allocate
@@ -528,7 +528,7 @@ static struct
 whio_blockdev * whio_blockdev_alloc()
 {
     whio_blockdev * obj = 0;
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
     size_t i = 0;
     for( ; i < whio_blockdev_alloc_count; ++i )
     {
@@ -537,7 +537,7 @@ whio_blockdev * whio_blockdev_alloc()
 	obj = &whio_blockdev_alloc_slots.objs[i];
 	break;
     }
-#endif /* WHIO_USE_STATIC_MALLOC */
+#endif /* WHIO_CONFIG_ENABLE_STATIC_MALLOC */
     if( ! obj ) obj = (whio_blockdev *) malloc( sizeof(whio_blockdev) );
     if( obj ) *obj = whio_blockdev_init;
     return obj;
@@ -546,7 +546,7 @@ whio_blockdev * whio_blockdev_alloc()
 void whio_blockdev_free( whio_blockdev * obj )
 {
     whio_blockdev_cleanup( obj );
-#if WHIO_USE_STATIC_MALLOC
+#if WHIO_CONFIG_ENABLE_STATIC_MALLOC
     if( (obj < &whio_blockdev_alloc_slots.objs[0]) ||
 	(obj > &whio_blockdev_alloc_slots.objs[whio_blockdev_alloc_count-1]) )
     { /* it does not belong to us */
@@ -563,7 +563,7 @@ void whio_blockdev_free( whio_blockdev * obj )
 #else
     if( obj ) *obj = whio_blockdev_init;
     free(obj);
-#endif /* WHIO_USE_STATIC_MALLOC */
+#endif /* WHIO_CONFIG_ENABLE_STATIC_MALLOC */
 }
 
 bool whio_blockdev_cleanup( whio_blockdev * self )

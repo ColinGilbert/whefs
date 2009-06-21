@@ -334,7 +334,7 @@ false, /* read/write */ \
 static const whio_dev_inode_meta whio_dev_inode_meta_init = WHIO_DEV_INODE_META_INIT;
 
 
-#if WHIO_USE_STATIC_MALLOC /* see whio_common.h for details */
+#if WHEFS_CONFIG_ENABLE_STATIC_MALLOC /* see whio_common.h for details */
 enum {
 /**
    The number of elements to statically allocate
@@ -353,7 +353,7 @@ static struct
 static whio_dev_inode_meta * whio_dev_inode_meta_alloc()
 {
     whio_dev_inode_meta * obj = 0;
-#if WHIO_USE_STATIC_MALLOC
+#if WHEFS_CONFIG_ENABLE_STATIC_MALLOC
     size_t i = whio_dev_inode_meta_alloc_slots.next;
     for( ; i < whio_dev_inode_meta_alloc_count; ++i )
     {
@@ -363,7 +363,7 @@ static whio_dev_inode_meta * whio_dev_inode_meta_alloc()
 	obj = &whio_dev_inode_meta_alloc_slots.objs[i];
 	break;
     }
-#endif /* WHIO_USE_STATIC_MALLOC */
+#endif /* WHEFS_CONFIG_ENABLE_STATIC_MALLOC */
     if( ! obj ) obj = (whio_dev_inode_meta *) malloc( sizeof(whio_dev_inode_meta) );
     if( obj ) *obj = whio_dev_inode_meta_init;
     return obj;
@@ -373,7 +373,7 @@ static void whio_dev_inode_meta_free( whio_dev_inode_meta * obj )
 {
     if( obj ) *obj = whio_dev_inode_meta_init;
     else return;
-#if WHIO_USE_STATIC_MALLOC
+#if WHEFS_CONFIG_ENABLE_STATIC_MALLOC
     if( (obj < &whio_dev_inode_meta_alloc_slots.objs[0]) ||
 	(obj > &whio_dev_inode_meta_alloc_slots.objs[whio_dev_inode_meta_alloc_count-1]) )
     { /* it does not belong to us */
@@ -389,7 +389,7 @@ static void whio_dev_inode_meta_free( whio_dev_inode_meta * obj )
     }
 #else
     free(obj);
-#endif /* WHIO_USE_STATIC_MALLOC */
+#endif /* WHEFS_CONFIG_ENABLE_STATIC_MALLOC */
 }
 
 
