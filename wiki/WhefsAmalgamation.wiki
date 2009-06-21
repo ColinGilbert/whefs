@@ -78,6 +78,9 @@ print;
 
 That said, stripping the API docs, even though they are large, does not have a consistent measurable effect on the compilation speed, and they should probably only be stripped when space is at a premium. _It also incidentally strips the license text, which might make some lawyers nervous._
 
+By default the library builds with support for internal debugging messages. This slows down the library a bit but can be very useful in tracking down errors. To deactivate the debugging code you must simply define the standard (or pseudostandard) `NDEBUG` macro (e.g. pass `-DNDEBUG=1` to your preprocessor).
+
+
 =Using tcc with the amalgamation=
 
 [http://bellard.org/tcc/ TinyCC] is a <em>really</em> fast C compiler with some interesting features. Namely, it's so fast that it can be used to run C code as if it were a shell-style script. With a copy of the whefs amalgamation it is trivial to write "scripts" in C which use whefs, without ever actually having to have libwhefs installed. tcc will compile it on the fly (and will do so so quickly that you won't even have time to time it). Here's an example, which uses [Whefs2c] input for an in-memory EFS:
