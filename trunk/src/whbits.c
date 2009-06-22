@@ -12,7 +12,11 @@ int whbits_init( whbits * b, whbits_count_t bitCount, unsigned char initialState
     if( b->sz_alloc >= lenB )
     { /* re-use the memory */
         //memset( b->bytes+b->sz_bytes, initialState, b->sz_bytes - lenB );
-        if( b->sz_bytes == lenB ) return 0;
+        if( b->sz_bytes == lenB )
+        {
+            b->sz_bits = bitCount;
+            return 0;
+        }
         else if( b->sz_bytes < lenB )
         {
             memset( b->bytes+b->sz_bytes, initialState, b->sz_alloc - b->sz_bytes );
