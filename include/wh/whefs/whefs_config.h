@@ -312,6 +312,41 @@ when some form of thread locking is enabled.
 #define WHEFS_CONFIG_ENABLE_STATIC_MALLOC 0
 #endif
 
+
+/** @def WHEFS_CONFIG_ENABLE_MMAP
+
+   If set to true then a whefs which uses a file as backing storage will
+   attempt to use mmap() to provide faster access.
+
+    TODO: make the use (or non-use) of mmap() toggleable if this option
+    is enabled.
+*/
+#if !defined(WHEFS_CONFIG_ENABLE_MMAP)
+#define WHEFS_CONFIG_ENABLE_MMAP 0
+#endif
+
+/** @def WHEFS_CONFIG_ENABLE_MMAP_ASYNC
+
+    If WHEFS_CONFIG_ENABLE_MMAP is false then this macro is ignored,
+    otherwise:
+
+    If WHEFS_CONFIG_ENABLE_MMAP_ASYNC is true then mmap() flushing is
+    done asynchronously, otherwise is is synchronous. Since all writes
+    to pseudofiles trigger a flush, running mmap() access in
+    synchronous mode can slow it down considerably (to almost the same
+    speed as no not using mmap()!). Running asynchronously speeds it
+    up drastically but could also theoretically lead to corruption in
+    more cases than synchronous writes do. e.g. what happens if a SIGINT
+    comes in after the write has returned (looking like success to the
+    caller) but before the commit to disk?
+
+    TODO: make this option runtime-configurable.
+
+*/
+#if !defined(WHEFS_CONFIG_ENABLE_MMAP_ASYNC)
+#  define WHEFS_CONFIG_ENABLE_MMAP_ASYNC 0
+#endif
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

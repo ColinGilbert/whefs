@@ -40,6 +40,16 @@ CFLAGS += -Wimplicit-function-declaration
 
 
 ########################################################################
+# If ENABLE_MMAP is 1 then whefs will try to mmap() file-based storage
+# for faster access. If ENABLE_MMAP_ASYNC is 1 then asynchronous mode
+# is used for mmap() flushing by default (*much* faster but also more
+# dangerous). If ENABLE_MMAP is false then ENABLE_MMAP_ASYNC is
+# ignored.
+ENABLE_MMAP ?= 1
+ENABLE_MMAP_ASYNC ?= 0
+
+
+########################################################################
 # Set ENABLE_STATIC_MALLOC to 1 to enable (0 to disable) custom
 # malloc()/free() implementations for certain types which avoid
 # malloc() until a certain number of objects have been created. This

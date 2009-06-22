@@ -160,7 +160,6 @@ static void whefs_fs_free( whefs_fs * obj )
 }
 
 
-
 int whefs_fs_lock( whefs_fs * restrict fs, bool writeLock, off_t start, int whence, off_t len )
 {
 #if WHEFS_CONFIG_ENABLE_FCNTL
@@ -216,6 +215,156 @@ int whefs_fs_unlock_range( whefs_fs * restrict fs, whefs_fs_range_locker const *
     return (fs && range)
 	? whefs_fs_unlock( fs, range->start, range->whence, range->len )
 	: whefs_rc.ArgError;
+}
+
+
+#if WHEFS_CONFIG_ENABLE_MMAP
+#include <sys/mman.h>
+/** Internal data for storing info about mmap()ed storage. */
+typedef struct
+{
+    void * mem;
+    whio_dev * fdev;
+    int fileno;
+    whio_size_t size;
+    bool writeMode;
+    bool async;
+}  WhioDevMMapInfo;
+static const WhioDevMMapInfo WhioDevMMapInfo_init = {NULL,NULL,0,0,false,false};
+
+/** Internal whio_dev_api::flush() impl for mmap()'d storage. */
+static int whio_dev_mmap_flush( whio_dev * dev )
+{
+    if(0) whio_dev_mmap_flush(0); /* avoid "static func defined but not used" warning. */
+    //WHEFS_DBG("msyncing mmap()...");
+    WhioDevMMapInfo * m = (WhioDevMMapInfo *)dev->client.data;
+    return m->writeMode
+        ? msync( m->mem, m->size, m->async ? MS_ASYNC : MS_SYNC )
+        : whio_rc.OK;
+}
+/** Internal whio_dev_api::close() impl for mmap()'d storage. */
+static bool whio_dev_mmap_close( whio_dev * dev )
+{
+    if(0) whio_dev_mmap_close(0); /* avoid "static func defined but not used" warning. */
+    if( ! dev ) return false;
+    //WHEFS_DBG("closing mmap()...");
+    WhioDevMMapInfo * m = (WhioDevMMapInfo *)dev->client.data;
+    if( ! m ) return true;
+    if( m->mem )
+    {
+        dev->api->flush( dev );
+        //WHEFS_DBG("munmap()...");
+        munmap( m->mem, m->size );
+    }
+    if( m->fdev ) m->fdev->api->finalize(m->fdev);
+    *m = WhioDevMMapInfo_init;
+    free(m);
+    dev->client.data = 0;
+    return whio_dev_api_memmap.close( dev );
+}
+
+#endif // WHEFS_CONFIG_ENABLE_MMAP
+
+/**
+   If WHEFS_CONFIG_ENABLE_MMAP is true then this tries to mmap() the
+   underlying storage (fs->dev). If it succeeds it replaces fs->dev
+   with a proxy device. Returns whefs_rc.OK on success. Failure can
+   be ignored unless you REALLY need mmap().
+
+   If WHEFS_CONFIG_ENABLE_MMAP is false then whefs_rc.UnsupportedError
+   is returned.
+*/
+static int whefs_fs_mmap_connect( whefs_fs * fs )
+{
+    //WHEFS_DBG("Trying mmap? fileno=%d",fs->fileno);
+#if WHEFS_CONFIG_ENABLE_MMAP
+    if( WHEFS_FLAG_FS_IsMMapped & fs->flags ) return whefs_rc.OK;
+    if( fs->fileno < 1 ) return whefs_rc.UnsupportedError;
+    /**
+       HOLY FARGING SHITE! What a speed difference mmap() makes!!!
+
+       Here we do a bit of trickery: we swap out fs->dev with a proxy
+       device which mmap()'s the file.
+
+       HOWEVER, we need to fix whefs_fs_append_blocks() to re-mmap()
+       the file if the size changes!
+    */
+    static whio_dev_api whio_dev_api_mmap = {0};
+    static bool doneIt = false;
+    if( !doneIt )
+    {
+        whio_dev_api_mmap = whio_dev_api_memmap;
+        whio_dev_api_mmap.flush = whio_dev_mmap_flush;
+        whio_dev_api_mmap.close = whio_dev_mmap_close;
+        doneIt = true;
+    }
+    whio_size_t dsz = whio_dev_size( fs->dev );
+    void * m = mmap( 0, dsz, PROT_WRITE, MAP_SHARED, fs->fileno, 0 );
+    if( ! m )
+    {
+        WHEFS_DBG_WARN("mmap() failed for %"WHIO_SIZE_T_PFMT" bytes of fs->fileno (#%d)!",dsz,fs->fileno);
+    }
+    whio_dev * md = whefs_fs_is_rw(fs)
+        ? whio_dev_for_memmap_rw( m, dsz )
+        : whio_dev_for_memmap_ro( m, dsz );
+    if( ! md )
+    {
+        WHEFS_DBG_WARN("whio_dev_for_memmap_xx() failed for %"WHIO_SIZE_T_PFMT" bytes of fs->fileno (#%d)!",dsz,fs->fileno);
+        return whefs_rc.IOError;
+    }
+    md->api = &whio_dev_api_mmap;
+    WhioDevMMapInfo * minfo = (WhioDevMMapInfo*)malloc(sizeof(WhioDevMMapInfo));
+    if( ! minfo )
+    {
+        WHEFS_DBG_ERR("Allocatation of %u bytes for WhioDevMMapInfo failed!",sizeof(WhioDevMMapInfo));
+        md->api->finalize(md);
+        return whefs_rc.AllocError;
+    }
+    md->client.data = minfo;
+    minfo->size = dsz;
+    minfo->fileno = fs->fileno;
+    minfo->mem = m;
+    minfo->fdev = fs->dev;
+    minfo->writeMode = whefs_fs_is_rw(fs);
+    minfo->async = WHEFS_CONFIG_ENABLE_MMAP_ASYNC ? true : false;
+    fs->dev = md;
+    fs->flags |= WHEFS_FLAG_FS_IsMMapped;
+    WHEFS_DBG_FYI("Swapped out EFS file-based whio_dev with mmap() wrapper! Flushing in %s mode.",
+                  WHEFS_CONFIG_ENABLE_MMAP_ASYNC ? "asynchronous" : "synchronous");
+    return whefs_rc.OK;
+#else
+    return whefs_rc.UnsupportedError;
+#endif
+
+}
+
+/**
+   If WHEFS_CONFIG_ENABLE_MMAP this simply returns whefs_rc.UnsupportedError, otherwise:
+
+   If fs->dev is a mmap() device proxy then it is removed and fs->dev
+   is redirected to the non-proxy device. This is necessary before
+   certain operations, namely a truncate() on an mmap()'d file.
+
+   We should be able to add a whio_dev::truncate() impl to our proxy which
+   could take care of re-mmap()ing for us.
+*/
+static int whefs_fs_mmap_disconnect( whefs_fs * fs )
+{
+#if ! WHEFS_CONFIG_ENABLE_MMAP
+    return whefs_rc.UnsupportedError;
+#else
+    if( ! fs ) return whefs_rc.ArgError;
+    if( ! (fs->flags & WHEFS_FLAG_FS_IsMMapped) ) return whefs_rc.OK;
+    if( fs->fileno < 1 ) return whefs_rc.InternalError;
+    if( fs->dev->impl.typeID != &whio_dev_api_memmap ) return whefs_rc.InternalError;
+    // We appear to have an mmap() proxy in place...
+    WhioDevMMapInfo * m = (WhioDevMMapInfo *)fs->dev->client.data;
+    whio_dev * dx = m->fdev;
+    m->fdev = 0;
+    fs->dev->api->finalize(fs->dev);
+    fs->dev = dx;
+    return whefs_rc.OK;
+#endif
 }
 
 
@@ -306,6 +455,7 @@ void whefs_fs_finalize( whefs_fs * restrict fs )
 {
     if( ! fs ) return;
     whefs_fs_flush(fs);
+    whefs_fs_mmap_disconnect( fs );
     if( fs->closers )
     {
 	WHEFS_DBG_WARN("We're closing with opened objects! Closing them...");
@@ -684,7 +834,6 @@ static int whefs_mkfs_write_inodelist( whefs_fs * restrict fs )
     return rc;
 }
 
-
 /**
    Uses whio_dev_ioctl() to try to get a file descriptor number
    associated with fs->dev. If it succeeds we store the descriptor
@@ -692,20 +841,16 @@ static int whefs_mkfs_write_inodelist( whefs_fs * restrict fs )
 */
 static void whefs_fs_check_fileno( whefs_fs * restrict fs )
 {
-    if( fs && fs->dev )
+    if( !fs || !fs->dev ) return;
+    char const * fname = 0;
+    whio_dev_ioctl( fs->dev, whio_dev_ioctl_GENERAL_name, &fname );
+    if( whio_rc.OK != whio_dev_ioctl( fs->dev, whio_dev_ioctl_FILE_fd, &fs->fileno ) )
     {
-	char const * fname = 0;
-	whio_dev_ioctl( fs->dev, whio_dev_ioctl_GENERAL_name, &fname );
-	if( whio_rc.OK == whio_dev_ioctl( fs->dev, whio_dev_ioctl_FILE_fd, &fs->fileno ) )
-	{
-	    //WHEFS_DBG_FYI("Backing store appears to be a FILE (named [%s]) with descriptor #%d.", fname, fs->fileno );
-	    //posix_fadvise( fs->fileno, 0L, 0L, POSIX_FADV_RANDOM );
-	}
-	else
-	{
-	    //WHEFS_DBG("Backing store does not appear to be a FILE." );
-	}
+        //WHEFS_DBG("Backing store does not appear to be a FILE." );
+        return;
     }
+    //WHEFS_DBG_FYI("Backing store appears to be a FILE (named [%s]) with descriptor #%d.", fname, fs->fileno );
+    //posix_fadvise( fs->fileno, 0L, 0L, POSIX_FADV_RANDOM );
 }
 
 /**
@@ -1168,6 +1313,7 @@ int whefs_mkfs( char const * filename, whefs_fs_options const * opt, whefs_fs **
     }
     else
     {
+        whefs_fs_mmap_connect( fs );
 	*tgt = fs;
     }
     return rc;
@@ -1208,6 +1354,7 @@ int whefs_mkfs_dev( whio_dev * dev, whefs_fs_options const * opt, whefs_fs ** tg
     if( fs )
     {
 	fs->ownsDev = takeDev;
+        whefs_fs_mmap_connect( fs );
 	*tgt = fs;
     }
     return rc;
@@ -1344,6 +1491,7 @@ int whefs_openfs_dev( whio_dev * restrict dev, whefs_fs ** tgt, bool takeDev )
     int rc = whefs_openfs_stage2( fs );
     if( whefs_rc.OK == rc )
     {
+        whefs_fs_mmap_connect( fs );
 	*tgt = fs;
     }
     return rc;
@@ -1368,6 +1516,7 @@ int whefs_openfs( char const * filename, whefs_fs ** tgt, bool writeMode )
     int rc = whefs_openfs_stage2( fs );
     if( whefs_rc.OK == rc )
     {
+        whefs_fs_mmap_connect( fs );
 	*tgt = fs;
     }
     return rc;
@@ -1456,6 +1605,14 @@ int whefs_fs_append_blocks( whefs_fs * restrict fs, whefs_id_type count )
     {
         return whefs_rc.AccessError;
     }
+    /**
+       Having an active mmap() makes it impossible to truncate an open
+       file because our simplified mmap() proxy device doesn't have a
+       proper truncate() implementation. So we remove the proxy (if any)
+       before truncating, then reconnect it (if the device supports it)
+       afterwards.
+    */
+    whefs_fs_mmap_disconnect(fs);
     whefs_fs_options * opt = &fs->options;
     const whefs_id_type oldCount = opt->block_count;
     const size_t oldEOF = fs->offsets[WHEFS_OFF_EOF];
@@ -1466,6 +1623,7 @@ int whefs_fs_append_blocks( whefs_fs * restrict fs, whefs_id_type count )
     {
         WHEFS_DBG_ERR("Could not truncate fs to %u bytes to add %"WHEFS_ID_TYPE_PFMT" blocks!",newEOF, count);
         fs->dev->api->truncate( fs->dev, oldEOF ); // just to be sure
+        whefs_fs_mmap_connect(fs);
         return rc;
     }
     fs->offsets[WHEFS_OFF_EOF] = newEOF;
@@ -1486,5 +1644,6 @@ int whefs_fs_append_blocks( whefs_fs * restrict fs, whefs_id_type count )
         if( whefs_rc.OK != rc ) break;
     }
     whefs_fs_flush( fs );
+    whefs_fs_mmap_connect( fs ); // We need to re-mmap() to account for the new size!
     return rc;
 }
