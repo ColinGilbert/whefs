@@ -23,7 +23,7 @@ EOF
     exit 1
 fi
 
-PATH=".:$PATH"
+PATH="$(dirname $0):$PATH"
 export PATH
 emkfs=$(which whefs-mkfs)
 els=$(which whefs-ls)
