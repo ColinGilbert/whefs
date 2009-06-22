@@ -15,6 +15,12 @@ $(call ShakeNMake.CALL.RULES.BINS,test)
 $(test.BIN): $(WHEFS_BINS_DEPS)
 bins: $(test.BIN)
 
+whio-test.BIN.OBJECTS := whio-test.o
+whio-test.BIN.LDFLAGS := $(WHEFS_BINS_LDFLAGS)
+$(call ShakeNMake.CALL.RULES.BINS,whio-test)
+$(whio-test.BIN): $(WHEFS_BINS_DEPS)
+bins: $(whio-test.BIN)
+
 
 ########################################################################
 # Converts arbitrary input to a C char array.
@@ -134,4 +140,5 @@ all: $(test.BIN) $(bin2c.BIN) \
 	$(whefs-ls.BIN) \
 	$(whefs-mkfs.BIN) \
 	$(whefs-rm.BIN) \
-	$(subfs.BIN)
+	$(subfs.BIN) \
+	$(whio-test.BIN)
