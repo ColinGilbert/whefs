@@ -622,7 +622,7 @@ int whio_blockdev_write( whio_blockdev * self, whio_size_t id, void const * src 
     whio_size_t pos = whio_block_offset_for_id( self, id );
     if( whio_rc.SizeTError == pos )
     {
-	WHIO_DEBUG("id #%"PRIu32" is not valid for this whio_blockdev. block count=%"PRIu32"\n",id,self->blocks.count);
+	WHIO_DEBUG("id #%"WHIO_SIZE_T_PFMT" is not valid for this whio_blockdev. block count=%"WHIO_SIZE_T_PFMT"\n",id,self->blocks.count);
 	return whio_rc.RangeError;
     }
     if( ! src ) return false;
