@@ -76,7 +76,6 @@ typedef struct whio_dev_membuf_meta
     }
 /**
    Initialization object for new whio_dev_membuf objects.
-   Also used as whio_dev::typeID for membuf.
 */
 static const whio_dev_membuf_meta whio_dev_membuf_meta_init = WHIO_DEV_MEMBUF_META_INIT;
 
@@ -140,7 +139,7 @@ static void whio_dev_membuf_meta_free( whio_dev_membuf_meta * obj )
    parameter be-a whio_dev and that that device is-a whio_dev_membuf.
  */
 #define WHIO_MEMBUF_DECL(RV) whio_dev_membuf_meta * mb = (dev ? (whio_dev_membuf_meta*)dev->impl.data : 0); \
-    if( !mb  || ((void const *)&whio_dev_membuf_meta_init != dev->impl.typeID) ) return RV
+    if( !mb  || ((void const *)&whio_dev_api_membuf != dev->impl.typeID) ) return RV
 
 static whio_size_t whio_dev_membuf_read( whio_dev * dev, void * dest, whio_size_t n )
 {
@@ -349,21 +348,48 @@ static int whio_dev_membuf_ioctl( whio_dev * dev, int arg, va_list vargs )
 {
     int rc = whio_rc.UnsupportedError;
     WHIO_MEMBUF_DECL(rc);
+    whio_size_t * x = 0;
+    unsigned char const ** cp = 0;
     switch( arg )
     {
       case whio_dev_ioctl_BUFFER_uchar_ptr:
-	  rc = whio_rc.OK;
-	  *(va_arg(vargs,unsigned char const **)) = mb->buffer;
+          cp = va_arg(vargs,unsigned char const **);
+          if( cp )
+          {
+              rc = whio_rc.OK;
+              *cp = mb->buffer;
+          }
+          else
+          {
+              rc = whio_rc.ArgError;
+          }
 	  break;
       case whio_dev_ioctl_GENERAL_size:
-	  rc = whio_rc.OK;
-	  *(va_arg(vargs,whio_size_t*)) = mb->size;
+          x = va_arg(vargs,whio_size_t*);
+          if( x )
+          {
+              rc = whio_rc.OK;
+              *x = mb->size;
+          }
+          else
+          {
+              rc = whio_rc.ArgError;
+          }
 	  break;
       case whio_dev_ioctl_BUFFER_size:
-	  rc = whio_rc.OK;
-	  *(va_arg(vargs,whio_size_t*)) = mb->alloced;
+          x = va_arg(vargs,whio_size_t*);
+          if( x )
+          {
+              rc = whio_rc.OK;
+              *x = mb->alloced;
+          }
+          else
+          {
+              rc = whio_rc.ArgError;
+          }
 	  break;
-      default: break;
+      default:
+          break;
     };
     return rc;
 }
@@ -418,7 +444,7 @@ const whio_dev_api whio_dev_api_membuf =
     &whio_dev_api_membuf, \
     { /* impl */ \
     0, /* data. Must be-a (whio_dev_membuf*) */ \
-    (void const *)&whio_dev_membuf_meta_init /* typeID */ \
+    (void const *)&whio_dev_api_membuf /* typeID */ \
     } }
 
 static const whio_dev whio_dev_membuf_init = WHIO_DEV_MEMBUF_INIT;
@@ -489,7 +515,6 @@ typedef struct whio_dev_memmap
 
 /**
    Initialization object for new whio_dev_memmap objects.
-   Also used as whio_dev::typeID for memmap.
 */
 #define WHIO_DEV_MEMMAP_INIT { \
     0, /* size */ \
@@ -565,7 +590,7 @@ static void whio_dev_memmap_free( whio_dev_memmap * obj )
    mismatch) it calls (return RV).
  */
 #define WHIO_MEMMAP_DECL(RV) whio_dev_memmap * mb = (dev ? (whio_dev_memmap*)dev->impl.data : 0); \
-    if( !mb  || ((void const *)&whio_dev_memmap_init != dev->impl.typeID) ) return RV
+    if( !mb  || ((void const *)&whio_dev_api_memmap != dev->impl.typeID) ) return RV
 
 static whio_size_t whio_dev_memmap_read( whio_dev * dev, void * dest, whio_size_t n )
 {
@@ -696,14 +721,35 @@ static int whio_dev_memmap_ioctl( whio_dev * dev, int arg, va_list vargs )
 {
     int rc = whio_rc.UnsupportedError;
     WHIO_MEMMAP_DECL(rc);
+    whio_size_t * x = 0;
     switch( arg )
     {
       case whio_dev_ioctl_GENERAL_size:
-      case whio_dev_ioctl_BUFFER_size:
-	  rc = whio_rc.OK;
-	  *(va_arg(vargs,whio_size_t*)) = mb->maxsize;
+          x = va_arg(vargs,whio_size_t*);
+          if( x )
+          {
+              rc = whio_rc.OK;
+              *x = mb->size;
+          }
+          else
+          {
+              rc = whio_rc.ArgError;
+          }
 	  break;
-      default: break;
+      case whio_dev_ioctl_BUFFER_size:
+          x = va_arg(vargs,whio_size_t*);
+          if( x )
+          {
+              rc = whio_rc.OK;
+              *x = mb->maxsize;
+          }
+          else
+          {
+              rc = whio_rc.ArgError;
+          }
+	  break;
+      default:
+          break;
     };
     return rc;
 }
@@ -757,7 +803,7 @@ static const whio_dev whio_dev_memmap_dev_init =
     &whio_dev_api_memmap,
     { /* impl */
     0, /* data. Must be-a (whio_dev_memmap*) */
-    (void const *)&whio_dev_memmap_init /* typeID */
+    (void const *)&whio_dev_api_memmap /* typeID */
     }
     };
 
@@ -818,3 +864,4 @@ whio_dev * whio_dev_for_memmap_ro( const void * mem, whio_size_t size )
 {
     return whio_dev_for_memmap( 0, mem, size );
 }
+

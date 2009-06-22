@@ -88,6 +88,41 @@ whio_dev * whio_dev_for_FILE( FILE * f, bool takeOwnership );
 */
 whio_dev * whio_dev_for_filename( char const * fname, char const * mode );
 
+/**
+   Equivalent to whio_dev_for_filename(), but takes an opened file
+   descriptor and calls fdopen() on it.
+
+   PLEASE read your local man pages for fdopen() regarding caveats in
+   the setting of the mode parameter and the close()
+   handling. e.g. destroying the returned device will close it, so the
+   descriptor should not be used by client code after that. Likewise,
+   client code should not close the descriptor as long as the returned
+   device is alive. Thus ownership of the handle is effectively passed
+   to the returned object, and there is no way to relinquish it.
+
+   My local man pages say:
+
+   @code
+   The fdopen() function associates a stream with the existing file
+   descriptor, fd.  The mode of the stream (one of the values "r",
+   "r+", "w", "w+", "a", "a+") must be compatible with the mode of the
+   file descriptor.  The file position indicator of the new stream is
+   set to that belonging to fd, and the error and end-of-file
+   indicators are cleared.  Modes "w" or "w+" do not cause truncation
+   of the file.  The file descriptor is not dup’ed, and will be
+   closed when the stream created by fdopen() is closed.  The result
+   of applying fdopen() to a shared memory object is undefined.
+   @endcode
+
+
+   The returned device is identical to ones returned by
+   whio_dev_for_filename(), except that the ioctl()
+   whio_dev_ioctl_GENERAL_name will return NULL (but will succeed
+   without an error).
+
+*/
+whio_dev * whio_dev_for_fileno( int filedescriptor, char const * mode );
+
 
 /**
    Creates a new whio_dev object which wraps an in-memory buffer. The
@@ -213,8 +248,12 @@ whio_dev * whio_dev_for_membuf( whio_size_t size, float expFactor );
    - write() on a read-only memory buffer returns 0, as opposed to
    whio_rc.SizeTError.
 
-   - Supports the same ioctl() arguments as described for
-   whio_dev_for_membuf().
+   - Supports the ioctl()s whio_dev_ioctl_BUFFER_size, which returns
+   the allocated size of the buffer (as passed to the factory
+   function), and whio_dev_ioctl_GENERAL_size, which returns the
+   position of the virtual EOF. It is not yet clear if we can support
+   whio_dev_ioctl_BUFFER_uchar_ptr without violating constness of
+   read-only buffers.
 
    @see whio_dev_for_memmap_ro()
    @see whio_dev_for_membuf()
@@ -236,6 +275,9 @@ whio_dev * whio_dev_for_memmap_ro( const void * mem, whio_size_t size );
    whio_dev_for_memmap_rw() and whio_dev_for_memmap_ro(). It is in the public
    interface because there are some interesting use-cases where we want
    to override parts of the API to do custom handling.
+
+   The address of this object is also used as the whio_dev::typeID value
+   for memmap devices.
 */
 extern const whio_dev_api whio_dev_api_memmap;
 
@@ -244,6 +286,9 @@ extern const whio_dev_api whio_dev_api_memmap;
    by whio_dev_for_membuf() . It is in the public interface because
    there are some interesting use-cases where we want to override
    parts of the API to do custom handling.
+
+   The address of this object is also used as the whio_dev::typeID value
+   for membuf devices.
 */
 extern const whio_dev_api whio_dev_api_membuf;
 
