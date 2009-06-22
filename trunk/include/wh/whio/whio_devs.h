@@ -232,6 +232,23 @@ whio_dev * whio_dev_for_memmap_rw( void * mem, whio_size_t size );
 whio_dev * whio_dev_for_memmap_ro( const void * mem, whio_size_t size );
 
 /**
+   This object is the api member used by whio_dev instances returned by
+   whio_dev_for_memmap_rw() and whio_dev_for_memmap_ro(). It is in the public
+   interface because there are some interesting use-cases where we want
+   to override parts of the API to do custom handling.
+*/
+extern const whio_dev_api whio_dev_api_memmap;
+
+/**
+   This object is the api member used by whio_dev instances returned
+   by whio_dev_for_membuf() . It is in the public interface because
+   there are some interesting use-cases where we want to override
+   parts of the API to do custom handling.
+*/
+extern const whio_dev_api whio_dev_api_membuf;
+
+
+/**
    Creates a new whio_dev object which acts as a proxy for a specified
    range of another device (that is, the object acts as a
    "subdevice"). All read/write/seek/tell operations on the returned
