@@ -288,8 +288,19 @@ struct whefs_fs
     uint32_t sizes[WHEFS_SZ_COUNT];
     /**
        Underlying i/o device for the backing store.
+
+       Maintenance warning:
+
+       If this object get swapped out during the life of this object
+       (the mmap() handler does that) then the objects in
+       whefs_fs::fences which were initialized to point to the
+       previous device must be cleaned before swapping the device and
+       re-set-up after swapping out the device.
+
+       That goes for any copied pointers back to whefs_fs::dev.
     */
     whio_dev * dev;
+
     /**
        If true, this object owns the dev member and will destroy
        it when the time comes.

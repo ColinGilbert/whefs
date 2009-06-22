@@ -328,9 +328,6 @@ static int whefs_fs_mmap_connect( whefs_fs * fs )
 
        Here we do a bit of trickery: we swap out fs->dev with a proxy
        device which mmap()'s the file.
-
-       HOWEVER, we need to fix whefs_fs_append_blocks() to re-mmap()
-       the file if the size changes!
     */
     static whio_dev_api whio_dev_api_mmap = {0};
     static bool doneIt = false;
@@ -346,13 +343,15 @@ static int whefs_fs_mmap_connect( whefs_fs * fs )
     if( ! m )
     {
         WHEFS_DBG_WARN("mmap() failed for %"WHIO_SIZE_T_PFMT" bytes of fs->fileno (#%d)!",dsz,fs->fileno);
+        return whefs_rc.IOError;
     }
     whio_dev * md = whefs_fs_is_rw(fs)
         ? whio_dev_for_memmap_rw( m, dsz )
         : whio_dev_for_memmap_ro( m, dsz );
     if( ! md )
     {
-        WHEFS_DBG_WARN("whio_dev_for_memmap_xx() failed for %"WHIO_SIZE_T_PFMT" bytes of fs->fileno (#%d)!",dsz,fs->fileno);
+        WHEFS_DBG_WARN("whio_dev_for_memmap_%s() failed for %"WHIO_SIZE_T_PFMT" bytes of fs->fileno (#%d)!",
+                       (whefs_fs_is_rw(fs) ? "rw" : "ro"), dsz,fs->fileno);
         return whefs_rc.IOError;
     }
     md->api = &whio_dev_api_mmap;
@@ -387,7 +386,8 @@ static int whefs_fs_mmap_connect( whefs_fs * fs )
        Note that we currently ignore any error code here from
        whefs_fs_init_fences(), because whefs_fs_mmap_connect()'s
        return value is ignored (because not having mmap() is not an
-       error).
+       error). Non-initialized fences would be fatal at the next
+       inode write, however, and we need to catch that here.
     */
     whio_blockdev_cleanup( &fs->fences.s );
     whio_blockdev_cleanup( &fs->fences.i );
