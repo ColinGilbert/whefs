@@ -398,7 +398,7 @@ static void whio_dev_membuf_finalize( whio_dev * dev )
 }
 #undef WHIO_MEMBUF_DECL
 
-static const whio_dev_api whio_dev_api_membuf =
+const whio_dev_api whio_dev_api_membuf =
     {
     whio_dev_membuf_read,
     whio_dev_membuf_write,
@@ -736,7 +736,7 @@ static void whio_dev_memmap_finalize( whio_dev * dev )
 }
 #undef WHIO_MEMMAP_DECL
 
-static const whio_dev_api whio_dev_api_memmap =
+const whio_dev_api whio_dev_api_memmap =
     {
     whio_dev_memmap_read,
     whio_dev_memmap_write,
