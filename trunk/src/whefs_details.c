@@ -75,7 +75,7 @@ WHEFS_DBG_F_DEFAULT = WHEFS_DBG_F_DEFAULTS_CLIENT
 Flags used for various purposes within the VFS internals.
 
 MAINTENANCE REMINDER: whefs_block::flags is uint8, so the flags
-used with that type need to stay smal.
+used with that type need to stay small.
 */
 typedef enum {
 /**
@@ -96,7 +96,12 @@ WHEFS_FLAG_Read = 0x02,
 WHEFS_FLAG_Write = 0x04,
 WHEFS_FLAG_ReadWrite = WHEFS_FLAG_Write | WHEFS_FLAG_Read,
 WHEFS_FLAG_Opened = 0x8,
-//WHEFS_FLAG_FS_AutoExpand = 0x0010,
+/**
+   If a whefs_fs mmap()s the underlying storage then this flag
+   is set.
+*/
+WHEFS_FLAG_FS_IsMMapped = 0x10,
+//WHEFS_FLAG_FS_AutoExpand = 0x0020,
 /**
    Mark error state for whefs_file objects.
 */
