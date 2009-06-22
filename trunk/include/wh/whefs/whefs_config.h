@@ -332,16 +332,19 @@ when some form of thread locking is enabled.
 
     If WHEFS_CONFIG_ENABLE_MMAP_ASYNC is true then mmap() flushing is
     done asynchronously, otherwise is is synchronous. Since all writes
-    to pseudofiles trigger a flush, running mmap() access in
-    synchronous mode can slow it down considerably (to almost the same
-    speed as no not using mmap()!). Running asynchronously speeds it
-    up drastically but could also theoretically lead to corruption in
-    more cases than synchronous writes do. e.g. what happens if a SIGINT
-    comes in after the write has returned (looking like success to the
-    caller) but before the commit to disk?
+    to pseudofiles trigger a flush (so that the inode info gets
+    updates), running mmap() access in synchronous mode can slow it
+    down. Running asynchronously speeds it up but could also
+    theoretically lead to corruption in more cases than synchronous
+    writes do. e.g. what happens if a SIGINT comes in after the write
+    has returned (looking like success to the caller) but before the
+    commit to disk?
+
+    That said - my simple tests have been inconclusive as to whether
+    async mode provides a huge benefit over synchronous mode, and async
+    is disabled by default.
 
     TODO: make this option runtime-configurable.
-
 */
 #if !defined(WHEFS_CONFIG_ENABLE_MMAP_ASYNC)
 #  define WHEFS_CONFIG_ENABLE_MMAP_ASYNC 0
