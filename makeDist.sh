@@ -27,6 +27,7 @@ for d in $sdirs; do
 	-type f \
 	-name '*.h' \
 	-o -name '*.c' \
+	-o -name '*.sh' \
 	-o -name 'Makefile' \
 	-o -name 'Doxyfile' \
 	-o -name 'Doxyfile-internal' \
