@@ -217,6 +217,49 @@ int whefs_fs_unlock_range( whefs_fs * restrict fs, whefs_fs_range_locker const *
 	: whefs_rc.ArgError;
 }
 
+/** @internal
+   Initializes several i/o fencing devices for fs. fs->dev must be valid
+   and whefs_fs_init_sizes() must have been falled.
+
+   Returns whefs_rc.OK on success.
+*/
+static int whefs_fs_init_fences( whefs_fs * restrict fs )
+{
+    if( ! fs || !fs->dev || !fs->offsets[WHEFS_OFF_BLOCKS] ) return whefs_rc.ArgError;
+    static unsigned char whefs_block_name_prototype[WHEFS_MAX_FILENAME_LENGTH + 30 /* FIXME: use proper offset here*/] = {'*',0};
+    if( '*' == whefs_block_name_prototype[0] )
+    {
+	memset( whefs_block_name_prototype + 1, 0, WHEFS_MAX_FILENAME_LENGTH - 1 );
+	whefs_block_name_prototype[0] = 0;
+    }
+    int rc = whefs_rc.OK;
+
+    rc = whio_blockdev_setup( &fs->fences.s, fs->dev,
+				  fs->offsets[WHEFS_OFF_INODE_NAMES],
+				  fs->sizes[WHEFS_SZ_INODE_NAME],
+				  fs->options.inode_count,
+				  whefs_block_name_prototype );
+    if( whio_rc.OK != rc ) return rc;
+
+    rc = whio_blockdev_setup( &fs->fences.i, fs->dev,
+			      fs->offsets[WHEFS_OFF_INODES_NO_STR],
+			      fs->sizes[WHEFS_SZ_INODE_NO_STR],
+			      fs->options.inode_count,
+			      0 );
+    if( whio_rc.OK != rc ) return rc;
+
+#if 0 // not yet used...
+    rc = whio_blockdev_setup( &fs->fences.b, fs->dev,
+			      fs->offsets[WHEFS_OFF_BLOCKS],
+			      fs->sizes[WHEFS_SZ_BLOCK],
+			      fs->options.block_count,
+			      0 /* FIXME: we need a prototype, but need the encoding routines for that first. */ );
+#endif
+
+    rc = whefs_string_cache_setup( &fs->cache.strings, fs->options.inode_count, fs->options.filename_length );
+
+    return rc;
+}
 
 #if WHEFS_CONFIG_ENABLE_MMAP
 #include <sys/mman.h>
@@ -299,7 +342,7 @@ static int whefs_fs_mmap_connect( whefs_fs * fs )
         doneIt = true;
     }
     whio_size_t dsz = whio_dev_size( fs->dev );
-    void * m = mmap( 0, dsz, PROT_WRITE, MAP_SHARED, fs->fileno, 0 );
+    void * m = mmap( 0, dsz, whefs_fs_is_rw(fs) ? PROT_WRITE : PROT_READ, MAP_SHARED, fs->fileno, 0 );
     if( ! m )
     {
         WHEFS_DBG_WARN("mmap() failed for %"WHIO_SIZE_T_PFMT" bytes of fs->fileno (#%d)!",dsz,fs->fileno);
@@ -327,7 +370,29 @@ static int whefs_fs_mmap_connect( whefs_fs * fs )
     minfo->fdev = fs->dev;
     minfo->writeMode = whefs_fs_is_rw(fs);
     minfo->async = WHEFS_CONFIG_ENABLE_MMAP_ASYNC ? true : false;
+    /**
+       This whio_blockdev_cleanup() stuff is an unsettling hack. The
+       problem is that fs->fences.* have already been set up to point
+       to fs->dev, and there is no public API for re-parenting
+       them. So we wipe them out and re-build them after re-directing
+       fs->dev.
+
+       This automatically means we have several wasted mallocs()
+       during mkfs/openfs, because the fences are initialized long
+       before this function is called. Then we destroy them just for
+       the sake of reparenting them. i'll look into tweaking the
+       whio_blockdev and/or whio_subdev interfaces to allow us to do
+       this without destroying and re-allocating the objects.
+
+       Note that we currently ignore any error code here from
+       whefs_fs_init_fences(), because whefs_fs_mmap_connect()'s
+       return value is ignored (because not having mmap() is not an
+       error).
+    */
+    whio_blockdev_cleanup( &fs->fences.s );
+    whio_blockdev_cleanup( &fs->fences.i );
     fs->dev = md;
+    whefs_fs_init_fences(fs);
     fs->flags |= WHEFS_FLAG_FS_IsMMapped;
     WHEFS_DBG_FYI("Swapped out EFS file-based whio_dev with mmap() wrapper! Flushing in %s mode.",
                   WHEFS_CONFIG_ENABLE_MMAP_ASYNC ? "asynchronous" : "synchronous");
@@ -335,11 +400,11 @@ static int whefs_fs_mmap_connect( whefs_fs * fs )
 #else
     return whefs_rc.UnsupportedError;
 #endif
-
 }
 
 /**
-   If WHEFS_CONFIG_ENABLE_MMAP this simply returns whefs_rc.UnsupportedError, otherwise:
+   If !WHEFS_CONFIG_ENABLE_MMAP this simply returns
+   whefs_rc.UnsupportedError, otherwise:
 
    If fs->dev is a mmap() device proxy then it is removed and fs->dev
    is redirected to the non-proxy device. This is necessary before
@@ -361,8 +426,15 @@ static int whefs_fs_mmap_disconnect( whefs_fs * fs )
     WhioDevMMapInfo * m = (WhioDevMMapInfo *)fs->dev->client.data;
     whio_dev * dx = m->fdev;
     m->fdev = 0;
+    /**
+       See the comments in whefs_fs_mmap_connect() for
+       why we have to kludge fs->fences.* here.
+    */
+    whio_blockdev_cleanup ( &fs->fences.s );
+    whio_blockdev_cleanup ( &fs->fences.i );
     fs->dev->api->finalize(fs->dev);
     fs->dev = dx;
+    whefs_fs_init_fences(fs);
     return whefs_rc.OK;
 #endif
 }
@@ -1118,50 +1190,6 @@ static void whefs_fs_init_sizes( whefs_fs * restrict fs )
     //assert(0 && "on purpose");
 #undef OFF
 #endif
-}
-
-/** @internal
-   Initializes several i/o fencing devices for fs. fs->dev must be valid
-   and whefs_fs_init_sizes() must have been falled.
-
-   Returns whefs_rc.OK on success.
-*/
-static int whefs_fs_init_fences( whefs_fs * restrict fs )
-{
-    if( ! fs || !fs->dev || !fs->offsets[WHEFS_OFF_BLOCKS] ) return whefs_rc.ArgError;
-    static unsigned char whefs_block_name_prototype[WHEFS_MAX_FILENAME_LENGTH + 30 /* FIXME: use proper offset here*/] = {'*',0};
-    if( '*' == whefs_block_name_prototype[0] )
-    {
-	memset( whefs_block_name_prototype + 1, 0, WHEFS_MAX_FILENAME_LENGTH - 1 );
-	whefs_block_name_prototype[0] = 0;
-    }
-    int rc = whefs_rc.OK;
-
-    rc = whio_blockdev_setup( &fs->fences.s, fs->dev,
-				  fs->offsets[WHEFS_OFF_INODE_NAMES],
-				  fs->sizes[WHEFS_SZ_INODE_NAME],
-				  fs->options.inode_count,
-				  whefs_block_name_prototype );
-    if( whio_rc.OK != rc ) return rc;
-
-    rc = whio_blockdev_setup( &fs->fences.i, fs->dev,
-			      fs->offsets[WHEFS_OFF_INODES_NO_STR],
-			      fs->sizes[WHEFS_SZ_INODE_NO_STR],
-			      fs->options.inode_count,
-			      0 );
-    if( whio_rc.OK != rc ) return rc;
-
-#if 0 // not yet used...
-    rc = whio_blockdev_setup( &fs->fences.b, fs->dev,
-			      fs->offsets[WHEFS_OFF_BLOCKS],
-			      fs->sizes[WHEFS_SZ_BLOCK],
-			      fs->options.block_count,
-			      0 /* FIXME: we need a prototype, but need the encoding routines for that first. */ );
-#endif
-
-    rc = whefs_string_cache_setup( &fs->cache.strings, fs->options.inode_count, fs->options.filename_length );
-
-    return rc;
 }
 
 
