@@ -5,6 +5,9 @@ This is the informal change list for whefs releases. Newest items are at the top
 
 ----
 
+*22 June 2009*
+  * Added optional support for `mmap()`ing file-based storage, which can speed up access.
+
 *21 June 2009*
   * Added the [WhefsCat whefs-cat] tool.
 
