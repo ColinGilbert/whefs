@@ -353,24 +353,40 @@ static const whio_dev whio_dev_fileno_init =
     }
     };
 
-#if 1 /* there is a separate implementation in whio_dev_FILE.c, but the API
-	 docs describe this one. */
-whio_dev * whio_dev_for_filename( char const * fname, char const * mode )
+/**
+   Implementation for whio_dev_for_fileno() and whio_dev_for_filename().
+
+   If fname is 0 or empty then fdopen(fileno,mode) is used, otherwise
+   fopen(fname,mode) is used.
+*/
+static whio_dev * whio_dev_for_file_impl( char const * fname, int filenum, char const * mode )
 {
-    if( ! fname || !mode ) return 0;
+    if( ((!fname || !*fname) && (filenum<1)) || (!mode || !*mode) )
+    {
+        return 0;
+    }
+    /** Maintenance reminder:
+
+        i would like to move these two allocs to below the fopen(),
+        but if we open the file first then we have to check whether we
+        created the file, and delete it if we did not.
+    */
     whio_dev * dev = whio_dev_alloc();
-    if( ! dev ) return 0;
+    if( ! dev )
+    {
+        return 0;
+    }
     whio_dev_fileno * meta = whio_dev_fileno_alloc();
     if( ! meta )
     {
 	whio_dev_free(dev);
 	return 0;
     }
-    FILE * f = fopen( fname, mode );
+    FILE * f = (fname && *fname) ? fopen(fname,mode) : fdopen( filenum, mode );
     if( ! f )
     {
-	whio_dev_free(dev);
-	whio_dev_fileno_free(meta);
+        whio_dev_free(dev);
+        whio_dev_fileno_free(meta);
 	return 0;
     }
     *dev = whio_dev_fileno_init;
@@ -380,5 +396,21 @@ whio_dev * whio_dev_for_filename( char const * fname, char const * mode )
     meta->fileno = fileno(f);
     meta->filename = fname;
     return dev;
+
+}
+
+whio_dev * whio_dev_for_fileno( int fileno, char const * mode )
+{
+    return whio_dev_for_file_impl( 0, fileno, mode );
+}
+
+#if 1 /* there is a separate implementation in whio_dev_FILE.c, but the API
+	 docs describe this one. */
+whio_dev * whio_dev_for_filename( char const * fname, char const * mode )
+{
+    return (fname && *fname)
+        ? whio_dev_for_file_impl( fname, -1, mode )
+        : NULL;
 }
 #endif
+
