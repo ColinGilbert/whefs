@@ -81,6 +81,7 @@ static void whefs_file_free( whefs_file * restrict obj )
 	return;
     }
 #else
+    whefs_string_clear( &obj->name, false );
     *obj = whefs_file_init;
     free(obj);
 #endif /* WHEFS_CONFIG_ENABLE_STATIC_MALLOC */
