@@ -89,3 +89,15 @@ We will eventually add more specialized caches to speed these operations up, but
    *  Any caching which requires a significant amount of memory must be either optional or so compelling in and of itself that it becomes a must-have. That is a design requirement of the library.
    *  Who says when to cache something and when not?
    *  Who says how much we're allowed to cache? And how can we control that?
+
+=Device-specific Hacks=
+
+Though the underlying i/o interface is generic, hiding the details of the underlying storage, we can sometimes make use of device-specific features for performance gains...
+
+==Speeding up file access with `mmap()`==
+
+Versions starting with r184 (20090622) have an option to enable `mmap()`, a POSIX-1.2001 function which gives access to files via direct memory addressing. If the EFS kernel thinks that the device can support it, it will try to `mmap()` the storage and access it via an i/o proxy device which acts upon the `mmap()`ed memory range instead of the file (if `mmap()` fails it falls back to normal access). This speeds up access drastically and in some simple tests it cut the number of `seek()` operations which actually go to disk by 75%. Seeking is the most common i/o operation in the library, so using `mmap()` gives a significant payoff here.
+
+To enable this, see the `WHEFS_CONFIG_ENABLE_MMAP` macro in [http://code.google.com/p/whefs/source/browse/trunk/include/wh/whefs/whefs_config.h whefs_config.h].
+
+For those interested in detail: this hack works by probing the storage using ioctl calls. If it has a file descriptor number then we call `mmap()`. If that works we create a whio_dev device which proxies that memory range and directs `flush()` operations to `msync()` (the `mmap()` equivalent of `fsync()`). We then replace the kernel's device with that one, so it directs all i/o through the memory mapped device. The implementation is _mostly_ non-intrusive on the EFS kernel, but due to some seemingly unrelated internal details (specifically `whefs_fs::fences`) it's not 100% unintrusive.
