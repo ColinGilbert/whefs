@@ -261,6 +261,12 @@ static int whio_dev_subdev_flush( whio_dev * dev )
     return sub->dev ? sub->dev->api->flush( sub->dev ) : whio_rc.ArgError;
 }
 
+short whio_dev_subdev_iomode( whio_dev * dev )
+{
+    WHIO_subdev_DECL(-1);
+    return sub->dev->api->iomode( sub->dev );
+}
+
 static int whio_dev_subdev_trunc( whio_dev * dev, off_t len )
 {
     return whio_rc.UnsupportedError;
@@ -327,7 +333,8 @@ static const whio_dev_api whio_dev_api_subdev =
     whio_dev_subdev_seek,
     whio_dev_subdev_flush,
     whio_dev_subdev_trunc,
-    whio_dev_subdev_ioctl
+    whio_dev_subdev_ioctl,
+    whio_dev_subdev_iomode
     };
 
 static const whio_dev whio_dev_subdev_init =

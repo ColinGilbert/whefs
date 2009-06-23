@@ -284,6 +284,14 @@ struct whio_dev_api
        that function's docs for why this one takes a va_list).
     */
     int (*ioctl)( struct whio_dev * dev, int operation, va_list args );
+
+    /**
+       This function must return a positive number if dev is writable,
+       0 if it is read-only, and a negative number if the device
+       cannot report this information or if the given argument is null
+       or otherwise invalid.
+    */
+    short (*iomode)( struct whio_dev * dev );
 };
 typedef struct whio_dev_api whio_dev_api;
 

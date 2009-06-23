@@ -20,6 +20,7 @@ along with the factory functions for creating the device objects.
 #include <unistd.h> /* ftruncate() */
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h> /* strchr() */
 #if defined(__GNUC__) || defined(__TINYC__)
 #if !defined(GCC_VERSION) || (GCC_VERSION < 40100)
 /* i don't actually know which versions need this, but 4.0.2 does. */
@@ -51,6 +52,7 @@ typedef struct whio_dev_FILE
      */
     short needsFlush;
     bool ownsFile;
+    short iomode;
 } whio_dev_FILE;
 
 
@@ -62,7 +64,8 @@ typedef struct whio_dev_FILE
     0, /* fp */ \
     0, /* fileno */ \
     0, /* needsFlush */ \
-    0 /* ownsFile */ \
+    0, /* ownsFile */                       \
+   -1 /*iomode*/ \
     }
 static const whio_dev_FILE whio_dev_FILE_meta_init = WHIO_DEV_FILE_INIT;
 
@@ -225,6 +228,12 @@ static int whio_dev_FILE_ioctl( whio_dev * dev, int arg, va_list vargs )
     return rc;
 }
 
+short whio_dev_FILE_iomode( whio_dev * dev )
+{
+    WHIO_FILE_DECL(-1);
+    return f->iomode;
+}
+
 static bool whio_dev_FILE_close( whio_dev * dev )
 {
     if( dev )
@@ -269,7 +278,8 @@ static const whio_dev_api whio_dev_FILE_api =
     whio_dev_FILE_seek,
     whio_dev_FILE_flush,
     whio_dev_FILE_trunc,
-    whio_dev_FILE_ioctl
+    whio_dev_FILE_ioctl,
+    whio_dev_FILE_iomode
     };
 
 static const whio_dev whio_dev_FILE_init =
@@ -304,6 +314,7 @@ whio_dev * whio_dev_for_FILE( FILE * F, bool takeOwnership )
     meta->fp = F;
     meta->ownsFile = takeOwnership;
     meta->fileno = fileno(F);
+    meta->iomode = -1;
     return dev;
 }
 
@@ -317,7 +328,21 @@ whio_dev * whio_dev_for_filename( char const * fname, char const * mode )
     if( ! d )
     {
 	fclose(f);
-	f = 0;
+        return 0;
+    }
+    whio_dev_FILE * meta = (whio_dev_FILE*)d->impl.data;
+    meta->iomode = -1;
+    if( (0 != strchr( mode, 'w' )) )
+    { 
+        meta->iomode = 1;
+    }
+    else if( 0 != strchr( mode, 'r' ) )
+    {
+	if( 0 != strchr( mode, '+' ) )
+        {
+            meta->iomode = 1;
+        }
+	else meta->iomode = 0;
     }
     return d;
 }

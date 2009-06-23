@@ -815,6 +815,12 @@ static int whio_dev_inode_trunc( whio_dev * dev, off_t len )
     return whefs_rc.InternalError;
 }
 
+short whio_dev_inode_iomode( whio_dev * dev )
+{
+    WHIO_DEV_DECL(-1);
+    return (meta->inode->writer == dev) ? 1 : 0;
+}
+
 static int whio_dev_inode_ioctl( whio_dev * dev, int arg, va_list vargs )
 {
     int rc = whio_rc.UnsupportedError;
@@ -889,7 +895,8 @@ static const whio_dev_api whio_dev_api_inode_init =
     whio_dev_inode_seek,
     whio_dev_inode_flush,
     whio_dev_inode_trunc,
-    whio_dev_inode_ioctl
+    whio_dev_inode_ioctl,
+    whio_dev_inode_iomode
     };
 
 static const whio_dev whio_dev_inode_init =
