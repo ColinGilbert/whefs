@@ -4,6 +4,7 @@
 <wiki:toc max_depth=3/>
 See also: [WhefsTools]
 
+
 =Hello, world!=
 
 Here's the "Hello, world!" of whefs...
@@ -176,6 +177,30 @@ int main( int argc, char const ** argv )
     WhefsCatApp.stdout->api->finalize( WhefsCatApp.stdout );
     return rc;
 }
-
-
 }}}
+
+=Sending data to or from `popen()`=
+
+Here's an example of how we can use the whio interface to port data from `popen()` into into an EFS.
+
+{{{
+/** x must be-a (FILE*) opened by popen(). */
+static void test_popen_dtor( void * x )
+{
+    pclose( (FILE*)x );
+}
+int test_popen( whio_stream * dest )
+{
+    char const * cmd = "/bin/ls -ltd *.h *.c; echo rc=$?";
+    FILE * p = popen(cmd, "r" );
+    assert( p && "popen() failed!");
+    whio_stream * str = whio_stream_for_FILE( p, false );
+    str->client.data = p;
+    str->client.dtor = test_popen_dtor;
+    iint rc = whio_stream_copy( str, dest );
+    str->api->finalize(str); // will call test_popen_dtor()
+    return rc;
+}
+}}}
+
+We can use `whefs_stream_open()` to get a stream handle to a pseudofile, then pass it to `test_popen()` to send the `popen()`-produced data to that stream. Conversely, if we create a writable `FILE` with `popen()` we could export EFS data to it.
