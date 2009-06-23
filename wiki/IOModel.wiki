@@ -26,7 +26,7 @@ Another benefit of using a generic i/o library for storage is that we can take a
 
 Almost any time a proverbial "level of abstraction" is added, there is a cost associated with it, especially if the abstraction is overly-generic. In whefs the more prominent "abstraction penalties" related to the I/O model can be summarized as follows:
 
-  * The library performs many more `seek()` operations than would be necessary if we optimized for a single storage interface (e.g. `FILE` handles). The object-oriented nature of the I/O API requires that we do many `seek()` and `tell()` operations to ensure consistency in the underlying device cursor across API calls in the whefs kernel. Every `write()` operation on an EFS has at least two seeks associated with it, and possibly more.
+  * The library performs many more `seek()` operations than would be necessary if we optimized for a single storage interface (e.g. `FILE` handles). The object-oriented nature of the I/O API requires that we do many `seek()` and `tell()` operations to ensure consistency in the underlying device cursor across API calls in the whefs kernel. Every `write()` operation on an EFS has at least one seek associated with it, and sometimes more.
   * There can be no unified interface for integrating device-dependent features, such as file locking. The I/O API contains an `ioctl()`-like interface for activating device-specific features, but the whefs kernel cannot assume that any given device supports a specific feature.
   * We cannot rely on any given underlying I/O device to support thread-private cursor data, which may complicate the implementation of any eventual thread-locking mechanisms in whefs.
 
