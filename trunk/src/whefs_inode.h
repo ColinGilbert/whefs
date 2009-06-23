@@ -399,17 +399,11 @@ bool whefs_inode_is_valid( whefs_fs const * restrict fs, whefs_inode const * n )
    whio_dev::ioctl(): the returned object supports the
    whio_dev_ioctl_GENERAL_size ictl to return the current size of the
    device.
+
+   whio_dev::iomode() will return a positive value if writeMode is
+   true, 0 if it is false, or -1 if its argument is invalid.
 */
 whio_dev * whefs_dev_for_inode( whefs_fs * fs, whefs_id_type nodeID, bool writeMode );
-
-#if 0 // no longer needed
-/**
-   Returns the on-disk size of an inode INCLUDING opt->filename_length.
-   Semantics of the library will soon (as of 20090115) change to remove
-   the string length from the inode itself.
-*/
-size_t whefs_fs_sizeof_inode( whefs_fs_options const * opt );
-#endif
 
 /**
    Returns the on-disk position of the given inode, which must be a
