@@ -253,7 +253,9 @@ used for certain operations.
 Maintenance reminder: if this is true be sure to include fcntl.h in
 the files which need it.
 */
-#define WHEFS_CONFIG_ENABLE_FCNTL 1
+#if !defined(WHEFS_CONFIG_ENABLE_FCNTL)
+#define WHEFS_CONFIG_ENABLE_FCNTL 0
+#endif
 
 /** @def WHEFS_CONFIG_ENABLE_THREADS
 
@@ -366,6 +368,25 @@ whefs_fs_set_inode_hash_cache().
 */
 #if !defined(WHEFS_CONFIG_ENABLE_MMAP_ASYNC)
 #  define WHEFS_CONFIG_ENABLE_MMAP_ASYNC 0
+#endif
+
+/** @def WHEFS_CONFIG_ENABLE_BITSET_CACHE
+
+If WHEFS_CONFIG_ENABLE_BITSET_CACHE is true then the EFS caches
+(using a bitset) whether or not any given inode or block is marked as
+used.  This speeds up some operations dramatically but costs malloced
+memory: 1 bit per inode plus 1 bit per block plus 1 byte.
+
+This approach to caching is going to Cause Grief (or at least
+Discomfort) when dealing with multi-app concurrency issues, as we
+cannot keep it in sync across multiple applications.
+
+TODO: re-evaluate the real cost of this cache. Memory is very low, but
+profiling has, in some cases, implied that it costs us more
+performance than we lose when it is disabled.
+*/
+#if !defined(WHEFS_CONFIG_ENABLE_BITSET_CACHE)
+#define WHEFS_CONFIG_ENABLE_BITSET_CACHE 1
 #endif
 
 #ifdef __cplusplus
