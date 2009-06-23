@@ -317,7 +317,7 @@ The state of this cache can be changed at runtime using
 whefs_fs_set_inode_hash_cache().
 */
 #if !defined(WHEFS_CONFIG_ENABLE_STRINGS_HASH_CACHE)
-#define WHEFS_CONFIG_ENABLE_STRINGS_HASH_CACHE 0
+#define WHEFS_CONFIG_ENABLE_STRINGS_HASH_CACHE 1
 #endif
 
 /** @def WHEFS_CONFIG_ENABLE_STATIC_MALLOC
