@@ -82,15 +82,19 @@ whefs_string_cache * whefs_string_cache_create( whefs_id_type blockCount, whio_s
 
 whio_size_t whefs_string_cache_memcost( whefs_string_cache const * db )
 {
+    if( ! db ) return 0;
+    whio_size_t mbase = sizeof(whefs_string_cache)
+        + (db->devMem ? sizeof(*(db->devMem)) : 0)
+        ;
     whio_size_t msize = (whio_size_t)-1;
     whio_dev_ioctl( db->devMem, whio_dev_ioctl_BUFFER_size, &msize );
     if( (whio_size_t)-1 == msize )
     {
+        if( 0 == whio_dev_size(db->devMem) ) return mbase;
         assert( 0 && "whio_dev_ioctl_GENERAL_size not behaving as documented!" );
         return 0;
     }
-    msize += sizeof(whefs_string_cache)
-        + sizeof(*(db->devMem))
+    msize += mbase;
         // we don't know the underlying internal costs of db->devMem, other than msize.
         ;
     return msize;
