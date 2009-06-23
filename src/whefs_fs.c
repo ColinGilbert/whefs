@@ -286,18 +286,25 @@ static bool whio_dev_mmap_close( whio_dev * dev )
 
 /**
    If WHEFS_CONFIG_ENABLE_MMAP is true then this tries to mmap() the
-   underlying storage (fs->dev). If it succeeds it replaces fs->dev
-   with a proxy device. Returns whefs_rc.OK on success. Failure can
-   be ignored unless you REALLY need mmap().
+   underlying storage (fs->dev) IF fs is read/write (profiling shows
+   memmapping read access to cost more than direct file access). If it
+   succeeds it replaces fs->dev with a proxy device. Returns
+   whefs_rc.OK on success. Failure can be ignored unless you REALLY
+   need mmap().
 
    If WHEFS_CONFIG_ENABLE_MMAP is false then whefs_rc.UnsupportedError
    is returned.
+
+   If fs is already mmap()ed or is read-only then whefs_rc.OK is
+   returned but fs is not modified.
 */
 static int whefs_fs_mmap_connect( whefs_fs * fs )
 {
+    if( !fs || !fs->dev ) return whefs_rc.ArgError;
     //WHEFS_DBG("Trying mmap? fileno=%d",fs->fileno);
 #if WHEFS_CONFIG_ENABLE_MMAP
     if( WHEFS_FLAG_FS_IsMMapped & fs->flags ) return whefs_rc.OK;
+    if( !whefs_fs_is_rw(fs) ) return whefs_rc.OK;
     if( fs->fileno < 1 ) return whefs_rc.UnsupportedError;
     /**
        HOLY FARGING SHITE! What a speed difference mmap() makes!!!
@@ -314,7 +321,6 @@ static int whefs_fs_mmap_connect( whefs_fs * fs )
         whio_dev_api_mmap.close = whio_dev_mmap_close;
         doneIt = true;
     }
-    fs->flags &= ~WHEFS_FLAG_FS_IsMMapped;
     whio_size_t dsz = whio_dev_size( fs->dev );
     void * m = mmap( 0, dsz, whefs_fs_is_rw(fs) ? PROT_WRITE : PROT_READ, MAP_SHARED, fs->fileno, 0 );
     if( ! m )
