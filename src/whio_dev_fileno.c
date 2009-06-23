@@ -26,7 +26,7 @@ to provide dramatic speed increases.
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h> /* ftruncate(), fdatasync() */
-#include <string.h>
+#include <string.h> /* strchr() */
 #include <fcntl.h>
 #include <errno.h>
 
@@ -58,6 +58,7 @@ typedef struct whio_dev_fileno
     char const * filename;
     bool atEOF;
     int errstate;
+    short iomode;
 } whio_dev_fileno;
 
 
@@ -70,7 +71,8 @@ typedef struct whio_dev_fileno
     0, /* fileno */ \
     0, /* filename */ \
     false, /* atEOF */ \
-    0 /* errstate */ \
+    0, /* errstate */                       \
+   -1 /*iomode*/ \
     }
 static const whio_dev_fileno whio_dev_fileno_meta_init = WHIO_DEV_fileno_INIT;
 
@@ -238,6 +240,12 @@ static int whio_dev_fileno_trunc( whio_dev * dev, off_t len )
     return rc;
 }
 
+short whio_dev_fileno_iomode( whio_dev * dev )
+{
+    WHIO_fileno_DECL(-1);
+    return f->iomode;
+}
+
 static int whio_dev_fileno_ioctl( whio_dev * dev, int arg, va_list vargs )
 {
     WHIO_fileno_DECL(whio_rc.ArgError);
@@ -341,7 +349,8 @@ static const whio_dev_api whio_dev_fileno_api =
     whio_dev_fileno_seek,
     whio_dev_fileno_flush,
     whio_dev_fileno_trunc,
-    whio_dev_fileno_ioctl
+    whio_dev_fileno_ioctl,
+    whio_dev_fileno_iomode
     };
 
 static const whio_dev whio_dev_fileno_init =
@@ -395,6 +404,20 @@ static whio_dev * whio_dev_for_file_impl( char const * fname, int filenum, char 
     meta->fp = f;
     meta->fileno = fileno(f);
     meta->filename = fname;
+
+    meta->iomode = -1;
+    if( (0 != strchr( mode, 'w' )) )
+    { 
+        meta->iomode = 1;
+    }
+    else if( 0 != strchr( mode, 'r' ) )
+    {
+	if( 0 != strchr( mode, '+' ) )
+        {
+            meta->iomode = 1;
+        }
+	else meta->iomode = 0;
+    }
     return dev;
 
 }

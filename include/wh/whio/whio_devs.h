@@ -44,6 +44,9 @@ extern "C" {
    - See the docs for whio_dev_ioctl_FILE_fd for how to fetch the
    underlying file descriptor.
 
+   - The iomode() member will always return -1 because it cannot know
+   (without trying to write) if f is writeable.
+
    @see whio_dev_for_filename()
 */
 whio_dev * whio_dev_for_FILE( FILE * f, bool takeOwnership );
@@ -84,6 +87,12 @@ whio_dev * whio_dev_for_FILE( FILE * f, bool takeOwnership );
    whio_dev_ioctl_FCNTL_lock_nowait, and whio_dev_ioctl_FCNTL_lock_get
    ioctls (from the whio_dev_ioctls enum).
 
+   - The iomode() member will return 0 or 1 depending on mode: If mode
+   contains "w" or "+" then it is write mode (iomode() returns a
+   positive value). If mode contains "r" and does not have a "+" then
+   iomode() returns 0.
+
+
    @see whio_dev_for_FILE()
 */
 whio_dev * whio_dev_for_filename( char const * fname, char const * mode );
@@ -115,11 +124,10 @@ whio_dev * whio_dev_for_filename( char const * fname, char const * mode );
    @endcode
 
 
-   The returned device is identical to ones returned by
+   The returned device is identical to one returned by
    whio_dev_for_filename(), except that the ioctl()
    whio_dev_ioctl_GENERAL_name will return NULL (but will succeed
    without an error).
-
 */
 whio_dev * whio_dev_for_fileno( int filedescriptor, char const * mode );
 
@@ -209,6 +217,9 @@ whio_dev * whio_dev_for_fileno( int filedescriptor, char const * mode );
    is also supported (from the whio_dev_ioctls enum), but it returns
    the size to the virtual EOF, whereas whio_dev_ioctl_BUFFER_size
    returns the allocated size of the buffer.
+
+   - iomode() always returns a positive value as long as its "this"
+   argument is valid.
 */
 whio_dev * whio_dev_for_membuf( whio_size_t size, float expFactor );
 
@@ -255,15 +266,26 @@ whio_dev * whio_dev_for_membuf( whio_size_t size, float expFactor );
    whio_dev_ioctl_BUFFER_uchar_ptr without violating constness of
    read-only buffers.
 
+   - iomode() always returns a positive value as long as its "this"
+   argument is valid.
+
+
    @see whio_dev_for_memmap_ro()
    @see whio_dev_for_membuf()
 */
 whio_dev * whio_dev_for_memmap_rw( void * mem, whio_size_t size );
 
 /**
-   This is equivalent to whio_dev_for_memmap_rw() except that it
+   This is nearly identical to whio_dev_for_memmap_rw() except that it
    creates a read-only device and ownership of mem is not changed by
    calling this function.
+
+   In addition to the description for whio_dev objects returned from
+   whio_dev_for_memmap_rw(), these notes apply:
+
+   - iomode() always returns 0 unless its "this" argument is invalid,
+   in which case it returns a negative value.
+
 
    @see whio_dev_for_memmap_rw()
    @see whio_dev_for_membuf()
@@ -372,9 +394,10 @@ extern const whio_dev_api whio_dev_api_membuf;
    whio_dev_ioctls enum having the name prefix
    whio_dev_ioctl_SUBDEV_. See those docs for details.
 
+   - iomode() returns the same as the parent device does.
+
    - It is theoretically possible to nest subdevices, and it may be
    even useful in some cases, but i haven't tried it.
-
 
    Example:
 

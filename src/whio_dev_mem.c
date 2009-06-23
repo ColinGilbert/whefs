@@ -344,6 +344,12 @@ static int whio_dev_membuf_trunc( whio_dev * dev, off_t _len )
     return whio_rc.OK;
 }
 
+short whio_dev_membuf_iomode( whio_dev * dev )
+{
+    WHIO_MEMBUF_DECL(-1);
+    return 1;
+}
+
 static int whio_dev_membuf_ioctl( whio_dev * dev, int arg, va_list vargs )
 {
     int rc = whio_rc.UnsupportedError;
@@ -437,7 +443,8 @@ const whio_dev_api whio_dev_api_membuf =
     whio_dev_membuf_seek,
     whio_dev_membuf_flush,
     whio_dev_membuf_trunc,
-    whio_dev_membuf_ioctl
+    whio_dev_membuf_ioctl,
+    whio_dev_membuf_iomode
     };
 
 #define WHIO_DEV_MEMBUF_INIT { \
@@ -717,6 +724,12 @@ static int whio_dev_memmap_trunc( whio_dev * dev, off_t _len )
     return whio_rc.OK;
 }
 
+short whio_dev_memmap_iomode( whio_dev * dev )
+{
+    WHIO_MEMMAP_DECL(-1);
+    return (NULL == mb->rw) ? 0 : 1;
+}
+
 static int whio_dev_memmap_ioctl( whio_dev * dev, int arg, va_list vargs )
 {
     int rc = whio_rc.UnsupportedError;
@@ -795,7 +808,8 @@ const whio_dev_api whio_dev_api_memmap =
     whio_dev_memmap_seek,
     whio_dev_memmap_flush,
     whio_dev_memmap_trunc,
-    whio_dev_memmap_ioctl
+    whio_dev_memmap_ioctl,
+    whio_dev_memmap_iomode
     };
 
 static const whio_dev whio_dev_memmap_dev_init =
