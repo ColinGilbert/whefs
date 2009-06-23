@@ -420,28 +420,8 @@ struct whefs_fs
 /** Empty initialization object. */
 extern const whefs_fs whefs_fs_init;
 
-
 /** inode/block in-use caching... */
-#if !defined(WHEFS_FS_BITSET_CACHE_ENABLED)
-/** @def WHEFS_FS_BITSET_CACHE_ENABLED
-
-TODO: re-evaluate the real cost of this cache. Memory is very low, but
-profiling has, in some cases, implied that it costs us more performance
-than we lose when it's disabled.
-
-If WHEFS_FS_BITSET_CACHE_ENABLED is true then the VFS caches (using a
-bitset) whether or not any given inode or block is marked as used.
-This speeds up some operations dramatically but costs malloced memory:
-1 bit per inode plus 1 bit per block plus 1 byte.
-
-
-This approach to caching is going to Cause Grief (or at least
-Discomfort) when dealing with multi-app concurrency issues, as we
-cannot keep it in sync across multiple applications.
-*/
-#  define WHEFS_FS_BITSET_CACHE_ENABLED (1)
-#endif
-#if WHEFS_FS_BITSET_CACHE_ENABLED
+#if WHEFS_CONFIG_ENABLE_BITSET_CACHE
 #define WHEFS_CACHE_ASSERT(NID) (assert(0 && ("bit #" # NID " out of range! Debug to here and look for fs->bits.{i,b}.sz_bits and friends")),0)
 #define WHEFS_ICACHE_PRECHECK(FS,NID) (FS && FS->bits.i.bytes && ((FS->bits.i.sz_bits > NID)||WHEFS_CACHE_ASSERT(NID)))
 #define WHEFS_ICACHE_SET_USED(FS,NID) (WHEFS_ICACHE_PRECHECK(FS,NID) && (WHBITS_SET(&FS->bits.i,NID)))
@@ -453,7 +433,7 @@ cannot keep it in sync across multiple applications.
 #define WHEFS_ICACHE_IS_USED(FS,NID)
 #endif
 
-#if WHEFS_FS_BITSET_CACHE_ENABLED
+#if WHEFS_CONFIG_ENABLE_BITSET_CACHE
 #define WHEFS_BCACHE_PRECHECK(FS,NID) (FS &&  FS->bits.b.bytes && ((FS->bits.b.sz_bits > NID)||WHEFS_CACHE_ASSERT(NID)))
 #define WHEFS_BCACHE_SET_USED(FS,NID) (WHEFS_BCACHE_PRECHECK(FS,NID) && WHBITS_SET(&FS->bits.b,NID))
 #define WHEFS_BCACHE_UNSET_USED(FS,NID) (WHEFS_BCACHE_PRECHECK(FS,NID) && WHBITS_UNSET(&FS->bits.b,NID))
@@ -461,7 +441,7 @@ cannot keep it in sync across multiple applications.
 #else
 #define WHEFS_BCACHE_SET_USED(FS,NID)
 #define WHEFS_BCACHE_UNSET_USED(FS,NID)
-#define WHEFS_BCACHE_IS_USED(FS,NID) THIS_MUST_BE_IN_A_BLOCK_GUARDED_BY__WHEFS_FS_BITSET_CACHE_ENABLED
+#define WHEFS_BCACHE_IS_USED(FS,NID) THIS_MUST_BE_IN_A_BLOCK_GUARDED_BY__WHEFS_CONFIG_ENABLE_BITSET_CACHE
 #endif
 
 
@@ -910,6 +890,12 @@ int whefs_inode_hash_cache_load( whefs_fs * fs );
 */
 void whefs_inode_hash_cache_sort(whefs_fs * fs );
 
-int whefs_fs_cache_name( whefs_fs * fs, whefs_id_type id, char const * n );
+
+/**
+   Returns the on-disk size of an inode name record for the given options,
+   or 0 if !opt.
+*/
+size_t whefs_fs_sizeof_name( whefs_fs_options const * opt );
+
 
 #endif /* WANDERINGHORSE_NET_WHEFS_DETAILS_C_INCLUDED */

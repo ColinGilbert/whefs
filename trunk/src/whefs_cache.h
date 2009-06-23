@@ -49,20 +49,33 @@ typedef struct whefs_string_cache whefs_string_cache;
 
 /** Empty initialization whefs_string_cache object. */
 extern const whefs_string_cache whefs_string_cache_init;
+
 /**
-   Calls whefs_string_cache_cleanup() then frees db.
+   Calls whefs_string_cache_cleanup() then deallocates db.
 */
-int whefs_string_cache_free( whefs_string_cache * db );
+void whefs_string_cache_free( whefs_string_cache * db );
+
+/**
+   Allocates and empty-initializes a new whefs_string_cache object,
+   the passes ownership of it to the caller. However, it might be
+   configured to not use malloc(), so the object must only be
+   destroyed by passing it to whefs_string_cache_free().
+*/
+whefs_string_cache * whefs_string_cache_alloc();
 /**
    Deallocates all resources associated with db, but does not free db
    itself. It can be re-used in another call to
    whefs_string_cache_setup() or freed using whefs_string_cache_free().
+
+   Returns whefs_rc.OK on success.
 */
 int whefs_string_cache_cleanup( whefs_string_cache * db );
 
 /**
    Truncates the internal string table of db to 0 bytes, potentially freeing
    up memory. db is still a valid/usable object after calling this.
+
+   Returns whefs_rc.OK on success.
 */
 int whefs_string_cache_clear_contents( whefs_string_cache * db );
 

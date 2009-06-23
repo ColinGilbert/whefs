@@ -15,6 +15,69 @@
 const whefs_string_cache whefs_string_cache_init = whefs_string_cache_init_m;
 
 
+#if WHEFS_CONFIG_ENABLE_STATIC_MALLOC
+enum {
+/**
+   The number of elements to statically allocate
+   in the whefs_string_cache_alloc_slots object.
+
+   We only need one per live whefs_fs object.
+*/
+whefs_string_cache_alloc_count = 3
+};
+static struct
+{
+    whefs_string_cache objs[whefs_string_cache_alloc_count];
+    char used[whefs_string_cache_alloc_count];
+    size_t next;
+    const size_t count;
+} whefs_string_cache_alloc_slots = { { whefs_string_cache_init_m }, {0}, 0, whefs_string_cache_alloc_count };
+#endif
+
+whefs_string_cache * whefs_string_cache_alloc()
+{
+    whefs_string_cache * obj = 0;
+#if WHEFS_CONFIG_ENABLE_STATIC_MALLOC
+    size_t i = whefs_string_cache_alloc_slots.next;
+    for( ; i < whefs_string_cache_alloc_slots.count; ++i )
+    {
+	if( whefs_string_cache_alloc_slots.used[i] ) continue;
+	whefs_string_cache_alloc_slots.used[i] = 1;
+	whefs_string_cache_alloc_slots.next = i+1;
+	obj = &whefs_string_cache_alloc_slots.objs[i];
+	break;
+    }
+#endif /* WHEFS_CONFIG_ENABLE_STATIC_MALLOC */
+    if( ! obj ) obj = (whefs_string_cache *) malloc( sizeof(whefs_string_cache) );
+    if( obj ) *obj = whefs_string_cache_init;
+    return obj;
+}
+
+void whefs_string_cache_free( whefs_string_cache * obj )
+{
+    if( ! obj ) return;
+    whefs_string_cache_cleanup( obj );
+#if WHEFS_CONFIG_ENABLE_STATIC_MALLOC
+    if( (obj < &whefs_string_cache_alloc_slots.objs[0]) ||
+	(obj > &whefs_string_cache_alloc_slots.objs[whefs_string_cache_alloc_slots.count-1]) )
+    { /* it does not belong to us */
+        *obj = whefs_string_cache_init;
+	free(obj);
+	return;
+    }
+    else
+    {
+	const size_t ndx = (obj - &whefs_string_cache_alloc_slots.objs[0]);
+	whefs_string_cache_alloc_slots.used[ndx] = 0;
+	if( ndx < whefs_string_cache_alloc_slots.next ) whefs_string_cache_alloc_slots.next = ndx;
+	return;
+    }
+#else
+    free(obj);
+#endif /* WHEFS_CONFIG_ENABLE_STATIC_MALLOC */
+}
+
+
 int whefs_string_cache_cleanup( whefs_string_cache * db )
 {
     if( ! db ) return whefs_rc.ArgError;
@@ -39,16 +102,6 @@ int whefs_string_cache_clear_contents( whefs_string_cache * db )
 
 }
 
-int whefs_string_cache_free( whefs_string_cache * db )
-{
-    const int rc = whefs_string_cache_cleanup( db );
-    if( whefs_rc.OK == rc )
-    {
-        free(db);
-    }
-    return rc;
-}
-
 int whefs_string_cache_setup( whefs_string_cache * db, whefs_id_type blockCount, whio_size_t blockSize )
 {
     if( ! db ) return whefs_rc.ArgError;
@@ -70,7 +123,7 @@ int whefs_string_cache_setup( whefs_string_cache * db, whefs_id_type blockCount,
 
 whefs_string_cache * whefs_string_cache_create( whefs_id_type blockCount, whio_size_t blockSize )
 {
-    whefs_string_cache * db = (whefs_string_cache*)malloc(sizeof(whefs_string_cache));
+    whefs_string_cache * db = whefs_string_cache_alloc();
     if( ! db ) return 0;
     int rc = whefs_string_cache_setup( db, blockCount, blockSize );
     if( whefs_rc.OK != rc )
@@ -206,7 +259,7 @@ int whefs_inode_hash_cache_load( whefs_fs * fs )
     name.alloced = bufSize;
     int rc = 0;
     whefs_id_type i;
-    //size_t count = 0;
+    size_t count = 0;
     for( i = fs->options.inode_count; i >=1 ; --i )
     {
         /**
@@ -220,7 +273,7 @@ int whefs_inode_hash_cache_load( whefs_fs * fs )
            times. If we insert from high to low, we're guaranteed to
            need only one malloc/realloc on it.
         */
-#if WHEFS_FS_BITSET_CACHE_ENABLED
+#if WHEFS_CONFIG_ENABLE_BITSET_CACHE
         if( fs->bits.i_loaded )
 	{
             if( ! WHEFS_ICACHE_IS_USED(fs,i) )
@@ -228,13 +281,14 @@ int whefs_inode_hash_cache_load( whefs_fs * fs )
                 continue;
             }
 	}
-#endif // WHEFS_FS_BITSET_CACHE_ENABLED
+#endif // WHEFS_CONFIG_ENABLE_BITSET_CACHE
         rc = whefs_inode_name_get( fs, i, &name );
         if( whefs_rc.OK != rc ) break;
+        ++count;
     }
     assert( (name.string == (char *)buf) && "Internal memory management foo-foo." );
     whefs_hashid_list_sort(li);
-    //WHEFS_DBG("loaded names caches with %u name(s).",count);
+    WHEFS_DBG_CACHE("Loaded all used inodes into cache with %u name(s).",count);
     return rc;
 }
 int whefs_inode_hash_cache_chomp_lv( whefs_fs * fs )
@@ -247,9 +301,9 @@ int whefs_inode_hash_cache_chomp_lv( whefs_fs * fs )
 whefs_id_type whefs_inode_hash_cache_search_ndx(whefs_fs * fs, char const * name )
 {
     if( ! WHEFS_FS_HASH_CACHE_IS_ENABLED(fs) ) return whefs_rc.IDTypeEnd;
-    if( 0 && fs->cache.hashes && !fs->cache.hashes->isSorted )
+    if( fs->cache.hashes && !fs->cache.hashes->isSorted )
     {
-        WHEFS_DBG_CACHE("Warning: auto-sorting dirty name cache before search starts.");
+        WHEFS_DBG_CACHE("Achtung: auto-sorting dirty name cache before search starts.");
         whefs_inode_hash_cache_sort(fs);
     }
     return ( ! fs->cache.hashes )
@@ -291,7 +345,7 @@ void whefs_inode_name_uncache(whefs_fs * fs, char const * name )
 
 int whefs_inode_hash_cache( whefs_fs * fs, whefs_id_type id, char const * name )
 {
-    if( !WHEFS_FS_HASH_CACHE_IS_ENABLED(fs) )
+    if( ! WHEFS_FS_HASH_CACHE_IS_ENABLED(fs) )
     {
         return whefs_rc.OK;
     }
@@ -326,14 +380,14 @@ int whefs_inode_hash_cache( whefs_fs * fs, whefs_id_type id, char const * name )
                       h, id, ndx );
         return whefs_rc.InternalError;
     }
-    if(0) WHEFS_DBG("ADDING: name cache count[%"WHEFS_ID_TYPE_PFMT"], alloced=[%"WHEFS_ID_TYPE_PFMT"], hash [%"WHEFS_HASHVAL_TYPE_PFMT"] for name [%s], ndx=[%"WHEFS_ID_TYPE_PFMT"]",
-                    fs->cache.hashes->count, fs->cache.hashes->alloced, h, name, ndx );
+    WHEFS_DBG_CACHE("ADDING: name cache count[%"WHEFS_ID_TYPE_PFMT"], alloced=[%"WHEFS_ID_TYPE_PFMT"], hash [%"WHEFS_HASHVAL_TYPE_PFMT"] for name [%s], ndx=[%"WHEFS_ID_TYPE_PFMT"]",
+                          fs->cache.hashes->count, fs->cache.hashes->alloced, h, name, ndx );
 #endif
     whefs_hashid H = whefs_hashid_init;
     H.hash = h;
     H.id = id;
     rc = whefs_hashid_list_add( fs->cache.hashes, &H );
-    if(0) WHEFS_DBG("Added to name cache: hash[%"WHEFS_HASHVAL_TYPE_PFMT"]=id[%"WHEFS_ID_TYPE_PFMT"], name=[%s], rc=%d", H.hash, H.id, name, rc );
+    WHEFS_DBG_CACHE("Added to name cache: hash[%"WHEFS_HASHVAL_TYPE_PFMT"]=id[%"WHEFS_ID_TYPE_PFMT"], name=[%s], rc=%d", H.hash, H.id, name, rc );
     return whefs_rc.OK;
 }
 

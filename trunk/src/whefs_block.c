@@ -33,7 +33,7 @@ whio_size_t whefs_block_id_pos( whefs_fs const * fs, whefs_id_type id )
 
 void whefs_block_update_used( whefs_fs * fs, whefs_block const * bl )
 {
-#if WHEFS_FS_BITSET_CACHE_ENABLED
+#if WHEFS_CONFIG_ENABLE_BITSET_CACHE
     //if( ! whefs_block_id_is_valid( fs, bl ? bl->id : 0) ) return; // this is relatively costly here
     if( ! fs->bits.b_loaded ) return;
     if( bl->flags & WHEFS_FLAG_Used )
@@ -48,7 +48,7 @@ void whefs_block_update_used( whefs_fs * fs, whefs_block const * bl )
 	    fs->hints.unused_block_start = bl->id;
 	}
     }
-#endif /* WHEFS_FS_BITSET_CACHE_ENABLED */
+#endif /* WHEFS_CONFIG_ENABLE_BITSET_CACHE */
 }
 
 whio_size_t whefs_fs_sizeof_block( whefs_fs_options const * opt )
@@ -354,7 +354,7 @@ int whefs_block_next_free( whefs_fs * restrict fs, whefs_block * restrict tgt, b
     whefs_block bl = whefs_block_init;
     for( ; i <= fs->options.block_count; ++i )
     {
-#if WHEFS_FS_BITSET_CACHE_ENABLED
+#if WHEFS_CONFIG_ENABLE_BITSET_CACHE
 	if( fs->bits.b_loaded && WHEFS_BCACHE_IS_USED(fs,i) )
 	{
 	    //WHEFS_DBG("Got cached block USED entry for block #%u", i );
