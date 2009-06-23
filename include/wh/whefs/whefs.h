@@ -1176,7 +1176,39 @@ bool whefs_fs_is_rw( whefs_fs const * restrict fs );
 */
 int whefs_inode_hash_cache_chomp_lv( whefs_fs * fs );
 
+/**
+   This function allows one to toggle the "inode names hash cache".
+   If on is true then the cache is enabled, else it is disabled.  If
+   on is true and loadNow is true then the cache is fully populated
+   immediately. If loadNow is false then the cache is built up
+   incrementally as inodes are searched for by name. If on is false then
+   loadNow is ignored and any current cache is deallocated.
 
+   This cache costs approximately 8 bytes per object, assuming
+   WHEFS_ID_TYPE_BITS==16, so it is not recommended for huge
+   EFSes. For small ones it doesn't cost much.
+
+   When the cache is enabled, searches for inodes by their name
+   will be reduced from O(N) (N=number of inodes) to O(log N)
+   once a given name has been cached (by being traversed once,
+   perhaps during the search for another inode).
+
+   On success whefs_rc.OK is returned. The only error conditions are:
+
+   - If !fs then whefs_rc.ArgError is returned.
+
+   - If the cache is enabled and memory cannot be allocated or population
+   of the cache fails due to an i/o error, that error is propagated back.
+
+   If an error happens then the cache will be disabled, under the assumption
+   that it could not be properly initialized. This is not a fatal error,
+   but may cause a performance hit on inode searches by name.
+
+   If WHEFS_CONFIG_ENABLE_STRINGS_HASH_CACHE (defined in
+   whefs_config.h) is set to true then this cache is enabled by
+   default but not pre-loaded, otherwise it is disabled by default.
+*/
+int whefs_fs_hash_cache_set( whefs_fs * fs, bool on, bool loadNow );
 
 
 #ifdef __cplusplus

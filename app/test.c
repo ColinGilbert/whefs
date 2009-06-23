@@ -541,6 +541,11 @@ int test_caching()
     assert((rc == whefs_rc.OK) && "mkfs failed :(" );
     whefs_fs_dump_info( fs, stdout );
     MARKER("mkfs([%s]) worked.\n",fname);
+
+    const bool useHashCache = false;
+    rc = whefs_fs_hash_cache_set( fs, useHashCache, false );
+    MARKER("%s inode hash cache.\n", useHashCache ? "Enabling" : "Disabling");
+
 #if 1
     char pname[xpos+2] = {'f','i','l','e',0/*index xpos*/,0};
     MARKER("looping %d times of over %d pseudofiles...\n",loops,count);

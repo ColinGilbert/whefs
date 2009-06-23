@@ -101,6 +101,11 @@ WHEFS_FLAG_Opened = 0x8,
    is set.
 */
 WHEFS_FLAG_FS_IsMMapped = 0x10,
+/**
+   If set then the inode names hashcode cache
+   is enabled.
+*/
+WHEFS_FLAG_FS_EnableHashCache = 0x20,
 //WHEFS_FLAG_FS_AutoExpand = 0x0020,
 /**
    Mark error state for whefs_file objects.
@@ -134,6 +139,13 @@ WHEFS_SZ_BLOCK,
 WHEFS_SZ_OPTIONS,
 WHEFS_SZ_COUNT /* must be the last entry! */
 };
+
+/** @def WHEFS_FS_HASH_CACHE_IS_ENABLED
+
+WHEFS_FS_HASH_CACHE_IS_ENABLED() returns true if whefs_fs object FS
+has the WHEFS_FLAG_FS_EnableHashCache flag set, else false.
+*/
+#define WHEFS_FS_HASH_CACHE_IS_ENABLED(FS) ((FS) && (WHEFS_FLAG_FS_EnableHashCache & (FS)->flags))
 
 /**
    For use with whefs_fs_closer_list::type.

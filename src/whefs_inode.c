@@ -149,12 +149,13 @@ int whefs_inode_name_set( whefs_fs * fs, whefs_id_type nid, char const * name )
     /**
        Maintenance reminders:
 
-       We write to disk before updating any opened inode because writing is
-       much more likely to fail then updating the opened inode is, since the latter
-       operation is either just a string copy or a small malloc and a string copy,
-       depending on the length of the new name. So we do the ops in order of likely
-       failure, to reduce the possibility of, e.g. on-disk and in-memory inode names
-       not matching.
+       We write to disk before updating any opened inode because
+       writing is much more likely to fail then updating the opened
+       inode is, since the latter operation is either just a string
+       copy and possibly a relatively small malloc for the name
+       strings cache. So we do the ops in order of likely failure, to
+       reduce the possibility of, e.g. on-disk and in-memory inode
+       names not matching.
     */
     rc = whefs_fs_name_write( fs, nid, name );
     if( whefs_rc.OK != rc ) return rc;
