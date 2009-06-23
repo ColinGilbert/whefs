@@ -8,6 +8,7 @@ This is the informal change list for whefs releases. Newest items are at the top
 *23 June 2009*
   * All of the EFS caching elements can now be disabled at compile time. Work is underway to make them runtime-togglable.
   * Read-only EFSes are no longer mmap()ed because profiling shows read-heavy uses to be slowed down by this.
+  * Added `whio_dev_api::iomode()` so downstream clients can ask the device about its read/write mode.
 
 *22 June 2009*
   * Added optional support for `mmap()`ing file-based storage, which can speed up access. In some simple benchmarks `mmap()`ing cut the number of disk seek operations by about 75%.
