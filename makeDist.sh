@@ -50,6 +50,7 @@ done
 cp LICENSE \
     README \
     Makefile \
+    createAmalgamation.sh \
     config.make \
     common.make \
     $DEST
