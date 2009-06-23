@@ -62,7 +62,7 @@ Though the linear-time access penalty does come into play the first time an inod
 
 =How data is stored=
 
-All data is encoded in an endian-neutral format. All objects are encoded using an initial tag byte (used for consistency checking) and followed by the actual data bytes. The underlying encoding routines supports the basic integral types plus c-style strings, and those routines are the basis for all data serialization. Each higher-level object, e.g. an inode, is encoded/decoded by iteratively en/decoding the member data.
+All FS-specific data is encoded in an endian-neutral format (pseudofile data is opaque to whefs and is not encoded). All FS objects are encoded using an initial tag byte (used for consistency checking) and followed by the actual data bytes. The underlying encoding routines supports the basic integral types plus c-style strings, and those routines are the basis for all data serialization. Each higher-level object, e.g. an inode, is encoded/decoded by iteratively en/decoding the member data.
 
 An inode record, for example, currently (20090610) looks like this:
 
