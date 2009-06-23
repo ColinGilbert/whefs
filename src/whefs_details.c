@@ -390,27 +390,11 @@ struct whefs_fs
        the vfs state or the fs will become corrupted.
     */
     whefs_fs_options options;
-    /**
-       Objects used to partition the underlying storage device
-       into more manageable units. Each one is responsible for
-       a given table of fixed-length records.
-    */
-    struct fences
-    {
-	/** Fencer for the inode names table. */
-	whio_blockdev s;
-	/** Fencer for the inode metadata table. */
-	whio_blockdev i;
-	/** Fencer for the block metadata table. */
-	//whio_blockdev b;
-    } fences;
     /** Holder for threading-related data. */
     struct thread_info
     {
+        int placeholder;
 #if WHEFS_CONFIG_ENABLE_THREADS
-        int placeholder;
-#else
-        int placeholder;
 #endif
     } threads;
     struct _caches
@@ -478,11 +462,17 @@ cannot keep it in sync across multiple applications.
    device.
 */
 whio_size_t whefs_fs_read( whefs_fs * fs, void * dest, whio_size_t n );
+whio_size_t whefs_fs_readat( whefs_fs * fs, whio_size_t pos, void * dest, whio_size_t n );
 /**
    Equivalent to calling whio_dev::write() on fs's underlying i/o
    device.
 */
 whio_size_t whefs_fs_write( whefs_fs * fs, void const * src, whio_size_t n );
+/**
+   Equivalent to calling whefs_fs_seek(), then whefs_fs_write(). Returns the
+   number of bytes written, or 0 if seek fails.
+*/
+whio_size_t whefs_fs_writeat( whefs_fs * fs, whio_size_t pos, void const * src, whio_size_t n );
 /**
    Equivalent to calling whio_dev::seek() on fs's underlying i/o
    device.
