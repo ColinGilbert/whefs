@@ -1,6 +1,6 @@
 /*
   A demonstration file for libwhefs. It uses static memory as
-  the back-end for a VFS.
+  the back-end for an EFS.
 
   Author: Stephan Beal (http://wanderinghorse.net/home/stephan/)
 
@@ -46,7 +46,7 @@ int main( int argc, char const ** argv )
     char const * lspat = "*";
     whefs_string * ls = whefs_ls( fs, lspat, &lscount );
     whefs_string * head = ls;
-    MARKER("VFS File list matching '%s':\n",lspat);
+    MARKER("EFS File list matching '%s':\n",lspat);
     char const * openMe = 0;
     while( ls )
     {
@@ -68,7 +68,7 @@ int main( int argc, char const ** argv )
     whefs_fclose( fi );
 
     head = ls = whefs_ls( fs, lspat, &lscount );
-    MARKER("VFS File list matching '%s':\n",lspat);
+    MARKER("EFS File list matching '%s':\n",lspat);
     while( ls )
     {
 	printf("\t%s\n", ls->string );
@@ -78,7 +78,7 @@ int main( int argc, char const ** argv )
 
     toWrite = "StaticWHEFS-export.whefs";
     rc = whefs_fs_dump_to_filename( fs, toWrite );
-    printf("Dumping VFS to file [%s]. RC=%d\n", toWrite, rc );
+    printf("Dumping EFS to file [%s]. RC=%d\n", toWrite, rc );
 
 #if 0
     rc = whefs_fs_append_blocks( fs, 10 );
