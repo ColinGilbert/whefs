@@ -7,6 +7,7 @@ This is the informal change list for whefs releases. Newest items are at the top
 
 *22 June 2009*
   * Added optional support for `mmap()`ing file-based storage, which can speed up access. In some simple benchmarks `mmap()`ing cut the number of disk seek operations by about 75%.
+  * Other (only incidentally related) optimizations cut the overall number of seeks considerably compared to the `mmap()`-reduce number (approximately 50% reduction in one test), but these changes also affect non-`mmap()`ed files.
 
 *21 June 2009*
   * Added the [WhefsCat whefs-cat] tool.
