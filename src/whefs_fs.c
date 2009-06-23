@@ -31,8 +31,15 @@
 /*
   Reminder to self: the problem here is one of "how do we distinguish empty names vs. not-cached names,"
 and is complicated by the voodoo we use to store the strings inside whefs_fs::cache::strings.
+
+20090623: The last i checked it appeared to work fine when disabled,
+but i need to look closer to be sure.
 */
 #endif
+
+/**
+   The various WHEFS_FS_STRUCT_xxx macros are parts of the whefs_fs structure.
+*/
 
 #if WHEFS_CONFIG_ENABLE_THREADS
 /**
@@ -96,8 +103,8 @@ const whefs_fs whefs_fs_init = whefs_fs_init_m;
 #if WHEFS_CONFIG_ENABLE_STATIC_MALLOC
 enum {
 /**
-   The number of elements to statically allocate
-   in the whefs_fs_alloc_slots object.
+   The number of elements to statically allocate in the
+   whefs_fs_alloc_slots object.
 */
 whefs_fs_alloc_count = 2
 };
@@ -108,7 +115,13 @@ static struct
     size_t next;
 } whefs_fs_alloc_slots = { {whefs_fs_init_m}, {0}, 0 };
 #endif
+/** @internal
 
+   Allocates an empty-initializes a new whefs_fs object, which the
+   caller owns and must destroy with whefs_fs_free() (if the object is
+   never used) or whefs_fs_finalize() (if it contains data which needs
+   to be cleaned up).
+*/
 static whefs_fs * whefs_fs_alloc()
 {
     whefs_fs * obj = 0;
@@ -127,7 +140,10 @@ static whefs_fs * whefs_fs_alloc()
     if( obj ) *obj = whefs_fs_init;
     return obj;
 }
+/** @internal
 
+    Deallocates obj.
+*/
 static void whefs_fs_free( whefs_fs * obj )
 {
     if( obj ) *obj = whefs_fs_init;
@@ -298,6 +314,7 @@ static int whefs_fs_mmap_connect( whefs_fs * fs )
         whio_dev_api_mmap.close = whio_dev_mmap_close;
         doneIt = true;
     }
+    fs->flags &= ~WHEFS_FLAG_FS_IsMMapped;
     whio_size_t dsz = whio_dev_size( fs->dev );
     void * m = mmap( 0, dsz, whefs_fs_is_rw(fs) ? PROT_WRITE : PROT_READ, MAP_SHARED, fs->fileno, 0 );
     if( ! m )
@@ -318,7 +335,7 @@ static int whefs_fs_mmap_connect( whefs_fs * fs )
     WhioDevMMapInfo * minfo = (WhioDevMMapInfo*)malloc(sizeof(WhioDevMMapInfo));
     if( ! minfo )
     {
-        WHEFS_DBG_ERR("Allocatation of %u bytes for WhioDevMMapInfo failed!",sizeof(WhioDevMMapInfo));
+        WHEFS_DBG_ERR("Allocation of %u bytes for WhioDevMMapInfo failed!",sizeof(WhioDevMMapInfo));
         md->api->finalize(md);
         return whefs_rc.AllocError;
     }
@@ -444,6 +461,7 @@ void whefs_fs_caches_names_clear( whefs_fs * restrict fs )
                         fs->cache.hashes->count,
                         fs->cache.hashes->alloced,
                         whefs_hashid_list_sizeof(fs->cache.hashes) );
+#if 0
         whefs_hashid * h = 0;
 	whefs_id_type i;
         for( i = 0; i < fs->cache.hashes->count; ++i )
@@ -451,6 +469,7 @@ void whefs_fs_caches_names_clear( whefs_fs * restrict fs )
             h = &fs->cache.hashes->list[i];
             WHEFS_DBG_CACHE("inode #%"WHEFS_ID_TYPE_PFMT" cached entry.", h->id);
         }
+#endif
         whefs_hashid_list_alloc( &fs->cache.hashes, 0 );// reminder: we keep fs->cache.hashes itself until finalization.
     }
     if(1)
@@ -584,7 +603,7 @@ static size_t whefs_fs_sizeof_options()
    Returns the on-disk size of inode names for the given
    whefs_fs_options object.
 */
-static size_t whefs_fs_sizeof_name( whefs_fs_options const * opt )
+size_t whefs_fs_sizeof_name( whefs_fs_options const * opt )
 {
     return !opt
 	? 0
@@ -616,71 +635,10 @@ static size_t whefs_name_pos( whefs_fs const * restrict fs, whefs_id_type id )
 */
 static unsigned char const whefs_inode_name_tag_char = 0x80 | '\'';
 
-
-int whefs_fs_name_write( whefs_fs * restrict fs, whefs_id_type id, char const * name )
-{
-    if( ! whefs_inode_id_is_valid( fs, id ) || !name)
-    {
-	return whefs_rc.ArgError;
-    }
-    uint16_t slen = 0;
-    {
-	char const * c = name;
-	uint16_t i = 0;
-	for( ; c && *c && (i < fs->options.filename_length); ++i, ++c, ++slen )
-	{
-	}
-	if( (i == fs->options.filename_length) && *c )
-	{ /** too long! */
-	    return whefs_rc.RangeError;
-	}
-    }
-    int rc = 0;
-    /**
-       Encode the string to a temp buffer then write it in one go to
-       disk. Takes more code than plain i/o, but using this approach
-       here means much less overall i/o and requies less error
-       handling for the encoding (which can't fail as long as we
-       provide the proper parameters and memory buffer sizes).
-    */
-    const size_t bsz =
-        fs->sizes[WHEFS_SZ_INODE_NAME]
-        ;
-    assert(fs->sizes[WHEFS_SZ_INODE_NAME] && "fs has not been set up properly!");
-    assert( bsz == fs->sizes[WHEFS_SZ_INODE_NAME] );
-    //    unsigned char * buf = fs->buffers.nodeName;
-    enum { bufSize = whefs_sizeof_encoded_inode_name };
-    unsigned char buf[bufSize+1];
-    memset( buf+1, 0, bufSize );
-    buf[0] = (unsigned char) whefs_inode_name_tag_char;
-    size_t off = 1;
-    off += whefs_id_encode( buf + off, id );
-    off += whefs_uint16_encode( buf + off, slen );
-    //uint64_t shash = 0UL; //whefs_bytes_hash( name, slen );
-    //off += whefs_uint64_encode( buf + off, shash );
-    memcpy( buf + off, name, slen );
-    unsigned char const * dbgStr = buf+off;
-    off += slen;
-    if( off < bsz ) memset( buf + off, 0, bsz - off );
-    assert( off <= bsz );
-    const off_t spos = fs->offsets[WHEFS_OFF_INODE_NAMES] +
-        (bsz * (id-1));
-    whio_size_t const sz = whefs_fs_writeat( fs, spos, buf, bsz );
-    if( bsz != sz )
-    {
-	WHEFS_DBG_ERR("Writing inode #%"WHEFS_ID_TYPE_PFMT"[%s] name failed! rc=%d bsz=%u",id,name,rc,bsz);
-	return whefs_rc.IOError;
-    }
-    if( 0 && *name )
-    {
-	WHEFS_DBG("Writing inode #%"WHEFS_ID_TYPE_PFMT"[%s] name: [%s]",id,name,dbgStr);
-    }
-    return whefs_rc.OK;
-
-}
-
 int whefs_inode_name_get( whefs_fs * restrict fs, whefs_id_type id, whefs_string * tgt )
-{
+{ /* Maintenance reminder: this "should" be in whefs_inode.c, but it's not because
+     of whefs_inode_name_tag_char.
+   */
     if( ! tgt || ! whefs_inode_id_is_valid( fs, id ) ) return whefs_rc.ArgError;
     if( WHEFS_CONFIG_ENABLE_STRINGS_CACHE )
     {
@@ -749,9 +707,74 @@ int whefs_inode_name_get( whefs_fs * restrict fs, whefs_id_type id, whefs_string
     {
         //WHEFS_DBG("Caching inode name [%s]",tgt->string);
         whefs_inode_hash_cache( fs, id, tgt->string );
+        // A necessary evil to avoid lots of O(N) searches.
+        whefs_inode_hash_cache_sort(fs);
     }
     return rc;
 }
+
+int whefs_fs_name_write( whefs_fs * restrict fs, whefs_id_type id, char const * name )
+{
+    if( ! whefs_inode_id_is_valid( fs, id ) || !name)
+    {
+	return whefs_rc.ArgError;
+    }
+    uint16_t slen = 0;
+    {
+	char const * c = name;
+	uint16_t i = 0;
+	for( ; c && *c && (i < fs->options.filename_length); ++i, ++c, ++slen )
+	{
+	}
+	if( (i == fs->options.filename_length) && *c )
+	{ /** too long! */
+	    return whefs_rc.RangeError;
+	}
+    }
+    int rc = 0;
+    /**
+       Encode the string to a temp buffer then write it in one go to
+       disk. Takes more code than plain i/o, but using this approach
+       here means much less overall i/o and requies less error
+       handling for the encoding (which can't fail as long as we
+       provide the proper parameters and memory buffer sizes).
+    */
+    const size_t bsz =
+        fs->sizes[WHEFS_SZ_INODE_NAME]
+        ;
+    assert(fs->sizes[WHEFS_SZ_INODE_NAME] && "fs has not been set up properly!");
+    assert( bsz == fs->sizes[WHEFS_SZ_INODE_NAME] );
+    //    unsigned char * buf = fs->buffers.nodeName;
+    enum { bufSize = whefs_sizeof_encoded_inode_name };
+    unsigned char buf[bufSize+1];
+    memset( buf+1, 0, bufSize );
+    buf[0] = whefs_inode_name_tag_char;
+    size_t off = 1;
+    off += whefs_id_encode( buf + off, id );
+    off += whefs_uint16_encode( buf + off, slen );
+    //uint64_t shash = 0UL; //whefs_bytes_hash( name, slen );
+    //off += whefs_uint64_encode( buf + off, shash );
+    memcpy( buf + off, name, slen );
+    unsigned char const * dbgStr = buf+off;
+    off += slen;
+    if( off < bsz ) memset( buf + off, 0, bsz - off );
+    assert( off <= bsz );
+    const off_t spos = fs->offsets[WHEFS_OFF_INODE_NAMES] +
+        (bsz * (id-1));
+    whio_size_t const sz = whefs_fs_writeat( fs, spos, buf, bsz );
+    if( bsz != sz )
+    {
+	WHEFS_DBG_ERR("Writing inode #%"WHEFS_ID_TYPE_PFMT"[%s] name failed! rc=%d bsz=%u",id,name,rc,bsz);
+	return whefs_rc.IOError;
+    }
+    if( 0 && *name )
+    {
+	WHEFS_DBG("Writing inode #%"WHEFS_ID_TYPE_PFMT"[%s] name: [%s]",id,name,dbgStr);
+    }
+    return whefs_rc.OK;
+
+}
+
 
 /**
    Writes the inode names table to pos fs->offsets[WHEFS_OFF_INODE_NAMES].
@@ -916,7 +939,7 @@ static whio_dev * whefs_open_FILE( char const * filename, whefs_fs * restrict fs
 
 static int whefs_fs_init_bitset_inodes( whefs_fs * restrict fs )
 {
-#if WHEFS_FS_BITSET_CACHE_ENABLED
+#if WHEFS_CONFIG_ENABLE_BITSET_CACHE
     if( ! fs ) return whefs_rc.ArgError;
     const size_t nbits = 1; /* flags: used */
     const size_t nbc = fs->options.inode_count * nbits + 1; /* +1 b/c we use the ID (1...N) as bit address */
@@ -928,13 +951,13 @@ static int whefs_fs_init_bitset_inodes( whefs_fs * restrict fs )
 #endif
     WHEFS_ICACHE_SET_USED(fs,0); /* inode ID 0 is reserved for "not a node". */
     WHEFS_ICACHE_SET_USED(fs,1); /* inode ID 1 is reserved for the root node. */
-#endif /* WHEFS_FS_BITSET_CACHE_ENABLED */
+#endif /* WHEFS_CONFIG_ENABLE_BITSET_CACHE */
     return whefs_rc.OK;
 }
 
 static int whefs_fs_init_bitset_blocks( whefs_fs * restrict fs )
 {
-#if WHEFS_FS_BITSET_CACHE_ENABLED
+#if WHEFS_CONFIG_ENABLE_BITSET_CACHE
     //WHEFS_DBG("Setting up bitsets for fs@0x%p", (void const *)fs );
     if( ! fs ) return whefs_rc.ArgError;
     const size_t bbits = 1; /* flag: used */
@@ -946,7 +969,7 @@ static int whefs_fs_init_bitset_blocks( whefs_fs * restrict fs )
 	      fs->options.block_count, fs->bits.b.sz_bits, fs->bits.b.sz_bytes );
 #endif
     WHEFS_ICACHE_SET_USED(fs,0); /* inode ID 0 is reserved for "not a block". */
-#endif /* WHEFS_FS_BITSET_CACHE_ENABLED */
+#endif /* WHEFS_CONFIG_ENABLE_BITSET_CACHE */
     return whefs_rc.OK;
 }
 
@@ -975,7 +998,7 @@ static int whefs_fs_init_bitsets( whefs_fs * restrict fs )
 */
 static int whefs_fs_inode_cache_load( whefs_fs * restrict fs )
 {
-#if WHEFS_FS_BITSET_CACHE_ENABLED
+#if WHEFS_CONFIG_ENABLE_BITSET_CACHE
     if( ! fs || !fs->dev ) return whefs_rc.ArgError;
     //return 0;
     const whefs_id_type nc = whefs_fs_options_get(fs)->inode_count;
@@ -1006,7 +1029,7 @@ static int whefs_fs_inode_cache_load( whefs_fs * restrict fs )
     }
     fs->bits.i_loaded = true;
     //WHEFS_DBG_FYI("Initialized inode cache (entries: %u)", count);
-#endif /* WHEFS_FS_BITSET_CACHE_ENABLED */
+#endif /* WHEFS_CONFIG_ENABLE_BITSET_CACHE */
     return whefs_rc.OK;
 }
 
@@ -1015,7 +1038,7 @@ static int whefs_fs_inode_cache_load( whefs_fs * restrict fs )
 */
 static int whefs_fs_block_cache_load( whefs_fs * restrict fs )
 {
-#if WHEFS_FS_BITSET_CACHE_ENABLED
+#if WHEFS_CONFIG_ENABLE_BITSET_CACHE
     /* FIXME: instead of using whefs_block_read(), simply extract the
        flags field from each block entry. That'll be much faster. */
     if( ! fs || !fs->dev ) return whefs_rc.ArgError;
@@ -1037,7 +1060,7 @@ static int whefs_fs_block_cache_load( whefs_fs * restrict fs )
     }
     //WHEFS_DBG("Initialized block cache.");
     fs->bits.b_loaded = true;
-#endif /* WHEFS_FS_BITSET_CACHE_ENABLED */
+#endif /* WHEFS_CONFIG_ENABLE_BITSET_CACHE */
     return whefs_rc.OK;
 }
 
@@ -1512,9 +1535,10 @@ void whefs_fs_dump_info( whefs_fs const * restrict fs, FILE * out )
 #define X(T) {"sizeof(" # T ")",sizeof(T)}
     X(whio_dev),
     X(whio_dev_api),
+    X(FILE),
     X(whefs_fs),
     X(whefs_file),
-#if 0
+#if 1
     X(whio_stream),
     X(whio_stream_api),
 #endif

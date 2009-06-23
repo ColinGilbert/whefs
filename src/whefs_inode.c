@@ -134,7 +134,7 @@ int whefs_inode_name_set( whefs_fs * fs, whefs_id_type nid, char const * name )
         if( *buf && (0==strcmp(buf,name))) return whefs_rc.OK;
         if( *buf ) nameCheck = ncheck.string;
     }
-    WHEFS_DBG_CACHE("inode-name-set searching for [old=%s][new=%s][check=%s].",ncheck.string,name,nameCheck);
+    WHEFS_DBG_CACHE("inode-name-set check for collision in [old=[%s]][new=[%s]][checkAgainst=[%s]].",ncheck.string,name,nameCheck);
     whefs_id_type ndx = whefs_inode_hash_cache_search_ndx( fs, nameCheck );
     if( ndx != whefs_rc.IDTypeEnd )
     {
@@ -167,11 +167,11 @@ int whefs_inode_name_set( whefs_fs * fs, whefs_id_type nid, char const * name )
         whefs_hashid_list_sort( fs->cache.hashes );
         WHEFS_DBG_CACHE("Replacing hashcode for file [%s].",name);
     }
-    if( whefs_rc.OK != rc ) return rc;
     whefs_string_cache_set( &fs->cache.strings, nid-1, name );
 #endif
     return rc;
 }
+
 
 #if ! WHEFS_MACROIZE_SMALL_CHECKS
 bool whefs_inode_id_is_valid( whefs_fs const * restrict fs, whefs_id_type nid )
@@ -331,7 +331,7 @@ int whefs_inode_foreach( whefs_fs * fs, whefs_inode_predicate_f where, void * wh
     int rc = whefs_rc.OK;
     for( ; i <= fs->options.inode_count; ++i )
     {
-#if WHEFS_FS_BITSET_CACHE_ENABLED
+#if WHEFS_CONFIG_ENABLE_BITSET_CACHE
 	if( fs->bits.i_loaded && !WHEFS_ICACHE_IS_USED(fs,i) )
 	{
 	    continue;
@@ -366,7 +366,7 @@ int whefs_inode_next_free( whefs_fs * restrict fs, whefs_inode * restrict tgt, b
 		    i, fs->hints.unused_inode_start, fs->options.inode_count );
     for( ; i <= fs->options.inode_count; ++i )
     {
-#if WHEFS_FS_BITSET_CACHE_ENABLED
+#if WHEFS_CONFIG_ENABLE_BITSET_CACHE
 	if( fs->bits.i_loaded && WHEFS_ICACHE_IS_USED(fs,i) )
 	{
 	    //WHEFS_DBG("Got cached inode USED entry for inode #%"WHEFS_ID_TYPE_PFMT"", i );
@@ -700,7 +700,7 @@ int whefs_inode_by_name( whefs_fs * fs, char const * name, whefs_inode * tgt )
         for( ; i <= fs->options.inode_count; ++i )
         { // brute force... walk the inodes and compare them...
             
-#if WHEFS_FS_BITSET_CACHE_ENABLED // we can't rely on this here.
+#if WHEFS_CONFIG_ENABLE_BITSET_CACHE // we can't rely on this here.
             if( fs->bits.i_loaded )
             {
                 if( ! WHEFS_ICACHE_IS_USED(fs,i) )

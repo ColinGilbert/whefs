@@ -267,7 +267,7 @@ int whefs_fs_entry_foreach( whefs_fs * fs, whefs_fs_entry_foreach_f func, void *
     ent.name.alloced = bufSize;
     for( ; i <= fs->options.inode_count; ++i )
     {
-#if WHEFS_FS_BITSET_CACHE_ENABLED
+#if WHEFS_CONFIG_ENABLE_BITSET_CACHE
 	if( fs->bits.i_loaded && !WHEFS_ICACHE_IS_USED(fs,i) )
 	{
 	    continue;
@@ -312,7 +312,7 @@ whefs_string * whefs_ls( whefs_fs * fs, char const * pattern, whefs_id_type * co
     whefs_inode tmpn = whefs_inode_init;
     for( ; id <= nc; ++id )
     {
-#if WHEFS_FS_BITSET_CACHE_ENABLED
+#if WHEFS_CONFIG_ENABLE_BITSET_CACHE
 	if( fs->bits.i_loaded && !WHEFS_ICACHE_IS_USED(fs,id) )
 	{
 	    continue;
