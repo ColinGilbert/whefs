@@ -56,10 +56,10 @@ WHEFS_ENABLE_STATIC_MALLOC ?= $(ENABLE_STATIC_MALLOC)
 ########################################################################
 # WHEFS_ENABLE_BITSET_CACHE enables the inode/block in-use caches
 # (they're very small).
-WHEFS_ENABLE_BITSET_CACHE ?= 1
+WHEFS_ENABLE_BITSET_CACHE ?= 0
 ########################################################################
 # WHEFS_ENABLE_FCNTL enables fcntl()-based file locking.
-WHEFS_ENABLE_FCNTL ?= 1
+WHEFS_ENABLE_FCNTL ?= 0
 
 ########################################################################
 # WHEFS_ENABLE_STRINGS_CACHE enables a cache for the complete string
@@ -70,7 +70,7 @@ WHEFS_ENABLE_FCNTL ?= 1
 # much smaller and provides a significant performance increase if
 # files are searched for by name more than once.
 WHEFS_ENABLE_STRINGS_CACHE ?= 0
-WHEFS_ENABLE_STRINGS_HASH_CACHE ?= 1
+WHEFS_ENABLE_STRINGS_HASH_CACHE ?= 0
 
 ########################################################################
 # If WHIO_ENABLE_ZLIB is 1 then certain features requiring libz will
