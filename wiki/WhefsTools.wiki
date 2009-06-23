@@ -17,6 +17,8 @@ The source tree comes with several tools (under `<top_srcdir>/app`) for working 
 
 Some of those tools rely on private API routines which most client code won't have access to. Over time the public API will be fleshed out, such that client-side tools will have the level of access they would need to implement features like those these tools provide.
 
+The source code for all of these tools id in the [http://code.google.com/p/whefs/source/browse/trunk/app/ app directory of the source tree].
+
 =Common command arguments=
 
 Most of the whefs tools support the following common arguments:
