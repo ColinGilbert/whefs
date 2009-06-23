@@ -186,7 +186,7 @@ bool whefs_inode_is_valid( whefs_fs const * restrict fs, whefs_inode const * n )
 }
 #endif
 
-whio_size_t whefs_inode_id_pos( whefs_fs const * restrict fs, size_t nid )
+whio_size_t whefs_inode_id_pos( whefs_fs const * restrict fs, whefs_id_type nid )
 {
     if( ! whefs_inode_id_is_valid( fs, nid ) )
     {
@@ -230,7 +230,14 @@ int whefs_inode_flush( whefs_fs * fs, whefs_inode const * n )
     unsigned char buf[bufSize];
     memset( buf, 0, bufSize );
     whefs_inode_encode( n, buf );
+#if 0
     return whio_blockdev_write( &fs->fences.i, n->id - 1, buf );
+#else
+    int rc = whefs_inode_id_seek( fs, n->id );
+    if( whefs_rc.OK != rc ) return rc;
+    whio_size_t const wsz = whefs_fs_write( fs, buf, bufSize );
+    return (wsz == bufSize) ? whefs_rc.OK : whefs_rc.IOError;
+#endif
 }
 
 int whefs_inode_id_read( whefs_fs * fs, whefs_id_type nid, whefs_inode * tgt )
@@ -256,6 +263,7 @@ int whefs_inode_id_read( whefs_fs * fs, whefs_id_type nid, whefs_inode * tgt )
     enum { bufSize = whefs_sizeof_encoded_inode };
     unsigned char buf[bufSize];
     memset( buf, 0, bufSize );
+#if 0
     rc = whio_blockdev_read( &fs->fences.i, nid - 1, buf );
     if( whefs_rc.OK != rc )
     {
@@ -263,6 +271,22 @@ int whefs_inode_id_read( whefs_fs * fs, whefs_id_type nid, whefs_inode * tgt )
 		      rc, nid );
 	return rc;
     }
+#else
+    rc = whefs_inode_id_seek( fs, nid );
+    if( whefs_rc.OK != rc )
+    {
+	WHEFS_DBG_ERR("Error #%d while seeking to disk pos for inode #%"WHEFS_ID_TYPE_PFMT"!",
+		      rc, nid );
+	return rc;
+    }
+    whio_size_t const rsz = whefs_fs_read( fs, buf, bufSize );
+    if( rsz != bufSize )
+    {
+	WHEFS_DBG_ERR("Error reading %u bytes for inode #%"WHEFS_ID_TYPE_PFMT". Only got %"WHIO_SIZE_T_PFMT" bytes!",
+		      bufSize, nid, rsz );
+	return rc;
+    }
+#endif
     rc = whefs_inode_decode( tgt, buf );
     if( whefs_rc.OK != rc )
     {
@@ -281,7 +305,6 @@ int whefs_inode_read( whefs_fs * fs, whefs_inode * n )
 
 int whefs_inode_read_flags( whefs_fs * fs, whefs_id_type nid, uint32_t * flags )
 {
-#if 1
     if( ! whefs_inode_id_is_valid( fs, nid ) || !fs->dev ) return whefs_rc.ArgError;
     whefs_inode ino = whefs_inode_init;
     int rc = whefs_inode_id_read( fs, nid, &ino );
@@ -296,36 +319,6 @@ int whefs_inode_read_flags( whefs_fs * fs, whefs_id_type nid, uint32_t * flags )
         (void)0;
     }
     return rc;
-#else
-    WHEFS_DBG("Don't use this function! It's probably going away!");
-    if( ! whefs_inode_id_is_valid( fs, nid ) || !fs->dev ) return whefs_rc.ArgError;
-
-    whefs_inode_list * li = fs->opened_nodes;
-    for( ; li && (li->inode. id <= nid); li = li->next )
-    {
-	if( nid == li->inode.id );
-	{
-	    if( flags ) *flags = li->inode.flags;
-	    //WHEFS_DBG("inode_read_size() found opened entry #%"WHEFS_ID_TYPE_PFMT" to read.", nid);
-	    return whefs_rc.OK;
-	}
-    }
-
-    whefs_inode ino = whefs_inode_init;
-    enum { bufSize = whefs_sizeof_encoded_inode };
-    unsigned char buf[bufSize];
-    memset( buf, 0, bufSize );
-    int rc = whio_blockdev_read( &fs->fences.i, nid - 1, buf );
-    if( whio_rc.OK != rc )
-    {
-	WHEFS_DBG_ERR("Error code #%d while reading inode #%"WHEFS_ID_TYPE_PFMT"!",
-		      rc, nid );
-	return rc;
-    }
-    whefs_inode_decode( &ino, buf );
-    if( flags ) *flags = ino.flags;
-    return rc;
-#endif
 }
 
 int whefs_inode_foreach( whefs_fs * fs, whefs_inode_predicate_f where, void * whereData,

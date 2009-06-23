@@ -417,7 +417,7 @@ size_t whefs_fs_sizeof_inode( whefs_fs_options const * opt );
    (!fs or !nid, or nid is out of range), 0 is returned. Does not require
    any i/o.
 */
-whio_size_t whefs_inode_pos( whefs_fs const * fs, whefs_id_type nid );
+whio_size_t whefs_inode_id_pos( whefs_fs const * restrict fs, whefs_id_type nid );
 
 /**
    Seeks to the given inode's on-disk position. Returns whefs_rc.OK
