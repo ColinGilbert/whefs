@@ -1,7 +1,10 @@
 #summary Recent whefs news items.
 #labels Category-UserDocs,Phase-Support
 
-<h1>whefs News (most recent items at the top)</h1>
+=whefs News (most recent items at the top)=
+
+*22 June 2009:*
+  * Added optional `mmap()` support for file-based storage, which speeds up access considerably and drastically cuts the overall amount of seek operations which actually have to refer to disk.
 
 *16/17 June 2009:*
    * Ported the project over to Google Code. i miss the ability to download a snapshot zip of the source repo, but the wiki/issues/downloads maintenance is much simpler on Google Code.
