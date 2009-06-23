@@ -89,7 +89,7 @@ int whefs_hashid_list_alloc( whefs_hashid_list ** tgt, whefs_id_type toAlloc )
     if( ! tgt ) return whefs_rc.ArgError;
     if( ! *tgt )
     {
-        if( ! toAlloc ) return whefs_rc.ArgError;
+        if( ! toAlloc ) return whefs_rc.OK;
         *tgt = (whefs_hashid_list*) malloc(sizeof(whefs_hashid_list));
         if( ! tgt ) return whefs_rc.AllocError;
         **tgt = whefs_hashid_list_init;

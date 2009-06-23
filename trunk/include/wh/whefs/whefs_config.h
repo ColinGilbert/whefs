@@ -294,13 +294,31 @@ when some form of thread locking is enabled.
    used inodes, the loading of the cache costs more than any relative
    benefit. Thus it is disabled by default.
 
-   In fact, an app may (and is likely to) end up making more calls to
-   malloc() and free() with the cache turned off, but they are likely
-   to not hold as much memory open at one time compared to the cache.
+   In fact, an app may end up making more calls to malloc() and free()
+   with the cache turned off, but they are unlikely to hold as much
+   memory open at one time compared to the cache.
 
    FIXME: make this runtime-togglable.
 */
+#if ! defined(WHEFS_CONFIG_ENABLE_STRINGS_CACHE)
 #define WHEFS_CONFIG_ENABLE_STRINGS_CACHE 0
+#endif
+
+/** @def WHEFS_CONFIG_ENABLE_STRINGS_HASH_CACHE
+
+If WHEFS_CONFIG_ENABLE_STRINGS_HASH_CACHE is set to false then the
+code for caching the hashcode of inode names is disabled by
+default. The cache costs a small amount (about 8 bytes/cached inode
+entry, more if WHEFS_ID_TYPE_BITS is bigger than 16) but can
+*drastically* speed up searches for inode by name if the operation is
+done more than once (the initial load populates the cache).
+
+The state of this cache can be changed at runtime using
+whefs_fs_set_inode_hash_cache().
+*/
+#if !defined(WHEFS_CONFIG_ENABLE_STRINGS_HASH_CACHE)
+#define WHEFS_CONFIG_ENABLE_STRINGS_HASH_CACHE 0
+#endif
 
 /** @def WHEFS_CONFIG_ENABLE_STATIC_MALLOC
 

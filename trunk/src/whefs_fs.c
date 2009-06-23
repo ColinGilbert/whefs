@@ -75,7 +75,7 @@ and is complicated by the voodoo we use to store the strings inside whefs_fs::ca
 */
 //const whefs_fs whefs_fs_init =
 #define whefs_fs_init_m { \
-    0, /* flags */ \
+    (WHEFS_CONFIG_ENABLE_STRINGS_HASH_CACHE ? WHEFS_FLAG_FS_EnableHashCache : 0), /* flags */ \
     0, /* err */ \
     {0}, /* offsets */ \
     {0}, /* sizes */ \
@@ -449,7 +449,7 @@ void whefs_fs_caches_names_clear( whefs_fs * restrict fs )
         for( i = 0; i < fs->cache.hashes->count; ++i )
         {
             h = &fs->cache.hashes->list[i];
-            WHEFS_DBG_CACHE("inode #%"WHEFS_ID_TYPE_PFMT" cache entry hits: %"PRIu16, h->id);
+            WHEFS_DBG_CACHE("inode #%"WHEFS_ID_TYPE_PFMT" cached entry.", h->id);
         }
         whefs_hashid_list_alloc( &fs->cache.hashes, 0 );// reminder: we keep fs->cache.hashes itself until finalization.
     }
@@ -495,7 +495,7 @@ void whefs_fs_finalize( whefs_fs * restrict fs )
         // We don't currently track those.
     }
     whefs_fs_caches_clear(fs);
-    whefs_hashid_list_free( fs->cache.hashes );
+    whefs_fs_hash_cache_set( fs, false, false );
     whefs_string_cache_cleanup( &fs->cache.strings );
     if( fs->dev )
     {
@@ -1055,7 +1055,10 @@ int whefs_fs_caches_load( whefs_fs * restrict fs )
 {
     int rc = whefs_fs_inode_cache_load( fs );
     if( whefs_rc.OK == rc ) rc = whefs_fs_block_cache_load( fs );
-    if( whefs_rc.OK == rc ) rc = whefs_inode_hash_cache_load( fs );
+    if( whefs_rc.OK == rc )
+    {
+        rc = whefs_fs_hash_cache_set( fs, WHEFS_CONFIG_ENABLE_STRINGS_HASH_CACHE ? true : false, false );
+    }
     return rc;
 }
 
@@ -1163,7 +1166,7 @@ static int whefs_mkfs_stage1( whefs_fs_options const * opt, whefs_fs ** tgt )
     whefs_fs * fs = whefs_fs_alloc();
     if( ! fs ) return whefs_rc.AllocError;
     *fs = whefs_fs_init;
-    fs->flags = WHEFS_FLAG_ReadWrite;
+    fs->flags |= WHEFS_FLAG_ReadWrite;
     fs->options = *opt;
 
     whefs_fs_init_sizes( fs );
@@ -1461,7 +1464,7 @@ int whefs_openfs_dev( whio_dev * restrict dev, whefs_fs ** tgt, bool takeDev )
     *fs = whefs_fs_init;
     // FIXME: do a 1-byte write test to see if the device is writeable,
     // or add a parameter to the function defining the write mode.
-    fs->flags = WHEFS_FLAG_ReadWrite; /* we're guessing!!! */
+    fs->flags |= WHEFS_FLAG_ReadWrite; /* we're guessing!!! */
     fs->dev = dev;
     fs->ownsDev = takeDev;
     whefs_fs_check_fileno( fs );
@@ -1482,7 +1485,7 @@ int whefs_openfs( char const * filename, whefs_fs ** tgt, bool writeMode )
     whefs_fs * fs = whefs_fs_alloc();
     if( ! fs ) return whefs_rc.AllocError;
     *fs = whefs_fs_init;
-    fs->flags = (writeMode ? WHEFS_FLAG_ReadWrite : WHEFS_FLAG_Read);
+    fs->flags |= (writeMode ? WHEFS_FLAG_ReadWrite : WHEFS_FLAG_Read);
     if( ! whefs_open_FILE( filename, fs, writeMode, false ) )
     {
 	WHEFS_DBG_WARN("Could not open file [%s] in %s mode.",
@@ -1622,5 +1625,33 @@ int whefs_fs_append_blocks( whefs_fs * restrict fs, whefs_id_type count )
     }
     whefs_fs_flush( fs );
     whefs_fs_mmap_connect( fs ); // We need to re-mmap() to account for the new size!
+    return rc;
+}
+
+int whefs_fs_hash_cache_set( whefs_fs * fs, bool on, bool loadNow )
+{
+    if( ! fs ) return whefs_rc.ArgError;
+    int rc = whefs_rc.OK;
+    if( on )
+    {
+        // Reminder: we don't check if it was already on so we
+        // can more easily honor loadNow.
+        fs->flags |= WHEFS_FLAG_FS_EnableHashCache;
+        if( loadNow )
+        {
+            rc = whefs_inode_hash_cache_load( fs );
+        }
+    }
+    else
+    {
+        fs->flags &= ~WHEFS_FLAG_FS_EnableHashCache;
+        whefs_hashid_list_free( fs->cache.hashes );
+        fs->cache.hashes = 0;
+    }
+    if( whefs_rc.OK != rc )
+    {
+        whefs_hashid_list_free( fs->cache.hashes );
+        if( on ) fs->flags &= ~WHEFS_FLAG_FS_EnableHashCache;
+    }
     return rc;
 }
