@@ -259,7 +259,8 @@ int whefs_inode_hash_cache_load( whefs_fs * fs )
     name.alloced = bufSize;
     int rc = 0;
     whefs_id_type i;
-    size_t count = 0;
+    whefs_id_type count = 0;
+    fs->cache.hashes->skipAutoSort = true; // optimization to avoid extra sorting via whefs_inode_name_get()
     for( i = fs->options.inode_count; i >=1 ; --i )
     {
         /**
@@ -282,13 +283,14 @@ int whefs_inode_hash_cache_load( whefs_fs * fs )
             }
 	}
 #endif // WHEFS_CONFIG_ENABLE_BITSET_CACHE
-        rc = whefs_inode_name_get( fs, i, &name );
+        rc = whefs_inode_name_get( fs, i, &name ); // this caches the name hash
         if( whefs_rc.OK != rc ) break;
         ++count;
     }
     assert( (name.string == (char *)buf) && "Internal memory management foo-foo." );
+    fs->cache.hashes->skipAutoSort = false;
     whefs_hashid_list_sort(li);
-    WHEFS_DBG_CACHE("Loaded all used inodes into cache with %u name(s).",count);
+    WHEFS_DBG_CACHE("Loaded all used inodes into cache with %"WHEFS_ID_TYPE_PFMT" name(s).",count);
     return rc;
 }
 int whefs_inode_hash_cache_chomp_lv( whefs_fs * fs )
