@@ -17,6 +17,7 @@ static whio_size_t whio_stream_dev_write( whio_stream * self, void const * src, 
 static int whio_stream_dev_flush( whio_stream * ARG_UNUSED(self) );
 static bool whio_stream_dev_close( whio_stream * self );
 static void whio_stream_dev_finalize( whio_stream * self );
+static short whio_stream_dev_iomode( whio_stream * self );
 /** whio_dev::impl::typeID value for whio_stream_dev objects. */
 
 const whio_stream_api whio_stream_api_dev = 
@@ -26,7 +27,8 @@ const whio_stream_api whio_stream_api_dev =
     whio_stream_dev_close,
     whio_stream_dev_finalize,
     whio_stream_dev_flush,
-    whio_stream_dev_isgood
+    whio_stream_dev_isgood,
+    whio_stream_dev_iomode
     };
 
 const whio_stream whio_stream_dev =
@@ -85,19 +87,29 @@ bool whio_stream_dev_close( whio_stream * self )
 {
     whio_stream_dev_meta * meta = (self ? (whio_stream_dev_meta*)self->impl.data : 0);
     if( ! meta ) return false;
-    if( self->client.dtor ) self->client.dtor( self->client.data );
-    self->client = whio_client_data_init;
     self->impl.data = 0;
     if( meta->dev )
     {
-        meta->dev->api->flush( meta->dev );
-        if( meta->ownsDev )
+        if( meta->dev->api->iomode(meta->dev) > 0 )
         {
-            meta->dev->api->finalize( meta->dev );
+            meta->dev->api->flush( meta->dev );
         }
+    }
+    if( self->client.dtor ) self->client.dtor( self->client.data );
+    self->client = whio_client_data_init;
+    if( meta->dev && meta->ownsDev )
+    {
+        meta->dev->api->finalize( meta->dev );
     }
     free( meta );
     return true;
+}
+
+
+static short whio_stream_dev_iomode( whio_stream * self )
+{
+    WHIO_STR_DEV_DECL(-1);
+    return meta->dev->api->iomode( meta->dev );
 }
 
 
