@@ -26,7 +26,6 @@ to provide dramatic speed increases.
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h> /* ftruncate(), fdatasync() */
-#include <string.h> /* strchr() */
 #include <fcntl.h>
 #include <errno.h>
 
@@ -404,22 +403,8 @@ static whio_dev * whio_dev_for_file_impl( char const * fname, int filenum, char 
     meta->fp = f;
     meta->fileno = fileno(f);
     meta->filename = fname;
-
-    meta->iomode = -1;
-    if( (0 != strchr( mode, 'w' )) )
-    { 
-        meta->iomode = 1;
-    }
-    else if( 0 != strchr( mode, 'r' ) )
-    {
-	if( 0 != strchr( mode, '+' ) )
-        {
-            meta->iomode = 1;
-        }
-	else meta->iomode = 0;
-    }
+    meta->iomode = whio_mode_to_iomode( mode );
     return dev;
-
 }
 
 whio_dev * whio_dev_for_fileno( int fileno, char const * mode )

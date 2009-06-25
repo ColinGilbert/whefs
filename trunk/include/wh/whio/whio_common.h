@@ -213,6 +213,19 @@ typedef struct whio_impl_data whio_impl_data;
 */
 extern const whio_impl_data whio_impl_data_init;
 
+/**
+   Tries to convert an fopen()-compatible mode string to a number
+   compatible with whio_dev::iomode() and whio_stream::iomode().
+
+   Returns a positive number of mode appears to be writeable,
+   0 if it appears to be read-only, and a negative value if it
+   cannot determine the mode.
+
+   This function is intended for use with whio_dev/whio_stream
+   factories which use an fopen()-like mode string.
+*/
+short whio_mode_to_iomode( char const * mode );
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

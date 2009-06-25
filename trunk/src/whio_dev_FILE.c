@@ -20,7 +20,6 @@ along with the factory functions for creating the device objects.
 #include <unistd.h> /* ftruncate() */
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h> /* strchr() */
 #if defined(__GNUC__) || defined(__TINYC__)
 #if !defined(GCC_VERSION) || (GCC_VERSION < 40100)
 /* i don't actually know which versions need this, but 4.0.2 does. */
@@ -331,19 +330,7 @@ whio_dev * whio_dev_for_filename( char const * fname, char const * mode )
         return 0;
     }
     whio_dev_FILE * meta = (whio_dev_FILE*)d->impl.data;
-    meta->iomode = -1;
-    if( (0 != strchr( mode, 'w' )) )
-    { 
-        meta->iomode = 1;
-    }
-    else if( 0 != strchr( mode, 'r' ) )
-    {
-	if( 0 != strchr( mode, '+' ) )
-        {
-            meta->iomode = 1;
-        }
-	else meta->iomode = 0;
-    }
+    meta->iomode = whio_mode_to_iomode( mode );
     return d;
 }
 #endif

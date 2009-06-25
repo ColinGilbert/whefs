@@ -18,6 +18,7 @@ static whio_size_t whio_stream_FILE_write( whio_stream * self, void const * src,
 static int whio_stream_FILE_flush( whio_stream * self );
 static void whio_stream_FILE_finalize( whio_stream * self );
 static bool whio_stream_FILE_close( whio_stream * self );
+static short whio_stream_FILE_iomode( whio_stream * self );
 
 const whio_stream_api whio_stream_api_FILE = 
     {
@@ -26,7 +27,8 @@ const whio_stream_api whio_stream_api_FILE =
     whio_stream_FILE_close,
     whio_stream_FILE_finalize,
     whio_stream_FILE_flush,
-    whio_stream_FILE_isgood
+    whio_stream_FILE_isgood,
+    whio_stream_FILE_iomode
     };
 
 const whio_stream whio_stream_FILE_init = 
@@ -54,12 +56,14 @@ typedef struct whio_stream_FILEINFO
        then api->finalize() will fclose() it.
      */
     bool ownsFile;
+    short iomode;
 } whio_stream_FILEINFO;
 static const whio_stream_FILEINFO whio_stream_FILEINFO_init =
     {
     0, /* fp */
     0, /* fileno */
-    false /* ownsFile */
+    false, /* ownsFile */
+    -1 /* iomode */
     };
 
 whio_stream * whio_stream_for_FILE( FILE * fp, bool takeOwnership )
@@ -79,6 +83,7 @@ whio_stream * whio_stream_for_FILE( FILE * fp, bool takeOwnership )
     meta->ownsFile = takeOwnership;
     meta->fp = fp;
     meta->fileno = fileno(fp);
+    meta->iomode = -1;
     return st;
 }
 
@@ -92,6 +97,11 @@ whio_stream * whio_stream_for_filename( char const * src, char const * mode )
     {
 	fclose(fp);
     }
+    else
+    {
+        whio_stream_FILEINFO * meta = (whio_stream_FILEINFO*)st->impl.data;
+        meta->iomode = whio_mode_to_iomode( mode );
+    }
     return st;
 }
 
@@ -103,6 +113,11 @@ whio_stream * whio_stream_for_fileno( int fileno, bool writeMode )
     if( ! st )
     {
 	fclose(fp);
+    }
+    else
+    {
+        whio_stream_FILEINFO * meta = (whio_stream_FILEINFO*)st->impl.data;
+        meta->iomode = writeMode ? 1 : 0;
     }
     return st;
 }
@@ -125,6 +140,12 @@ static bool whio_stream_FILE_isgood( whio_stream * self )
 	return meta->fp && (0 == ferror(meta->fp));
     }
     return false;
+}
+
+static short whio_stream_FILE_iomode( whio_stream * self )
+{
+	WHIO_STR_FILE_DECL(-1);
+        return meta->iomode;
 }
 
 /**

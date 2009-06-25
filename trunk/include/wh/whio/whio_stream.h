@@ -110,6 +110,14 @@ struct whio_stream_api
        implementation.
     */
     bool (*isgood)( struct whio_stream * self );
+
+    /**
+       This function must return a positive number if self is writable,
+       0 if it is read-only, and a negative number if the device
+       cannot report this information or if the given argument is null
+       or otherwise invalid.
+    */
+    short (*iomode)( struct whio_stream * dev );
 };
 
 typedef struct whio_stream_api whio_stream_api;
