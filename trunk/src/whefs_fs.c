@@ -646,6 +646,7 @@ int whefs_inode_name_get( whefs_fs * restrict fs, whefs_id_type id, whefs_string
      of whefs_inode_name_tag_char.
    */
     if( ! tgt || ! whefs_inode_id_is_valid( fs, id ) ) return whefs_rc.ArgError;
+    assert(fs->sizes[WHEFS_SZ_INODE_NAME] && "fs has not been set up properly!");
     if( WHEFS_CONFIG_ENABLE_STRINGS_CACHE )
     {
         static uint32_t hitmiss[2] = {0,0};
@@ -662,13 +663,11 @@ int whefs_inode_name_get( whefs_fs * restrict fs, whefs_id_type id, whefs_string
         }
         ++hitmiss[0];
     }
-
     // FIXME? check opened inodes first?
     int rc = 0;
     enum { bufSize = whefs_sizeof_encoded_inode_name };
     unsigned char buf[bufSize + 1];
     memset( buf, 0, bufSize + 1 );
-    assert(fs->sizes[WHEFS_SZ_INODE_NAME] && "fs has not been set up properly!");
     whio_size_t const toRead = whefs_fs_sizeof_name(&fs->options);
     assert( toRead <= bufSize );
     whio_size_t spos = fs->offsets[WHEFS_OFF_INODE_NAMES]
@@ -714,7 +713,10 @@ int whefs_inode_name_get( whefs_fs * restrict fs, whefs_id_type id, whefs_string
         //WHEFS_DBG("Caching inode name [%s]",tgt->string);
         whefs_inode_hash_cache( fs, id, tgt->string );
         // A necessary evil to avoid lots of O(N) searches.
-        whefs_inode_hash_cache_sort(fs);
+        if( fs->cache.hashes && ! fs->cache.hashes->skipAutoSort )
+        {
+            whefs_inode_hash_cache_sort(fs);
+        }
     }
     return rc;
 }

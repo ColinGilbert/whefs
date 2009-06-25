@@ -96,10 +96,12 @@ struct whefs_hashid_list
     whefs_hashid * list;
     /** Functions which unsort a list set this to false. whefs_hashid_list_sort() sets it to true. */
     bool isSorted;
+    /** Internal optimization. */
+    bool skipAutoSort;
 };
 typedef struct whefs_hashid_list whefs_hashid_list;
 /** Empty initializer object. */
-#define whefs_hashid_list_init_m {0U/*alloced*/,0U/*count*/,0U/*maxAlloc*/,0/*list*/,false/*isSorted*/}
+#define whefs_hashid_list_init_m {0U/*alloced*/,0U/*count*/,0U/*maxAlloc*/,0/*list*/,false/*isSorted*/,false/*skipAutoSort*/}
 /** Empty initializer object. */
 extern const whefs_hashid_list whefs_hashid_list_init;
 
