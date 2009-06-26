@@ -197,7 +197,7 @@ int test_popen( whio_stream * dest )
     whio_stream * str = whio_stream_for_FILE( p, false );
     str->client.data = p;
     str->client.dtor = test_popen_dtor;
-    iint rc = whio_stream_copy( str, dest );
+    int rc = whio_stream_copy( str, dest );
     str->api->finalize(str); // will call test_popen_dtor()
     return rc;
 }
