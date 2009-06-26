@@ -628,7 +628,7 @@ int main( int argc, char const ** argv )
     //if(!rc) rc =  test_gzip();
 #endif
     if(!rc) rc =  test_stuff();
-    //if(!rc) rc =  test_popen();
+    if(!rc) rc =  test_popen();
     //if(!rc) rc =  test_tar();
 #if TRY_MMAP
     if(!rc) rc =  test_mmap();
