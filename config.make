@@ -65,14 +65,9 @@ WHEFS_ENABLE_BITSET_CACHE ?= 1
 WHEFS_ENABLE_FCNTL ?= 1
 
 ########################################################################
-# WHEFS_ENABLE_STRINGS_CACHE enables a cache for the complete string
-# data of traversed inodes. It's quite big, though, so it's off by
-# default.
-#
 # WHEFS_ENABLE_STRINGS_HASH_CACHE enables the "hash cache", which is
-# much smaller and provides a significant performance increase if
+# a small cache which provides a significant performance increase if
 # files are searched for by name more than once.
-WHEFS_ENABLE_STRINGS_CACHE ?= 0
 WHEFS_ENABLE_STRINGS_HASH_CACHE ?= 1
 
 ########################################################################

@@ -9,7 +9,9 @@
 const whefs_hashid whefs_hashid_init = whefs_hashid_init_m;
 
 whefs_hashval_type whefs_hash_cstring( char const * vstr)
-{ /* "djb2" algo code taken from: http://www.cse.yorku.ca/~oz/hash.html */
+{
+#if 1
+    /* "djb2" algo code taken from: http://www.cse.yorku.ca/~oz/hash.html */
     if( ! vstr ) return 0U;
     whefs_hashval_type hash = 5381;
     int c = 0;
@@ -18,6 +20,17 @@ whefs_hashval_type whefs_hash_cstring( char const * vstr)
         hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
     }
     return hash;
+#else
+ /* "shift-and-xor" algo code taken from: http://eternallyconfuzzled.com/tuts/algorithms/jsw_tut_hashing.aspx
+
+*/
+    whefs_hashval_type hash = 0;
+    if(vstr) for( ; *vstr; ++vstr )
+    {
+        hash ^= ( hash << 5 ) + ( hash >> 2 ) + *vstr;
+    }
+   return hash;
+#endif
 }
 
 /**

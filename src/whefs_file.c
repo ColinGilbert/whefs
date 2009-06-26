@@ -65,6 +65,7 @@ static whefs_file * whefs_file_alloc()
 
 static void whefs_file_free( whefs_file * restrict obj )
 {
+    if(obj) whefs_string_clear( &obj->name, false );
 #if WHEFS_CONFIG_ENABLE_STATIC_MALLOC
     if( (obj < &whefs_file_alloc_slots.objs[0]) ||
 	(obj > &whefs_file_alloc_slots.objs[whefs_file_alloc_count-1]) )
@@ -81,7 +82,6 @@ static void whefs_file_free( whefs_file * restrict obj )
 	return;
     }
 #else
-    whefs_string_clear( &obj->name, false );
     *obj = whefs_file_init;
     free(obj);
 #endif /* WHEFS_CONFIG_ENABLE_STATIC_MALLOC */
