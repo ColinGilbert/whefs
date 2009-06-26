@@ -283,29 +283,6 @@ when some form of thread locking is enabled.
 #  define WHEFS_MACROIZE_SMALL_CHECKS 1
 #endif
 
-/**
-   If WHEFS_CONFIG_ENABLE_STRINGS_CACHE is 0 then the internal inode
-   name string caching mechanism is disabled. The cache costs a
-   significant amount of memory (proportional to the number of used
-   inodes multiplied by the maximum filename length), but can save i/o
-   when files are searched by name often or their names are fetched
-   more than once. Any performance gains are only noted in apps which
-   have an unusually high amount of lookups by name. When it is turned
-   on, the whole inode names table is read and the cache is
-   populated. If the client searches by name less times than there are
-   used inodes, the loading of the cache costs more than any relative
-   benefit. Thus it is disabled by default.
-
-   In fact, an app may end up making more calls to malloc() and free()
-   with the cache turned off, but they are unlikely to hold as much
-   memory open at one time compared to the cache.
-
-   FIXME: make this runtime-togglable.
-*/
-#if ! defined(WHEFS_CONFIG_ENABLE_STRINGS_CACHE)
-#define WHEFS_CONFIG_ENABLE_STRINGS_CACHE 0
-#endif
-
 /** @def WHEFS_CONFIG_ENABLE_STRINGS_HASH_CACHE
 
 If WHEFS_CONFIG_ENABLE_STRINGS_HASH_CACHE is set to false then the
