@@ -968,7 +968,7 @@ void whefs_fs_dump_info( whefs_fs const * restrict fs, FILE * out );
 
    If !fs then 0 is returned (0 is never a valid size of a vfs).
 */
-size_t whefs_fs_calculate_size( whefs_fs_options const * opt );
+whio_size_t whefs_fs_calculate_size( whefs_fs_options const * opt );
 
 /**
    A debuggering routine which dumps fs to the given FILE. This is
