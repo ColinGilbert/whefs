@@ -19,7 +19,7 @@ To build the amalgamation, simply do the following from the whefs source tree:
 
 That will create the files <tt>whefs_amalgamation.h</tt> and <tt>whefs_amalgamation.c</tt>, which can be compiled into library form or embedded directly in a client source tree. The [http://sqlite.org sqlite project] uses this technique as well, and they claim that via this approach the overall performance of the library can be improved by 5-10% because the compiler can perform certain extra optimizations when all definitions are in the same source file.
 
-Creating the amalgamation requires some (automated) tweaks to the source and header files (e.g. removing the #includes for the related headers). To see how it's done, look at the the script `[http://code.google.com/p/whefs/source/browse/trunk/createAmalgamation.sh createAmalgamation.sh]`.
+Creating the amalgamation requires some (automated) tweaks to the source and header files (e.g. removing the #includes for the related headers). To see how it's done, look at the the script [http://code.google.com/p/whefs/source/browse/trunk/createAmalgamation.sh createAmalgamation.sh].
 
 =Using the amalgamation from client code=
 
