@@ -775,11 +775,11 @@ static int whefs_mkfs_write_names_table( whefs_fs * restrict fs )
 
 
 
-size_t whefs_fs_calculate_size( whefs_fs_options const * opt )
+whio_size_t whefs_fs_calculate_size( whefs_fs_options const * opt )
 {
-    static const size_t sz = whio_dev_sizeof_uint32;
+    static const whio_size_t sz = (whio_size_t)whio_dev_sizeof_uint32;
     if( ! opt ) return 0;
-    else return
+    else return (whio_size_t)(
 	(whio_dev_sizeof_uint32 * whefs_fs_magic_bytes_len) // core magic
 	+ sz // file size header
 	+ whio_dev_sizeof_uint16 // client magic size
@@ -788,7 +788,7 @@ size_t whefs_fs_calculate_size( whefs_fs_options const * opt )
 	+ (whefs_fs_sizeof_name( opt ) * opt->inode_count)/* inode names table */
 	+ (whefs_sizeof_encoded_inode * opt->inode_count) /* inode table */
 	+ (whefs_fs_sizeof_block( opt ) * opt->block_count)/* blocks table */
-	;
+	);
 }
 
 
@@ -1405,6 +1405,7 @@ static int whefs_openfs_stage2( whefs_fs * restrict fs )
     ///fs->offsets[WHEFS_OFF_OPTIONS] = 
     fs->dev->api->seek( fs->dev, opt->magic.length, SEEK_CUR );
     /* FIXME: store the opt->magic.data somewhere! Ownership requires some changes in other code. */
+    // FIXME: add whio_dev_size_t_en/decode()
     rc = whio_dev_uint32_decode( fs->dev, &opt->block_size );
     CHECK;
     rc = whefs_dev_id_decode( fs->dev, &opt->block_count );
@@ -1517,7 +1518,7 @@ void whefs_fs_dump_info( whefs_fs const * restrict fs, FILE * out )
     fprintf( out, "sizeof() of various internal types:\n");
     for( ;so && so->label; ++so )
     {
-	fprintf( out,"\t%s = %u\n", so->label, so->size );
+	fprintf( out,"\t%s = %"PRIu64"\n", so->label, (uint64_t)so->size );
     }
 
 
@@ -1525,21 +1526,21 @@ void whefs_fs_dump_info( whefs_fs const * restrict fs, FILE * out )
     fprintf( out,"Various EFS stats:\n" );
     whefs_fs_options const * o = &fs->options;
     fprintf( out,
-	     "\ton-disk sizeof whefs_inode = %u (+%u bytes for the name)\n"
-	     "\tbits used for node/block IDs: %u\n"
-	     "\tblock size: %u\n"
+	     "\ton-disk sizeof whefs_inode = %u (+%"PRIu64" bytes for the name)\n"
+	     "\tbits used for node/block IDs: %d\n"
+	     "\tblock size: %"WHIO_SIZE_T_PFMT"\n"
 	     "\tblock count: %"WHEFS_ID_TYPE_PFMT"\n"
 	     "\tmax inode count: %"WHEFS_ID_TYPE_PFMT" (1 is reserved for the root dir entry!)\n"
 	     "\tmax filename length: %u (WHEFS_MAX_FILENAME_LENGTH=%u)\n"
-	     "\tmagic cookie length: %u\n"
-	     "\tContainer size:\n\t\tcalculated =\t\t%u\n\t\tdevice-reported =\t%"WHIO_SIZE_T_PFMT"\n",
-	     whefs_sizeof_encoded_inode, whefs_fs_sizeof_name(&fs->options),
-	     WHEFS_ID_TYPE_BITS,
+	     "\tmagic cookie length: %"PRIu32"\n"
+	     "\tContainer size:\n\t\tcalculated =\t\t%"WHIO_SIZE_T_PFMT"\n\t\tdevice-reported =\t%"WHIO_SIZE_T_PFMT"\n",
+	     whefs_sizeof_encoded_inode, (uint64_t)whefs_fs_sizeof_name(&fs->options),
+	     (int) WHEFS_ID_TYPE_BITS,
 	     o->block_size,
 	     o->block_count,
 	     o->inode_count,
 	     o->filename_length, WHEFS_MAX_FILENAME_LENGTH,
-	     o->magic.length,
+	     (uint32_t)o->magic.length,
 	     whefs_fs_calculate_size(&fs->options),
 	     whio_dev_size(fs->dev)
 	     );
