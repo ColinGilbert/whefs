@@ -5,6 +5,10 @@ This is the informal change list for whefs releases. Newest items are at the top
 
 ----
 
+*26 June 2009*
+  * Removed the full-string cache altogether. It _might_ be reintroduced in another form, but it's not on the immediate to-do list. The hash cache gives us 95% of what we need and requires much less memory.
+  * Fixed a memleak of an inode name in `whefs_fclose()` when (ironically enough) the static allocators were enabled.
+
 *23 June 2009*
   * All of the EFS caching elements can now be disabled at compile time. Work is underway to make them runtime-togglable.
   * Read-only EFSes are no longer mmap()ed because profiling shows read-heavy uses to be slowed down by this.
@@ -12,7 +16,7 @@ This is the informal change list for whefs releases. Newest items are at the top
 
 *22 June 2009*
   * Added optional support for `mmap()`ing file-based storage, which can speed up access. In some simple benchmarks `mmap()`ing cut the number of disk seek operations by about 75%.
-  * Other (only incidentally related) optimizations cut the overall number of seeks considerably compared to the `mmap()`-reduce number (approximately 50% reduction in one test), but these changes also affect non-`mmap()`ed files.
+  * Other (only incidentally related) optimizations cut the overall number of seeks considerably compared to the `mmap()`-reduced number (approximately 50% reduction in one test), but these changes also affect non-`mmap()`ed files.
   * Prettied up the output from [WhefsLs whefs-ls].
 
 *21 June 2009*
