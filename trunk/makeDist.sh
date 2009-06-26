@@ -32,6 +32,7 @@ for d in $sdirs; do
 	-o -name 'Doxyfile' \
 	-o -name 'Doxyfile-internal' \
 	| sed -e '/\/bak/d' \
+	-e '/kdbg/d' \
 	-e '/\/nono/d' \
 	-e '/\.#/d' \
 	-e '/\.svn/d' \
