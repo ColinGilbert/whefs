@@ -1214,7 +1214,7 @@ int whefs_inode_hash_cache_chomp_lv( whefs_fs * fs );
    whefs_config.h) is set to true then this cache is enabled by
    default but not pre-loaded, otherwise it is disabled by default.
 */
-int whefs_fs_hash_cache_set( whefs_fs * fs, bool on, bool loadNow );
+int whefs_fs_setopt_hash_cache( whefs_fs * fs, bool on, bool loadNow );
 
 
 #ifdef __cplusplus

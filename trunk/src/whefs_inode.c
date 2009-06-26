@@ -167,7 +167,6 @@ int whefs_inode_name_set( whefs_fs * fs, whefs_id_type nid, char const * name )
         whefs_hashid_list_sort( fs->cache.hashes );
         WHEFS_DBG_CACHE("Replacing hashcode for file [%s].",name);
     }
-    whefs_string_cache_set( &fs->cache.strings, nid-1, name );
 #endif
     return rc;
 }
@@ -642,7 +641,7 @@ int whefs_inode_id_unlink( whefs_fs * fs, whefs_id_type nid )
 
 int whefs_inode_by_name( whefs_fs * fs, char const * name, whefs_inode * tgt )
 {
-    if( ! fs || !name || !tgt ) return whefs_rc.ArgError;
+    if( ! fs || !name || !*name || !tgt ) return whefs_rc.ArgError;
     if( ! fs->options.inode_count ) return whefs_rc.RangeError;
     const size_t slen = strlen(name);
     if( slen > fs->options.filename_length )
@@ -672,73 +671,55 @@ int whefs_inode_by_name( whefs_fs * fs, char const * name, whefs_inode * tgt )
         whefs_hashid * H = &fs->cache.hashes->list[i];
         ++H->hits;
         i = H->id;
-        if( WHEFS_CONFIG_ENABLE_STRINGS_CACHE )
-        {
-            cname = whefs_string_cache_get( &fs->cache.strings, i-1 );
-            if(0) WHEFS_DBG_CACHE("Got cached ID (%"WHEFS_ID_TYPE_PFMT") for hash code 0x%"WHEFS_HASHVAL_TYPE_PFMT" for name [%s]/[%s] hit count=[%"PRIu32"]",i, nameHash,name,cname,H->hits);
-            if( !cname )
-            {
-                WHEFS_DBG_ERR("Internal consistency/usage error: hash cache has inode entry #%"WHEFS_ID_TYPE_PFMT" cached for name [%s] but names db does not have an entry!",
-                              i, name );
-                return whefs_rc.InternalError;
-            }
-            //rc = whefs_rc.OK;
-            // FIXME: either remove whefs_inode::name (replaced with the name cache)
-            // or search for opened node here where id==H->id and use that name,
-            // if it's set. (The plan is to try to phase out inode.name first.).
-        }
     }
 
     enum { bufSize = WHEFS_MAX_FILENAME_LENGTH+1 };
     unsigned char buf[bufSize] = {0};
-    if( ! cname )
-    {
-        memset(buf,0,bufSize);
-        ns.string = (char *)buf;
-        ns.alloced = bufSize;
-        ns.length = 0;
-        for( ; i <= fs->options.inode_count; ++i )
-        { // brute force... walk the inodes and compare them...
-            
+    memset(buf,0,bufSize);
+    ns.string = (char *)buf;
+    ns.alloced = bufSize;
+    ns.length = 0;
+    rc = whefs_rc.RangeError;
+    for( ; i <= fs->options.inode_count; ++i )
+    { // brute force... walk the inodes and compare them...
 #if WHEFS_CONFIG_ENABLE_BITSET_CACHE // we can't rely on this here.
-            if( fs->bits.i_loaded )
+        if( fs->bits.i_loaded )
+        {
+            if( ! WHEFS_ICACHE_IS_USED(fs,i) )
             {
-                if( ! WHEFS_ICACHE_IS_USED(fs,i) )
+                //WHEFS_DBG("Skipping unused inode entry #%"WHEFS_ID_TYPE_PFMT, i );
+                if( expectExact )
                 {
-                    //WHEFS_DBG("Skipping unused inode entry #%"WHEFS_ID_TYPE_PFMT, i );
-                    if( expectExact )
-                    {
-                        assert(0 && "If we have a cached entry for a specific bit then it must have been flagged as used.");
-                        rc = whefs_rc.ConsistencyError;
-                        break;
-                    }
-                    else continue;
+                    assert(0 && "If we have a cached entry for a specific bit then it must have been flagged as used.");
+                    rc = whefs_rc.ConsistencyError;
+                    break;
                 }
+                else continue;
             }
-            //WHEFS_DBG("Cache says inode #%i is used.", i );
-#endif
-            rc = whefs_inode_name_get( fs, i, &ns );
-            if( whefs_rc.OK != rc )
-            {
-                WHEFS_DBG_ERR("whefs_string_read(fs,%"WHEFS_ID_TYPE_PFMT",&ns) returned error code %d. file name=[%s]", i, rc, name );
-                break;
-            }
-            if( 0 && *ns.string ) WHEFS_DBG("Trying inode #%"WHEFS_ID_TYPE_PFMT": name [%s] =? [%s]", i, name, ns.string);
-            if( !ns.string ) continue;
-            rc = strcmp( ns.string, name );
-            if( 0 == rc )
-            {
-                cname = ns.string;
-                break;
-            }
-            if( expectExact )
-            { /* can't happen */
-                assert( 0 && "If expectExact is true then cname must also be non-zero!");
-                return whefs_rc.ConsistencyError;
-            }
-            memset(buf,0,ns.length);
         }
+        //WHEFS_DBG("Cache says inode #%i is used.", i );
+#endif
+        rc = whefs_inode_name_get( fs, i, &ns );
         assert( (ns.string == (char const *)buf) && "Internal consistency error!");
+        if( whefs_rc.OK != rc )
+        {
+            WHEFS_DBG_ERR("whefs_string_read(fs,%"WHEFS_ID_TYPE_PFMT",&ns) returned error code %d. file name=[%s]", i, rc, name );
+            break;
+        }
+        if( 0 && *ns.string ) WHEFS_DBG("Trying inode #%"WHEFS_ID_TYPE_PFMT": name [%s] =? [%s]", i, name, ns.string);
+        if( !*ns.string ) continue;
+        rc = strcmp( ns.string, name );
+        if( 0 == rc )
+        {
+            cname = ns.string;
+            break;
+        }
+        if( expectExact )
+        { /* can't happen */
+            assert( 0 && "If expectExact is true then cname must also be non-zero!");
+            return whefs_rc.ConsistencyError;
+        }
+        memset(buf,0,ns.length);
     }
     if( whefs_rc.OK != rc )
     {

@@ -16,8 +16,9 @@
 #include <wh/whefs/whefs.h>
 #include <wh/whefs/whefs_string.h>
 #include "whefs_encode.h"
-#include <wh/whio/whio_devs.h>
+#include "whefs_cache.h"
 #include "whefs_details.c"
+#include <wh/whio/whio_devs.h>
 #include <wh/whglob.h>
 
 #if WHEFS_CONFIG_ENABLE_FCNTL
@@ -58,7 +59,6 @@ but i need to look closer to be sure.
     {/*cache*/                                  \
         0/*hashes*/,                        \
         whefs_hash_cstring/*hashfunc*/,     \
-        whefs_string_cache_init_m/*strings*/ \
     }
 
 /* whefs_fs::bits struct ... */
@@ -225,18 +225,6 @@ int whefs_fs_unlock_range( whefs_fs * restrict fs, whefs_fs_range_locker const *
 	: whefs_rc.ArgError;
 }
 
-/** @internal
-
-    Sets up fs' internal string cache object, but does not populate it.
-
-    Returns whefs_rc.OK on success.
-*/
-static int whefs_fs_init_string_cache( whefs_fs * restrict fs )
-{
-    if( ! fs || !fs->dev || !fs->offsets[WHEFS_OFF_INODES_NO_STR] ) return whefs_rc.ArgError;
-    return whefs_string_cache_setup( &fs->cache.strings, fs->options.inode_count, fs->options.filename_length );
-}
-
 #if WHEFS_CONFIG_ENABLE_MMAP
 #include <sys/mman.h>
 /** Internal data for storing info about mmap()ed storage. */
@@ -302,7 +290,9 @@ static int whefs_fs_mmap_connect( whefs_fs * fs )
 {
     if( !fs || !fs->dev ) return whefs_rc.ArgError;
     //WHEFS_DBG("Trying mmap? fileno=%d",fs->fileno);
-#if WHEFS_CONFIG_ENABLE_MMAP
+#if ! WHEFS_CONFIG_ENABLE_MMAP
+    return whefs_rc.UnsupportedError;
+#else
     if( WHEFS_FLAG_FS_IsMMapped & fs->flags ) return whefs_rc.OK;
     if( !whefs_fs_is_rw(fs) ) return whefs_rc.OK;
     if( fs->fileno < 1 ) return whefs_rc.UnsupportedError;
@@ -338,7 +328,7 @@ static int whefs_fs_mmap_connect( whefs_fs * fs )
         return whefs_rc.IOError;
     }
     md->api = &whio_dev_api_mmap;
-    WhioDevMMapInfo * minfo = (WhioDevMMapInfo*)malloc(sizeof(WhioDevMMapInfo));
+    WhioDevMMapInfo * minfo = (WhioDevMMapInfo*)malloc(sizeof(WhioDevMMapInfo)); // FIXME: add static allocator for WhioDevMMApInfo
     if( ! minfo )
     {
         WHEFS_DBG_ERR("Allocation of %u bytes for WhioDevMMapInfo failed!",sizeof(WhioDevMMapInfo));
@@ -357,8 +347,6 @@ static int whefs_fs_mmap_connect( whefs_fs * fs )
     WHEFS_DBG_FYI("Swapped out EFS file-based whio_dev with mmap() wrapper! Flushing in %s mode.",
                   WHEFS_CONFIG_ENABLE_MMAP_ASYNC ? "asynchronous" : "synchronous");
     return whefs_rc.OK;
-#else
-    return whefs_rc.UnsupportedError;
 #endif
 }
 
@@ -388,6 +376,8 @@ static int whefs_fs_mmap_disconnect( whefs_fs * fs )
     m->fdev = 0;
     fs->dev->api->finalize(fs->dev);
     fs->dev = dx;
+    WHEFS_DBG_FYI("Disconnected mmap() proxy. Restored fs->dev to %p.",
+                  (void const *)fs->dev );
     return whefs_rc.OK;
 #endif
 }
@@ -478,12 +468,6 @@ void whefs_fs_caches_names_clear( whefs_fs * restrict fs )
 #endif
         whefs_hashid_list_alloc( &fs->cache.hashes, 0 );// reminder: we keep fs->cache.hashes itself until finalization.
     }
-    if(1)
-    {
-        WHEFS_DBG_CACHE("Emptying names string cache using approximately %"WHIO_SIZE_T_PFMT" bytes.",
-                        whefs_string_cache_memcost( &fs->cache.strings ) );
-        whefs_string_cache_clear_contents( &fs->cache.strings );
-    }
 }
 void whefs_fs_caches_clear( whefs_fs * restrict fs )
 {
@@ -520,8 +504,7 @@ void whefs_fs_finalize( whefs_fs * restrict fs )
         // We don't currently track those.
     }
     whefs_fs_caches_clear(fs);
-    whefs_fs_hash_cache_set( fs, false, false );
-    whefs_string_cache_cleanup( &fs->cache.strings );
+    whefs_fs_setopt_hash_cache( fs, false, false );
     if( fs->dev )
     {
         /**
@@ -647,23 +630,6 @@ int whefs_inode_name_get( whefs_fs * restrict fs, whefs_id_type id, whefs_string
    */
     if( ! tgt || ! whefs_inode_id_is_valid( fs, id ) ) return whefs_rc.ArgError;
     assert(fs->sizes[WHEFS_SZ_INODE_NAME] && "fs has not been set up properly!");
-    if( WHEFS_CONFIG_ENABLE_STRINGS_CACHE )
-    {
-        static uint32_t hitmiss[2] = {0,0};
-        char const * cached = whefs_string_cache_get( &fs->cache.strings, id-1 );
-        if( cached && *cached )
-        {
-            /* reminder: (!*cached) is ambiguous: it could be an unused inode slot or
-               an empty name.
-             */
-            //WHEFS_DBG("Got cached name for inode #%"WHEFS_ID_TYPE_PFMT" [%s]",id,cached);
-            WHEFS_DBG_CACHE("Got cached name for inode #%"WHEFS_ID_TYPE_PFMT" [name=[%s]]. TOTAL cache misses=%u, hits=%u]",id,cached,hitmiss[0],hitmiss[1]);
-            ++hitmiss[1];
-            return whefs_string_copy_cstring( tgt, cached );
-        }
-        ++hitmiss[0];
-    }
-    // FIXME? check opened inodes first?
     int rc = 0;
     enum { bufSize = whefs_sizeof_encoded_inode_name };
     unsigned char buf[bufSize + 1];
@@ -1088,7 +1054,7 @@ int whefs_fs_caches_load( whefs_fs * restrict fs )
     if( whefs_rc.OK == rc ) rc = whefs_fs_block_cache_load( fs );
     if( whefs_rc.OK == rc )
     {
-        rc = whefs_fs_hash_cache_set( fs, WHEFS_CONFIG_ENABLE_STRINGS_HASH_CACHE ? true : false, false );
+        rc = whefs_fs_setopt_hash_cache( fs, WHEFS_CONFIG_ENABLE_STRINGS_HASH_CACHE ? true : false, false );
     }
     return rc;
 }
@@ -1243,14 +1209,6 @@ static int whefs_mkfs_stage2( whefs_fs * restrict fs )
     if( whio_rc.OK != rc )
     {
 	WHEFS_DBG_ERR("Could not truncate EFS container to %u bytes!", szcheck );
-	whefs_fs_finalize( fs );
-	return rc;
-    }
-
-    rc = whefs_fs_init_string_cache( fs );
-    if( whio_rc.OK != rc )
-    {
-	WHEFS_DBG_ERR("Internal error: could not initialize string cache innards! rc=%d", rc );
 	whefs_fs_finalize( fs );
 	return rc;
     }
@@ -1458,14 +1416,6 @@ static int whefs_openfs_stage2( whefs_fs * restrict fs )
 #undef CHECK
     whefs_fs_init_sizes( fs );
 
-    rc = whefs_fs_init_string_cache( fs );
-    if( whio_rc.OK != rc )
-    {
-	WHEFS_DBG_ERR("Internal error: could not initialize string cache innards!" );
-	whefs_fs_finalize( fs );
-	return rc;
-    }
-
     rc = whefs_fs_init_bitsets( fs );
     if( whefs_rc.OK != rc )
     {
@@ -1552,7 +1502,6 @@ void whefs_fs_dump_info( whefs_fs const * restrict fs, FILE * out )
 #endif
     X(whbits),
     X(whefs_string),
-    X(whefs_string_cache),
     X(whefs_inode),
     X(whefs_block),
     X(whefs_hashid),
@@ -1660,7 +1609,7 @@ int whefs_fs_append_blocks( whefs_fs * restrict fs, whefs_id_type count )
     return rc;
 }
 
-int whefs_fs_hash_cache_set( whefs_fs * fs, bool on, bool loadNow )
+int whefs_fs_setopt_hash_cache( whefs_fs * fs, bool on, bool loadNow )
 {
     if( ! fs ) return whefs_rc.ArgError;
     int rc = whefs_rc.OK;

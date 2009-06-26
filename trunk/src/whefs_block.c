@@ -355,6 +355,7 @@ int whefs_block_next_free( whefs_fs * restrict fs, whefs_block * restrict tgt, b
     for( ; i <= fs->options.block_count; ++i )
     {
 #if WHEFS_CONFIG_ENABLE_BITSET_CACHE
+        // TODO(?): i think we could skip 8 entries at a time as long as (0xFF & fs->bits.b.bytes[i*8])
 	if( fs->bits.b_loaded && WHEFS_BCACHE_IS_USED(fs,i) )
 	{
 	    //WHEFS_DBG("Got cached block USED entry for block #%u", i );
