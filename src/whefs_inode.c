@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdlib.h> /* realloc() and friends. */
 #include "whefs_details.c"
+#include "whefs_cache.h"
 
 //#include "whio_dev.h" /* for whio_dev_sizeof_uint32 */
 
@@ -243,22 +244,6 @@ int whefs_inode_flush( whefs_fs * fs, whefs_inode const * n )
 int whefs_inode_id_read( whefs_fs * fs, whefs_id_type nid, whefs_inode * tgt )
 {
     if( !tgt || !whefs_inode_id_is_valid( fs, nid ) ) return whefs_rc.ArgError;
-    if( WHEFS_CONFIG_ENABLE_STRINGS_CACHE )
-    {
-        whefs_inode * nop = 0;
-        int xc = whefs_inode_search_opened( fs, nid, &nop );
-        if( (whefs_rc.OK == xc) && nop )
-        {
-            if( tgt != nop )
-            {
-                *tgt = *nop;
-                // avoid confusion regarding ownership of malloced tgt->blocks data:
-                tgt->blocks = whefs_block_list_init;
-            }
-            //WHEFS_DBG("whefs_inode_id_read() found opened entry #%"WHEFS_ID_TYPE_PFMT" to read.", n->id);
-            return whefs_rc.OK;
-	}
-    }
     int rc = whefs_rc.OK;
     enum { bufSize = whefs_sizeof_encoded_inode };
     unsigned char buf[bufSize];
