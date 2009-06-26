@@ -8,7 +8,8 @@ This is my personal list of "immediate" TODOs (in no particular order):
    *  Several parts of the public API need to be rounded out.
    *  Once the API settles down i'll provide an OO wrapper API for C++. Adding a stream wrapper for std::i/ostream shouldn't be difficult, either.
    *  Directories. See Issue #3 for thoughts on that.
-   *  Concurrency via advisory locks (POSIX fcntl()). See [WhefsConcurrency].
+   *  Re-model the inode string table as an on-disk b-tree. With this we could drop the hash cache altogether. It would cost i/o (not terribly much) but not much memory.
+   *  Concurrency via advisory locks (POSIX `fcntl()`). See [WhefsConcurrency].
    *  Concurrency via threads. See [WhefsConcurrency].
    *  Scripting language bindings via [http://www.swig.org SWIG]. i've tinkered with scripting the i/o layer a bit, and i don't think making whio/whefs play nicely with SWIG will be all that difficult to do. We've already got hand-implemented [http://code.google.com/p/v8-juice/wiki/PluginWhefs JavaScript bindings for whefs].
    *  Add storage for Unix access rights on the inodes (not user/group IDs), or at least +x bit. We have no intention of using them to control access within the VFS, but for when we export the data to a file (so we can keep the original permissions intact).
