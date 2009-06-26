@@ -55,8 +55,6 @@ Though this cache can cut the search-by-name time by a factor of hundreds over p
 
 The API will eventually evolve to allow clients to monitor and tune some aspects of this cache. At the moment it has an embarrassingly low-level interface and needs several important optimizations (like optimizing the number of sorts which are performed on the cache).
 
-Versions as of 20090613 have another inode names cache which literally stores the names in memory, and does so in such a way that we can get O(1) access to them once they are cached. It costs quite a lot of memory (about `1+max_filename_length` bytes per <em>in-used</em> inode). While this costs a notable amount of memory, the number of calls to malloc are low and the strings are stored in a way which allows us to avoid many other mallocs in conjunction with the `whefs_string` class. The memory cost is reasonable for small EFSes (say, 200 inodes and 64-byte names = about 13kb for name caching), but it gets prohibitive quickly, especially when the maximum name length is high. e.g. those same 200 inodes with 128-byte names take up 25kb of memory. Because of this cost, this particular cache will eventually be made togglable. It can be disabled entirely via the `WHEFS_CONFIG_ENABLE_STRINGS_CACHE` macro in [http://code.google.com/p/whefs/source/browse/trunk/include/wh/whefs/whefs_config.h whefs_config.h]. In fact, for small use cases (like most of the [WhefsTools]), building the string cache costs us more i/o than if the cache is disabled.
-
 ==Block Chain Cache==
 
 whefs does not, by default, cache any block-related info other than the (optional) bitset cache mentioned above. However...
