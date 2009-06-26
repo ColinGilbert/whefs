@@ -33,9 +33,9 @@ endif
 ########################################################################
 # If ENABLE_MMAP is 1 then whefs will try to mmap() file-based storage
 # for faster access. If ENABLE_MMAP_ASYNC is 1 then asynchronous mode
-# is used for mmap() flushing by default (*much* faster but also more
-# dangerous). If ENABLE_MMAP is false then ENABLE_MMAP_ASYNC is
-# ignored.
+# is used for mmap() flushing by default (theoretically *much* faster
+# but also more dangerous). If ENABLE_MMAP is 0 then ENABLE_MMAP_ASYNC
+# is ignored.
 ENABLE_MMAP ?= 1
 ENABLE_MMAP_ASYNC ?= 0
 
@@ -46,7 +46,7 @@ ENABLE_MMAP_ASYNC ?= 0
 # malloc() until a certain number of objects have been created. This
 # is not thread-safe, but neither is whefs, so go ahead and turn it on
 # unless you need to create whio_dev and/or whefs_fs-related objects
-# in multiple threads or you need to use multiple VFSs in separate
+# in multiple threads or you need to use multiple EFSes in separate
 # threads.
 ENABLE_STATIC_MALLOC ?= 1
 
@@ -55,11 +55,14 @@ WHEFS_ENABLE_STATIC_MALLOC ?= $(ENABLE_STATIC_MALLOC)
 
 ########################################################################
 # WHEFS_ENABLE_BITSET_CACHE enables the inode/block in-use caches
-# (they're very small).
-WHEFS_ENABLE_BITSET_CACHE ?= 0
+# (they're very small, but have arguable performance benefits).
+WHEFS_ENABLE_BITSET_CACHE ?= 1
+
 ########################################################################
-# WHEFS_ENABLE_FCNTL enables fcntl()-based file locking.
-WHEFS_ENABLE_FCNTL ?= 0
+# WHEFS_ENABLE_FCNTL enables fcntl()-based file locking. Without this,
+# two whefs-using processes can use the same EFS and stomp all over
+# each other.
+WHEFS_ENABLE_FCNTL ?= 1
 
 ########################################################################
 # WHEFS_ENABLE_STRINGS_CACHE enables a cache for the complete string
@@ -70,7 +73,7 @@ WHEFS_ENABLE_FCNTL ?= 0
 # much smaller and provides a significant performance increase if
 # files are searched for by name more than once.
 WHEFS_ENABLE_STRINGS_CACHE ?= 0
-WHEFS_ENABLE_STRINGS_HASH_CACHE ?= 0
+WHEFS_ENABLE_STRINGS_HASH_CACHE ?= 1
 
 ########################################################################
 # If WHIO_ENABLE_ZLIB is 1 then certain features requiring libz will
@@ -95,7 +98,7 @@ CPPFLAGS += $(INCLUDES)
 
 
 ########################################################################
-# common.make should come last. Contains config-independent make code.
+# common.make contains config-independent make code.
 include $(TOP_SRCDIR_REL)/common.make
 ALL_MAKEFILES := $(PACKAGE.MAKEFILE) $(ShakeNMake.MAKEFILE) $(CONFIG.MAKEFILE)
 
