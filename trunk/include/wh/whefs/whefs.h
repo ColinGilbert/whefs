@@ -923,6 +923,12 @@ int whefs_openfs_dev( whio_dev * restrict dev, whefs_fs ** tgt, bool takeDev );
 /**
    Cleans up all resources associated with fs. After calling this,
    fs will be an invalid pointer.
+
+   If file/device handles are opened via whefs_fopen(),
+   whefs_dev_open(), etc. and they are not closed by the time this is
+   called, then they will be closed by this routine. If that happens,
+   the client must NOT close them again after calling this - doing so
+   will lead to stepping on null pointers or otherwise invalid objects.
 */
 void whefs_fs_finalize( whefs_fs * restrict fs );
 
