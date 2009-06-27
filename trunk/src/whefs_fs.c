@@ -793,8 +793,9 @@ whio_size_t whefs_fs_calculate_size( whefs_fs_options const * opt )
 
 
 /**
-   Writes all (empty) blocks of fs to the current position of the data
-   store.  Returns whefs_rc.OK on success.
+   Writes all (empty) blocks of fs to pos
+   fs->offsets[WHEFS_OFF_BLOCKS] of the data store.  Returns
+   whefs_rc.OK on success.
 */
 static int whefs_mkfs_write_blocklist( whefs_fs * restrict fs )
 {
