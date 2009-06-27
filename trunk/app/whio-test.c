@@ -566,7 +566,8 @@ int test_tar()
 
     uint32_t csum = 0U;
     unsigned char * x = buf;
-    for( int i = 0; i < TarHeaderSize; ++i, ++x )
+    unsigned int i = 0;
+    for( ; i < TarHeaderSize; ++i, ++x )
     {
         csum += *x;
     }
@@ -575,7 +576,8 @@ int test_tar()
 #if 1
     //memset( buf + TarHeaderOffsetData, '*', TarHeaderSize - TarHeaderOffsetData );
     x = buf;
-    for( unsigned int i = 0; i < TarHeaderSize; ++i, ++x )
+
+    for( i = 0 ; i < TarHeaderSize; ++i, ++x )
     {
         if( !*x ) *x = '*';
     }
