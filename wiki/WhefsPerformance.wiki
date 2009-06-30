@@ -49,11 +49,13 @@ As of 20090611, whefs has a search cache mechanism which allows much faster sear
 
 It works by using a sorted array of entries which map the name's hash value to the inode's id. Once this cache is built (it is automatically built during whefs_fopen()), searches by name can be done in average O(log N) time instead of O(N) time, by doing a binary search with the hash value of the name as the search key.
 
-The cache is, by default, built when the fs is opened. If it is not, however, (i.e. it is compiled out) it will be built up incrementally as files are searched from and added to the fs, and when an inode is renamed (which requires special handling of the cached key). It grows incrementally, but won't allocate more than it can possibly use (that is, never more than the inode count of the FS). In a worst case, this costs `(inode_count*sizeof(whefs_hashid)[=currently 8])` bytes of memory, plus another 20 bytes or so for the management data structure. So, for 1000 _used_ inodes, the cache would cost up to about 8k. That is its peak, however - it will only get that high if it reads enough _in-use_ inodes to cause it to grow (non-in-use inodes don't take up memory in the cache).
+The cache is, by default, built when the fs is opened. If it is not initialized when the EFS is opened then it will be built up incrementally as files are searched from and added to the FS, and when an inode is renamed (which requires special handling of the cached key). It grows incrementally, but won't allocate more than it can possibly use (that is, never more than the inode count of the FS). In a worst case, this costs `(inode_count*sizeof(whefs_hashid)[=currently 8])` bytes of memory, plus another 20 bytes or so for the management data structure. So, for 1000 _used_ inodes, the cache would cost up to about 8k. That is its peak, however - it will only get that high if it reads enough _in-use_ inodes to cause it to grow (non-in-use inodes don't take up memory in the cache).
 
 Though this cache can cut the search-by-name time by a factor of hundreds over previous code, 1000+ inodes is still considered to be fairly large for whefs' target audience. Then again, the primary reason so many inodes were considered "too many" was because of the time associated with searching for them.
 
 The API will eventually evolve to allow clients to monitor and tune some aspects of this cache. At the moment it has an embarrassingly low-level interface and needs several important optimizations (like optimizing the number of sorts which are performed on the cache).
+
+As of 20090629, experimentation is underway with replacing this so-called "hash cache" with an in-disk AVL tree. This approach costs much more i/o than the hash cache but also has a memory cost which is independent of the number of inodes. (An AVL tree was chosen over a B-Tree because the B-Tree code i've looked at so far is way over my head, whereas AVL code is still grokkable.)
 
 ==Block Chain Cache==
 
