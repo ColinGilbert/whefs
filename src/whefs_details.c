@@ -110,7 +110,13 @@ WHEFS_FLAG_FS_IsMMapped = 0x10,
    is enabled.
 */
 WHEFS_FLAG_FS_EnableHashCache = 0x20,
-//WHEFS_FLAG_FS_AutoExpand = 0x0020,
+/**
+   If set, the whefs_fs will not try to close any opened
+   whefs_file/whio_dev/whio_stream handles.
+*/
+WHEFS_FLAG_FS_NoAutoCloseFiles = 0x40,
+
+//WHEFS_FLAG_FS_AutoExpand = 0x0080,
 /**
    Mark error state for whefs_file objects.
 */

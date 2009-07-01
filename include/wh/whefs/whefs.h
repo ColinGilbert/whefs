@@ -1005,17 +1005,17 @@ typedef struct whefs_file_stats
     /**
        Size of the file, in bytes.
     */
-    size_t bytes;
+    whio_size_t bytes;
 
     /**
        inode number.
     */
-    size_t inode;
+    whefs_id_type inode;
 
     /**
        Number of blocks used by the file.
     */
-    size_t blocks;
+    whefs_id_type blocks;
 } whefs_file_stats;
 
 
@@ -1030,7 +1030,7 @@ typedef struct whefs_file_stats
 
    @code
    whefs_file_stats st;
-   if( whefs_rc.OK == whefs_fstate( myFile, &st ) ) {
+   if( whefs_rc.OK == whefs_fstat( myFile, &st ) ) {
        ... use st ...
    }
    @endcode
@@ -1106,17 +1106,17 @@ void whefs_setup_debug( FILE * ostream, unsigned int flags );
 
     'c' = Caching messages.
 
-    'd' = Default log level.
+    'd' = Default log level. Typically warnings and errors.
 
     'e' = Error messages.
 
     'f' = FIXME messages.
 
-    'h' = Hacker-level messages.
+    'h' = Hacker-level messages. Turns on several other options.
 
     'l' = Locking messages.
 
-    'n' = NYI messages.
+    'n' = NYI (Not Yet Implemented) messages.
 
     'w' = Warning messages.
 
@@ -1215,6 +1215,26 @@ int whefs_inode_hash_cache_chomp_lv( whefs_fs * fs );
    default but not pre-loaded, otherwise it is disabled by default.
 */
 int whefs_fs_setopt_hash_cache( whefs_fs * fs, bool on, bool loadNow );
+
+/**
+   By default if a whefs_fs object is closed while pseudofile handles
+   are still opened then they will be properly closed at that time to
+   avoid memory leaks. However, if the client properly closes such
+   handles after the owning whefs_fs has been destroyed, undefined
+   behaviour will result and a segfault is certain.
+
+   If this option is turned off, opened handles are not closed
+   automatically when the whefs_fs has closed. After that, the objects
+   MUST NOT be destroyed via the normal means (and their memory is
+   leaked).
+
+   The original intention of toggling this off was to assist in
+   certain cases when binding whefs to scripting engines where a
+   garbage collector is involved and can complicate proper destruction
+   order. Whether or not it's really necessary is a whole other
+   question, though.
+*/
+int whefs_fs_setopt_autoclose_files( whefs_fs * fs, bool on );
 
 
 #ifdef __cplusplus

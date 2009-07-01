@@ -97,18 +97,17 @@ int whefs_fs_closer_list_close( whefs_fs_closer_list * head, bool right )
     for( ; x; head = x )
     {
         x = head->next;
+        // We unlink head before closing b/c the close routines may update the list indirectly.
+        whefs_fs_closer_list_unlink(head);
         switch( head->type )
         {
           case WHEFS_CLOSER_TYPE_FILE:
-              whefs_fs_closer_list_unlink(head);
               whefs_fclose( head->item.file );
               break;
           case WHEFS_CLOSER_TYPE_DEV:
-              whefs_fs_closer_list_unlink(head);
               head->item.dev->api->finalize( head->item.dev );
               break;
           case WHEFS_CLOSER_TYPE_STREAM:
-              whefs_fs_closer_list_unlink(head);
               head->item.stream->api->finalize( head->item.stream );
               break;
           default:
