@@ -70,15 +70,15 @@ namespace whio {
     struct istreambuf_whio::Impl
     {
 	std::istream & sstr;
-	whio_stream * qstr;
+	whio_stream * wstr;
 	std::streambuf * oldBuf;
         bool ownsWh;
         typedef std::vector<std::istream::char_type> BufferType;
         BufferType bufa;
-	static const int bufsize = 1024 * 2;
+	static const int bufsize = 512;
 	Impl(std::istream & i, whio_stream * o, bool ownsWh ) :
 	    sstr(i),
-	    qstr(o),
+	    wstr(o),
 	    oldBuf(i.rdbuf()),
             ownsWh(ownsWh),
 	    bufa(bufsize,0)
@@ -90,6 +90,10 @@ namespace whio {
 	}
 	~Impl()
 	{
+            if( this->ownsWh && this->wstr )
+            {
+                this->wstr->api->finalize( this->wstr );
+            }
 	}
     };
 
@@ -117,7 +121,7 @@ namespace whio {
     int istreambuf_whio::underflow()
     {
 	char * dest = &impl->bufa[0];
-	whio_size_t rd = impl->qstr->api->read( impl->qstr, dest, Impl::bufsize );
+	whio_size_t rd = impl->wstr->api->read( impl->wstr, dest, Impl::bufsize );
 	if( rd < 1 )
 	{
 	    return traits_type::eof();
