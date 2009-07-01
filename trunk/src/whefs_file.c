@@ -478,8 +478,7 @@ int whefs_fstat( whefs_file const * f, whefs_file_stats * st )
     *st = whefs_file_stats_init;
     st->inode = f->inode;
     whefs_inode ino = whefs_inode_init;
-    ino.id = f->inode;
-    int rc = whefs_inode_read( f->fs, &ino );
+    int rc = whefs_inode_id_read( f->fs, f->inode, &ino );
     if( whefs_rc.OK != rc ) return rc;
     st->bytes = ino.data_size;
     whefs_id_type bid = ino.first_block;

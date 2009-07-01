@@ -214,11 +214,6 @@ extern const whefs_inode_list whefs_inode_list_init;
 int whefs_inode_id_read( whefs_fs * fs, whefs_id_type nid, whefs_inode * tgt );
 
 /**
-   Equivalent to whefs_inode_id_read( fs, n->id, n );
-*/
-int whefs_inode_read( whefs_fs * fs, whefs_inode * n );
-
-/**
     Don't use this function - it's probably going away.
 
    Reads the flags field of the given inode and assigns the flags
