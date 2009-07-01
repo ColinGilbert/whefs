@@ -34,6 +34,11 @@
 #include <pthread.h>
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 /** @enum whefs_debug_flags
    Debugging flags for use with whdbg() and friends.
 */
@@ -844,6 +849,10 @@ int whefs_fs_name_write( whefs_fs * fs, whefs_id_type id, char const * name );
    or 0 if !opt.
 */
 size_t whefs_fs_sizeof_name( whefs_fs_options const * opt );
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 
 #endif /* WANDERINGHORSE_NET_WHEFS_DETAILS_C_INCLUDED */

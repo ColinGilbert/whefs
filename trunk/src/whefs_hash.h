@@ -11,6 +11,10 @@
 
 #include <wh/whefs/whefs_config.h> // whefs_id_type, stdint types
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
    The integral type whefs uses to store hash values.
 
@@ -281,6 +285,10 @@ whefs_id_type whefs_hashid_list_search( whefs_hashid_list const * src,
                                         whefs_hashid_list_search_cmp cmp,
                                         void const * cmpData
                                         );
+#endif
+
+#ifdef __cplusplus
+} /* extern "C"*/
 #endif
 
 #endif // WANDERINGHORSE_NET_WHEFS_HASH_H_INCLUDED

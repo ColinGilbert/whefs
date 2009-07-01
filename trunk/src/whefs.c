@@ -13,6 +13,11 @@
 
 #include <wh/whefs/whefs.h>
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+
 char const * whefs_home_page_url()
 {
     return "http://code.google.com/p/whefs";
@@ -127,6 +132,6 @@ void whefs_setup_debug_arg( FILE * ostream, char const * arg )
     whefs_setup_debug( ostream, flags );
 }
 
-
-
-
+#if defined(__cplusplus)
+} /* extern "C" */
+#endif
