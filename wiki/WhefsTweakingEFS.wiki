@@ -191,10 +191,10 @@ configuration options:
 || 0 || 1 || 17 || 843 ||
 || 1 || 0 || 8 || 863 ||
 <tr><td colspan=4>*Opening and closing a total of 100 pseudofile objects, in groups of 10:*</td></tr>
-|| 0 || 1 || 275 || 8468 ||
-|| 1 || 0 || 506 || 15928 ||
 || 0 || 0 || 616 || 18120 ||
 || 1 || 1 || 165 || 6276 ||
+|| 0 || 1 || 275 || 8468 ||
+|| 1 || 0 || 506 || 15928 ||
 
 (Stats provided by [http://www.valgrind.org Valgrind].)
 
