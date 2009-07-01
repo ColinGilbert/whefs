@@ -49,7 +49,7 @@ int whefs_test_insert_dummy_files( whefs_fs * fs )
 #if 1
     //whefs_inode_next_free( fs, &ino, true );
     //ino = whefs_inode_init; ino.id = nid;
-    whefs_inode_read( fs, &ino );
+    whefs_inode_id_read( fs, ino.id, &ino );
     WHEFS_DBG("Trampling over inode #%u", ino.id );
     fname = "via whio_dev_inode";
     whefs_inode_name_set( fs, ino.id, fname );
