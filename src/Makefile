@@ -15,6 +15,7 @@ WHIO_SOURCES := \
 	whio_stream_dev.c \
 	whio_stream_FILE.c \
 	whio_zlib.c \
+	whio_stream_stl.cpp \
 	whprintf.c
 
 MISC_SOURCES := \
@@ -40,7 +41,9 @@ WHEFS_SOURCES := \
 
 SOURCES := $(WHEFS_SOURCES) $(WHIO_SOURCES)
 
-WHIO_OBJ := $(WHIO_SOURCES:%.c=%.o)
+WHIO_OBJ := $(patsubst %.c,%.o,$(WHIO_SOURCES))
+WHIO_OBJ := $(patsubst %.cpp,%.o,$(WHIO_OBJ))
+#$(error WHIO_OBJ=$(WHIO_OBJ))
 ifeq (1,$(WHIO_ENABLE_ZLIB))
   WHIO_LIB_LDFLAGS += -lz
   whio_zlib.o: CPPFLAGS+=-DWHIO_ENABLE_ZLIB=1
@@ -49,6 +52,7 @@ endif
 WHEFS_OBJ := $(WHEFS_SOURCES:%.c=%.o)
 
 OBJECTS := $(SOURCES:%.c=%.o)
+OBJECTS := $(patsubst %.cpp,%.o,$(OBJECTS))
 $(OBJECTS): $(ALL_MAKEFILES)
 
 whio.o whio%.o: CPPFLAGS+=-DWHIO_CONFIG_ENABLE_STATIC_MALLOC=$(WHIO_ENABLE_STATIC_MALLOC)
