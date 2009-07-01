@@ -113,6 +113,7 @@ $(subfs.BIN): $(WHEFS_BINS_DEPS)
 bins: $(subfs.BIN)
 endif
 
+
 ########################################################################
 # The staticfs demo creates a VFS, imports some files, converts the VFS
 # to C code, builds an application with that VFS built in as a static
@@ -132,6 +133,22 @@ $(staticfs.BIN): $(WHEFS_BINS_DEPS)
 # bins: $(staticfs.BIN)
 endif
 
+#ifeq (1,1)
+#avl.BIN.OBJECTS := avl.o whargv.o
+#avl.BIN.LDFLAGS := $(WHEFS_BINS_LDFLAGS)
+#$(call ShakeNMake.CALL.RULES.BINS,avl)
+#$(avl.BIN): $(WHEFS_BINS_DEPS)
+#bins: $(avl.BIN)
+#endif
+
+ifeq (1,1)
+plus.BIN.OBJECTS := plus.o
+plus.BIN.LDFLAGS := $(WHEFS_BINS_LDFLAGS)
+$(call ShakeNMake.CALL.RULES.BINS,plus)
+$(plus.BIN): $(WHEFS_BINS_DEPS)
+bins: $(plus.BIN)
+endif
+
 
 all: $(test.BIN) $(bin2c.BIN) \
 	$(whefs-addblocks.BIN) \
@@ -141,4 +158,5 @@ all: $(test.BIN) $(bin2c.BIN) \
 	$(whefs-mkfs.BIN) \
 	$(whefs-rm.BIN) \
 	$(subfs.BIN) \
-	$(whio-test.BIN)
+	$(whio-test.BIN) \
+	$(plus.BIN)
