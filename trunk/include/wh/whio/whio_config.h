@@ -36,6 +36,9 @@
 
 
 #ifdef __cplusplus
+#if !defined(restrict)
+#  define restrict
+#endif
 extern "C" {
 #endif
 
