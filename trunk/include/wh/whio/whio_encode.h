@@ -171,6 +171,30 @@ int whio_uint8_decode( unsigned char const * src, uint8_t * tgt );
 
 
 /**
+   Encodes v to dest. This is just a proxy for one of:
+   whio_uint8_encode(), whio_uint16_encode(), whio_uint32_encode() or
+   whio_uint64_encode(), depending on the value of WHIO_SIZE_T_BITS.
+*/
+whio_size_t whio_size_t_encode( unsigned char * dest, whio_size_t v );
+
+/**
+   Decodes v from src. This is just a proxy for one of:
+   whio_uint8_decode(), whio_uint16_decode(), whio_uint32_decode() or
+   whio_uint64_decode(), depending on the value of WHIO_SIZE_T_BITS.
+*/
+int whio_size_t_decode( unsigned char const * src, whio_size_t * v );
+
+/**
+   Encodes v to dev using whio_size_t_encode().
+*/
+whio_size_t whio_dev_size_t_encode( whio_dev * dev, whio_size_t v );
+
+/**
+   Decodes v from dev using whio_size_t_decode().
+*/
+int whio_dev_size_t_decode( whio_dev * dev, whio_size_t * v );
+
+/**
    The 64-bit variant of whio_uint32_encode(). Follows the same
    conventions as that function but handles a uint64_t value instead
    of uint32_t.
