@@ -26,6 +26,15 @@
 #  include <fcntl.h>
 #endif
 
+#if WHEFS_CONFIG_ENABLE_MMAP
+#  include <sys/mman.h>
+#endif
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #define WHEFS_LOAD_CACHES_ON_OPEN 1 /* make sure and test whefs-cp and friends if setting this to 0. */
 #if ! WHEFS_LOAD_CACHES_ON_OPEN
@@ -227,7 +236,6 @@ int whefs_fs_unlock_range( whefs_fs * restrict fs, whefs_fs_range_locker const *
 }
 
 #if WHEFS_CONFIG_ENABLE_MMAP
-#include <sys/mman.h>
 /** Internal data for storing info about mmap()ed storage. */
 typedef struct
 {
@@ -1639,3 +1647,8 @@ int whefs_fs_setopt_hash_cache( whefs_fs * fs, bool on, bool loadNow )
     }
     return rc;
 }
+
+
+#ifdef __cplusplus
+} /* extern "C"*/
+#endif
