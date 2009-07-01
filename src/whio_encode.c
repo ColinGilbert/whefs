@@ -227,56 +227,7 @@ int whio_cstring_decode( unsigned char const * src, char ** tgt, size_t * length
    tag byte for encoded whio_id_type objects.
 */
 static const unsigned int whio_size_t_tag_char = 0x08 | 'p';
-size_t whio_dev_size_t_encode( whio_dev * dev, whio_size_t v )
-{
-#if WHIO_SIZE_T_BITS == 64
-    return whio_dev_uint64_encode( dev, v );
-#elif WHIO_SIZE_T_BITS == 32
-    return whio_dev_uint32_encode( dev, v );
-#elif WHIO_SIZE_T_BITS == 16
-    return whio_dev_uint16_encode( dev, v );
-#elif WHIO_SIZE_T_BITS == 8
-    if( ! dev ) return whio_rc.ArgError;
-    unsigned char buf[2];
-    buf[0] = whio_size_t_tag_char;
-    buf[1] = v;
-    return dev->api->write( dev, buf, 2 );
-#else
-#error "whio_size_t size (WHIO_SIZE_T_BITS) is not supported!"
-#endif
-}
-
-int whio_dev_size_t_decode( whio_dev * dev, whio_size_t * v )
-{
-#if WHIO_SIZE_T_BITS == 64
-    return whio_dev_uint64_decode( dev, v );
-#elif WHIO_SIZE_T_BITS == 32
-    return whio_dev_uint32_decode( dev, v );
-#elif WHIO_SIZE_T_BITS == 16
-    return whio_dev_uint16_decode( dev, v );
-#elif WHIO_SIZE_T_BITS == 8
-    if( ! v || ! dev ) return whio_rc.ArgError;
-    unsigned char buf[2] = {0,0};
-    size_t sz = dev->api->read( dev, buf, 2 );
-    if( 2 != sz)
-    {
-	return whio_rc.IOError;
-    }
-    else if( buf[0] != whio_size_t_tag_char )
-    {
-	return whio_rc.ConsistencyError;
-    }
-    else
-    {
-	*v = buf[1];
-	return whio_rc.OK;
-    }
-#else
-#error "whio_size_t is not a supported type!"
-#endif
-}
-
-size_t whio_size_t_encode( unsigned char * dest, whio_size_t v )
+whio_size_t whio_size_t_encode( unsigned char * dest, whio_size_t v )
 {
 #if WHIO_SIZE_T_BITS == 64
     return whio_uint64_encode( dest, v );
@@ -285,10 +236,7 @@ size_t whio_size_t_encode( unsigned char * dest, whio_size_t v )
 #elif WHIO_SIZE_T_BITS == 16
     return whio_uint16_encode( dest, v );
 #elif WHIO_SIZE_T_BITS == 8
-    if( ! dest ) return whio_rc.ArgError;
-    dest[0] = whio_size_t_tag_char;
-    dest[1] = v;
-    return whio_sizeof_encoded_size_t;
+    return whio_uint8_encode( dest, v );
 #else
 #error "whio_size_t size (WHIO_SIZE_T_BITS) is not supported!"
 #endif
@@ -303,20 +251,29 @@ int whio_size_t_decode( unsigned char const * src, whio_size_t * v )
 #elif WHIO_SIZE_T_BITS == 16
     return whio_uint16_decode( src, v );
 #elif WHIO_SIZE_T_BITS == 8
-    if( ! src ) return whio_rc.ArgError;
-    else if( src[0] != whio_size_t_tag_char )
-    {
-	return whio_rc.ConsistencyError;
-    }
-    else
-    {
-	if( v ) *v = src[1];
-    }
-    return whio_rc.OK;
+    return whio_uint8_decode( src, v );
 #else
 #error "whio_size_t is not a supported type!"
 #endif
 }
+
+whio_size_t whio_dev_size_t_encode( whio_dev * dev, whio_size_t v )
+{
+    unsigned char buf[whio_sizeof_encoded_size_t];
+    whio_size_t_encode( buf, v );
+    return dev->api->write( dev, &buf, whio_sizeof_encoded_size_t );
+}
+
+int whio_dev_size_t_decode( whio_dev * dev, whio_size_t * tgt )
+{
+    unsigned char buf[whio_sizeof_encoded_size_t]; /* Flawfinder: ignore This is intentional and safe as long as whio_sizeof_encoded_uint16 is the correct size. */
+    memset( buf, 0, whio_sizeof_encoded_size_t );
+    size_t rc = dev->api->read( dev, buf  /*Flawfinder: ignore  This is safe in conjunction with whio_sizeof_encoded_uint16*/, whio_sizeof_encoded_size_t );
+    return ( whio_sizeof_encoded_size_t == rc )
+        ? whio_size_t_decode( buf, tgt )
+        : whio_rc.IOError;
+}
+
 
 size_t whio_dev_uint64_encode( whio_dev * dev, uint64_t i )
 {
