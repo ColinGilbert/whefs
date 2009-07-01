@@ -14,6 +14,7 @@
 #include <ctype.h>
 #include <assert.h>
 #include <wh/whio/whio.h>
+#include <wh/whio/whio_encode.h>
 
 #ifndef WHIO_ENABLE_ZLIB
 #define WHIO_ENABLE_ZLIB 0
@@ -59,8 +60,8 @@ int test_iodev()
 	//dev->api->write( dev, "hi, world!", 9 );
 	size_t wrc = whio_dev_cstring_encode( dev, "hi, world!", 0 );
 	MARKER("wrc=%u\n",wrc);
-	assert( (wrc == 10 + whio_dev_sizeof_cstring) && "write failed!" );
-	dev->api->seek( dev, whio_dev_sizeof_cstring + 2, SEEK_SET );
+	assert( (wrc == 10 + whio_sizeof_encoded_cstring) && "write failed!" );
+	dev->api->seek( dev, whio_sizeof_encoded_cstring + 2, SEEK_SET );
 	dev->api->write( dev, "!", 1 );
 	szrc = dev->api->seek( dev, 99, SEEK_SET );
 	MARKER( "seek-past-bounds rc=%u\n", szrc );
