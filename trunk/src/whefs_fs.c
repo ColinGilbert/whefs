@@ -92,7 +92,7 @@ but i need to look closer to be sure.
 */
 //const whefs_fs whefs_fs_init =
 #define whefs_fs_init_m { \
-    (WHEFS_CONFIG_ENABLE_STRINGS_HASH_CACHE ? WHEFS_FLAG_FS_EnableHashCache : 0), /* flags */ \
+    /* flags */ (WHEFS_CONFIG_ENABLE_STRINGS_HASH_CACHE ? WHEFS_FLAG_FS_EnableHashCache : 0), \
     0, /* err */ \
     {0}, /* offsets */ \
     {0}, /* sizes */ \
@@ -492,25 +492,34 @@ void whefs_fs_finalize( whefs_fs * restrict fs )
     whefs_fs_mmap_disconnect( fs );
     if( fs->closers )
     {
-	WHEFS_DBG_WARN("We're closing with opened objects! Closing them...");
-        while( fs->closers->prev )
+        if( ! (fs->flags & WHEFS_FLAG_FS_NoAutoCloseFiles) )
         {
-            fs->closers = fs->closers->prev;
+            WHEFS_DBG_WARN("We're closing with opened objects! Closing them...");
+            while( fs->closers->prev )
+            {
+                fs->closers = fs->closers->prev;
+            }
+            whefs_fs_closer_list * x = fs->closers;
+            fs->closers = 0; // we must do this b/c whefs_fs_closer_list_close() will indirectly use this list.
+            whefs_fs_closer_list_close( x, true );
         }
-        whefs_fs_closer_list * x = fs->closers;
+        else
+        {
+            WHEFS_DBG_WARN("We're closing with opened objects and auto-close of files is disabled! They are leaking and MUST NOT be properly destroyed now!");
+            whefs_fs_closer_list_free( fs->closers );
+        }
         fs->closers = 0;
-        whefs_fs_closer_list_close( x, true );
     }
     if( fs->opened_nodes )
     {
 	WHEFS_DBG_WARN("We're closing with opened inodes! Closing them...");
         while( fs->opened_nodes )
         {
-            WHEFS_DBG_WARN("Auto-closing inode #"WHEFS_ID_TYPE_PFMT", but leaking its whefs_file or whio_dev handle (if any).");
+            WHEFS_DBG_WARN("Auto-closing inode #%"WHEFS_ID_TYPE_PFMT", but leaking its whefs_file, whio_dev, or whio_stream handle (if any).",fs->opened_nodes->inode.id);
             whefs_inode_close( fs, &fs->opened_nodes->inode, fs->opened_nodes->inode.writer );
+            // reminder: whefs_inode_close() updates fs->opened_nodes directly.
 	}
-        // FIXME: this doesn't stop us from leaking unclosed whefs_file or whio_dev handles!
-        // We don't currently track those.
+        // this doesn't stop us from leaking unclosed whefs_file/whio_dev/whio_stream handles!
     }
     whefs_fs_caches_clear(fs);
     whefs_fs_setopt_hash_cache( fs, false, false );
@@ -1618,6 +1627,14 @@ int whefs_fs_append_blocks( whefs_fs * restrict fs, whefs_id_type count )
     whefs_fs_flush( fs );
     whefs_fs_mmap_connect( fs ); // We need to re-mmap() to account for the new size!
     return rc;
+}
+
+int whefs_fs_setopt_autoclose_files( whefs_fs * fs, bool on )
+{
+    if( ! fs ) return whefs_rc.ArgError;
+    if( ! on ) fs->flags |= WHEFS_FLAG_FS_NoAutoCloseFiles;
+    else fs->flags &= ~WHEFS_FLAG_FS_NoAutoCloseFiles;
+    return whefs_rc.OK;
 }
 
 int whefs_fs_setopt_hash_cache( whefs_fs * fs, bool on, bool loadNow )
