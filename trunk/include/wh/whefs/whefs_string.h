@@ -1,6 +1,11 @@
 #if !defined(WANDERINGHORSE_NET_WHEFS_STRING_H_INCLUDED)
 #define WANDERINGHORSE_NET_WHEFS_STRING_H_INCLUDED 1
 #include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
   Author: Stephan Beal (http://wanderinghorse.net/home/stephan/
 
@@ -146,5 +151,9 @@ int whefs_string_finalize( whefs_string * tgt, bool clearChain );
    passed to whefs_string_finalize() to free the memory.
 */
 whefs_string * whefs_string_alloc();
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif // WANDERINGHORSE_NET_WHEFS_STRING_H_INCLUDED
