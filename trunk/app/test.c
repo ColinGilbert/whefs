@@ -17,7 +17,7 @@
 //#include <unistd.h> /* sleep() */
 #include <wh/whefs/whefs.h>
 #include <wh/whefs/whefs_client_util.h>
-
+#include <wh/whio/whio_encode.h>
 #include "WHEFSApp.c"
 #if 0
 #if 1
@@ -356,7 +356,7 @@ int test_encodings()
     memset( buf, 0, bufSize );
 
     uint16_t ui = 27;
-    size_t sz = whefs_uint16_encode( buf, ui );
+    size_t sz = whio_uint16_encode( buf, ui );
     MARKER("sz=%u\n",sz);
     MARKER("Buffer bytes=");
     size_t i = 0;
@@ -365,7 +365,7 @@ int test_encodings()
 	printf("#%u=[0x%02x]\t", i, buf[i] );
     } puts("");
     uint16_t uid = (uint16_t)-1;
-    int rc = whefs_uint16_decode( buf, & uid );
+    int rc = whio_uint16_decode( buf, & uid );
     MARKER("rc=%d uid=%"PRIu16"\n", rc, uid );
     MARKER("Buffer bytes=");
     for( i = 0; i < 5; ++i )
@@ -525,7 +525,7 @@ int test_caching()
        where the pfile size is exactly the block size (or a multiple
        of it).
     */
-    enum { count = 10, xpos = 4 /*see pname var*/, loops = 10 };
+    enum { count = 5, xpos = 4 /*see pname var*/, loops = 10 };
     assert( (count<=26) && "count must be less than 27!" );
 
     enum { bufSize = 1024*4 };
@@ -543,7 +543,7 @@ int test_caching()
     MARKER("mkfs([%s]) worked.\n",fname);
 
     const bool useHashCache = false;
-    rc = whefs_fs_hash_cache_set( fs, useHashCache, false );
+    rc = whefs_fs_setopt_hash_cache( fs, useHashCache, false );
     MARKER("%s inode hash cache.\n", useHashCache ? "Enabling" : "Disabling");
 
 #if 1
@@ -576,7 +576,7 @@ int test_caching()
             ++writeCount;
             //whefs_fflush( f );
         }
-        if( 1 == L ) whefs_inode_hash_cache_sort(fs);
+        //if( 1 == L ) whefs_inode_hash_cache_sort(fs);
         for( i = 0; i < count; ++i )
         {
             putchar('c');
@@ -588,7 +588,7 @@ int test_caching()
         printf("] ");
         fflush(stdout);
     }
-    printf("\n%u whefs_file objects were opened and closed, doing %u writes of %u bytes each.\n",objCount,writeCount,bufSize);
+    printf("\n%u whefs_file objects were opened and closed, doing a total of %u writes of %u bytes each.\n",objCount,writeCount,bufSize);
     //whefs_inode_hash_cache_chomp_lv(fs);
 #endif
     do_foreach(fs);

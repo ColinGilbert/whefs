@@ -10,6 +10,7 @@ WHIO_SOURCES := \
 	whio_dev_fileno.c \
 	whio_dev_mem.c \
 	whio_dev_subdev.c \
+	whio_encode.c \
 	whio_stream.c \
 	whio_stream_dev.c \
 	whio_stream_FILE.c \

@@ -19,6 +19,7 @@
 #include "whefs_cache.h"
 #include "whefs_details.c"
 #include <wh/whio/whio_devs.h>
+#include <wh/whio/whio_encode.h>
 #include <wh/whglob.h>
 
 #if WHEFS_CONFIG_ENABLE_FCNTL
@@ -570,7 +571,7 @@ static int whefs_mkfs_write_options( whefs_fs * restrict fs )
     sz = whefs_dev_id_encode( fs->dev, fs->options.inode_count );
     if( whefs_sizeof_encoded_id_type != sz ) return whefs_rc.IOError;
     pos += whio_dev_uint16_encode( fs->dev, fs->options.filename_length );
-    return (pos>0)
+    return (pos>0) /* <--- this is not technically correct. */
 	? whefs_rc.OK
 	: whefs_rc.IOError;
 }
@@ -580,11 +581,11 @@ static int whefs_mkfs_write_options( whefs_fs * restrict fs )
 */
 static size_t whefs_fs_sizeof_options()
 {
-    const size_t sz = whio_dev_sizeof_uint32;
+    const size_t sz = whio_sizeof_encoded_uint32;
     return sz /* block_size */
 	+ whefs_sizeof_encoded_id_type /* block_count */
 	+ whefs_sizeof_encoded_id_type /* inode_count */
-	+ whio_dev_sizeof_uint16 /* filename_length */
+	+ whio_sizeof_encoded_uint16 /* filename_length */
 	;
 }
 
@@ -655,18 +656,18 @@ int whefs_inode_name_get( whefs_fs * restrict fs, whefs_id_type id, whefs_string
     unsigned char * bufP = buf;
     ++bufP; // skip tag byte
     bufP += whefs_sizeof_encoded_id_type //skip id field
-        //+ whefs_sizeof_encoded_uint64 //skip hash field
+        //+ whio_sizeof_encoded_uint64 //skip hash field
         ;
     uint16_t sl = 0; // string length
-    rc = whefs_uint16_decode( bufP, &sl );
+    rc = whio_uint16_decode( bufP, &sl );
     if( whio_rc.OK != rc )
     {
 	WHEFS_DBG_ERR("Could not decode string length token from inode #"WHEFS_ID_TYPE_PFMT"'s "
 		      "name record! RC=%d",id,rc);
 	return rc;
     }
-    bufP += whefs_sizeof_encoded_uint16; // skip over size field
-    //bufP += whefs_sizeof_encoded_uint64; // skip hash field
+    bufP += whio_sizeof_encoded_uint16; // skip over size field
+    //bufP += whio_sizeof_encoded_uint64; // skip hash field
     rc = whefs_string_copy_cstring( tgt, (char const *)bufP );
     if( whio_rc.OK != rc )
     {
@@ -725,7 +726,7 @@ int whefs_fs_name_write( whefs_fs * restrict fs, whefs_id_type id, char const * 
     buf[0] = whefs_inode_name_tag_char;
     size_t off = 1;
     off += whefs_id_encode( buf + off, id );
-    off += whefs_uint16_encode( buf + off, slen );
+    off += whio_uint16_encode( buf + off, slen );
     //uint64_t shash = 0UL; //whefs_bytes_hash( name, slen );
     //off += whefs_uint64_encode( buf + off, shash );
     memcpy( buf + off, name, slen );
@@ -777,12 +778,12 @@ static int whefs_mkfs_write_names_table( whefs_fs * restrict fs )
 
 whio_size_t whefs_fs_calculate_size( whefs_fs_options const * opt )
 {
-    static const whio_size_t sz = (whio_size_t)whio_dev_sizeof_uint32;
+    static const whio_size_t sz = (whio_size_t)whio_sizeof_encoded_uint32;
     if( ! opt ) return 0;
     else return (whio_size_t)(
-	(whio_dev_sizeof_uint32 * whefs_fs_magic_bytes_len) // core magic
+	(whio_sizeof_encoded_uint32 * whefs_fs_magic_bytes_len) // core magic
 	+ sz // file size header
-	+ whio_dev_sizeof_uint16 // client magic size
+	+ whio_sizeof_encoded_uint16 // client magic size
 	+ opt->magic.length
 	+ whefs_fs_sizeof_options()
 	+ (whefs_fs_sizeof_name( opt ) * opt->inode_count)/* inode names table */
@@ -1074,19 +1075,19 @@ static void whefs_fs_init_sizes( whefs_fs * restrict fs )
     fs->offsets[WHEFS_OFF_CORE_MAGIC] = 0;
 
     size_t sz =	/* core magic len */
-	(whefs_sizeof_encoded_uint32 * whefs_fs_magic_bytes_len);
+	(whio_sizeof_encoded_uint32 * whefs_fs_magic_bytes_len);
 
     fs->offsets[WHEFS_OFF_SIZE] =
 	fs->offsets[WHEFS_OFF_CORE_MAGIC]
 	+ sz;
     sz = /* file size */
-	whefs_sizeof_encoded_uint32;
+	whio_sizeof_encoded_uint32;
 
     fs->offsets[WHEFS_OFF_CLIENT_MAGIC] =
 	fs->offsets[WHEFS_OFF_SIZE]
 	+ sz;
     sz = /* client magic size */
-	whefs_sizeof_encoded_uint16 // length
+	whio_sizeof_encoded_uint16 // length
 	+ fs->options.magic.length;
 
     fs->offsets[WHEFS_OFF_OPTIONS] = 
@@ -1189,7 +1190,7 @@ static int whefs_fs_write_filesize( whefs_fs * restrict fs )
 {
     fs->dev->api->seek( fs->dev, fs->offsets[WHEFS_OFF_SIZE], SEEK_SET );
     const whio_size_t ck = whio_dev_uint32_encode( fs->dev, fs->filesize );
-    return ( whio_dev_sizeof_uint32 == ck )
+    return ( whio_sizeof_encoded_uint32 == ck )
         ? whefs_rc.OK
         : whefs_rc.IOError;
 }
@@ -1344,7 +1345,7 @@ static int whefs_openfs_stage2( whefs_fs * restrict fs )
     if( ! fs ) return whefs_rc.ArgError;
 
     fs->offsets[WHEFS_OFF_CORE_MAGIC] = 0;
-    fs->offsets[WHEFS_OFF_SIZE] = (whefs_fs_magic_bytes_len * whio_dev_sizeof_uint32);
+    fs->offsets[WHEFS_OFF_SIZE] = (whefs_fs_magic_bytes_len * whio_sizeof_encoded_uint32);
     int rc = whefs_rc.OK;
     uint32_t coreMagic[whefs_fs_magic_bytes_len];
 

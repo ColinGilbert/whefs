@@ -21,6 +21,7 @@ ${srcd}/whio_dev_subdev.c
 ${srcd}/whio_stream.c
 ${srcd}/whio_stream_dev.c
 ${srcd}/whio_stream_FILE.c
+${srcd}/whio_encode.c
 ${srcd}/whio_zlib.c
 ${srcd}/whprintf.c
 "
@@ -29,12 +30,13 @@ ${srcd}/whprintf.c
 WHIO_HEADERS="
 ${inc_io}/whio_config.h
 ${inc_io}/whio_common.h
-${inc_w}/whprintf.h
 ${inc_io}/whio_dev.h
-${inc_io}/whio_devs.h
 ${inc_io}/whio_stream.h
+${inc_io}/whio_encode.h
+${inc_io}/whio_devs.h
 ${inc_io}/whio_streams.h
 ${inc_io}/whio_zlib.h
+${inc_w}/whprintf.h
 "
 
 WHEFS_SRC="
