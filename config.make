@@ -48,7 +48,7 @@ ENABLE_MMAP_ASYNC ?= 0
 # unless you need to create whio_dev and/or whefs_fs-related objects
 # in multiple threads or you need to use multiple EFSes in separate
 # threads.
-ENABLE_STATIC_MALLOC ?= 1
+ENABLE_STATIC_MALLOC ?= 0
 
 WHIO_ENABLE_STATIC_MALLOC ?= $(ENABLE_STATIC_MALLOC)
 WHEFS_ENABLE_STATIC_MALLOC ?= $(ENABLE_STATIC_MALLOC)
