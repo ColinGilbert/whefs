@@ -155,8 +155,7 @@ static int ls_dump_blocks()
     whefs_string name = whefs_string_init;
     for( ; id <= nc; ++id )
     {
-	ino.id = id;
-	rc = whefs_inode_read( fs, &ino );
+	rc = whefs_inode_id_read( fs, id, &ino );
 	if( whefs_rc.OK != rc )
 	{
 	    APPERR("Error #%d while reading inode #%"WHEFS_ID_TYPE_PFMT"!\n", rc, id);
