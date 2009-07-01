@@ -4,6 +4,10 @@
 #include "whefs.h"
 #include "whefs_string.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
    Like the 'ls' Unix program, this function fetches a list of
    filenames matching the given pattern. If no matches are found, null
@@ -207,5 +211,9 @@ typedef int (*whefs_fs_entry_foreach_f)( whefs_fs * fs, whefs_fs_entry const * e
    inodes which are currently opened for write access.
 */
 int whefs_fs_entry_foreach( whefs_fs * fs, whefs_fs_entry_foreach_f forEach, void * forEachData );
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif // WANDERINGHORSE_NET_WHEFS_CLIENT_UTIL_INCLUDED
