@@ -50,6 +50,7 @@ ${srcd}/whefs_hash.c
 ${srcd}/whefs_nodedev.c
 ${srcd}/whefs_file.c
 ${srcd}/whefs_cache.c
+${srcd}/whefs_fs_closer.c
 ${srcd}/whbits.c
 ${srcd}/whdbg.c
 ${srcd}/whglob.c
@@ -100,8 +101,15 @@ timestamp=$(date)
 echo "Creating ${AMAL_H}..."
 echo "/* auto-generated on ${timestamp}. Do not edit! */" > "${AMAL_H}"
 {
-    echo "#define WHEFS_AMALGAMATION_BUILD 1"
-    echo -e "#if ! defined __STDC_FORMAT_MACROS\n#define __STDC_FORMAT_MACROS 1\n#endif"
+    cat <<EOF
+#define WHEFS_AMALGAMATION_BUILD 1
+#if ! defined __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS 1
+#endif
+#if defined(__cplusplus) && !defined(restrict)
+#  define restrict
+#endif
+EOF
     for h in ${AMAL_HEADERS}; do
         dofile $h
     done
@@ -129,6 +137,7 @@ echo "/* auto-generated on ${timestamp}. Do not edit! */" > "${AMAL_C}"
     for h in ${AMAL_SRC2}; do
         dofile $h
     done
+
 } >> "${AMAL_C}"
 
 echo "Done:"
