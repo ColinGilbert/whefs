@@ -132,7 +132,7 @@ int whefs_block_flush( whefs_fs * fs, whefs_block const * bl )
     check = whefs_dev_id_encode( fs->dev, bl->next_block );
     if( whefs_sizeof_encoded_id_type != check ) return whefs_rc.IOError;
 #else
-    unsigned char buf[whefs_sizeof_encoded_block];
+    unsigned char buf[whefs_sizeof_encoded_block] = {0};
     // TODO: use whefs_encode_xxx() here
     buf[0] = whefs_block_tag_char;
     whio_size_t off = 1;
