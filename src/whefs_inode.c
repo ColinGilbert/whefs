@@ -283,11 +283,6 @@ int whefs_inode_id_read( whefs_fs * fs, whefs_id_type nid, whefs_inode * tgt )
     return rc;
 }
 
-int whefs_inode_read( whefs_fs * fs, whefs_inode * n )
-{
-    return whefs_inode_id_read( fs, n ? n->id : 0, n );
-}
-
 int whefs_inode_read_flags( whefs_fs * fs, whefs_id_type nid, uint32_t * flags )
 {
     if( ! whefs_inode_id_is_valid( fs, nid ) || !fs->dev ) return whefs_rc.ArgError;
@@ -427,13 +422,6 @@ int whefs_inode_search_opened( whefs_fs * fs, whefs_id_type nodeID, whefs_inode 
 
 int whefs_inode_open( whefs_fs * fs, whefs_id_type nodeID, whefs_inode ** tgt, void const * writer )
 {
-    /**
-       Design note/reminder: the preference would have been to use an
-       expanding array of whefs_inode for the opened nodes list, but
-       when we realloc() it that could invalidate older pointers to
-       those inodes (been there, done that). Thus we suffer a linked
-       list and the associated mallocs...
-    */
     if( ! whefs_inode_id_is_valid(fs, nodeID) || !tgt ) return whefs_rc.ArgError;
     //WHEFS_DBG_FYI( "Got request to open inode #%"WHEFS_ID_TYPE_PFMT". writer=@0x%p", nodeID, writer );
     whefs_inode * x = 0;
@@ -478,6 +466,13 @@ int whefs_inode_open( whefs_fs * fs, whefs_id_type nodeID, whefs_inode ** tgt, v
 			    x->id, x->open_count, x->data_size );
 	return  whefs_rc.OK;
     }
+    /**
+       Design note/reminder: the preference would have been to use an
+       expanding array of whefs_inode for the opened nodes list, but
+       when we realloc() it that could invalidate older pointers to
+       those inodes (been there, done that). Thus we suffer a linked
+       list and the associated mallocs...
+    */
     whefs_inode_list * ent = whefs_inode_list_alloc();
     if( ! ent ) return whefs_rc.AllocError;
     *ent = whefs_inode_list_init;
@@ -500,7 +495,7 @@ int whefs_inode_open( whefs_fs * fs, whefs_id_type nodeID, whefs_inode ** tgt, v
     }
     else
     { /* let's keep the list sorted here, as that can save us some comparisons later. */
-	while( li->next && li && (li->inode.id < ent->inode.id) )
+	while( li->next && (li->inode.id < ent->inode.id) )
 	{
 	    li = li->next;
 	}
