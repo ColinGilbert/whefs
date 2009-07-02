@@ -8,6 +8,7 @@ This is the informal change list for whefs releases. Newest items are at the top
 *26 June 2009*
   * Removed the full-string cache altogether. It _might_ be reintroduced in another form, but it's not on the immediate to-do list. The hash cache gives us 95% of what we need and requires much less memory.
   * Fixed a memleak of an inode name in `whefs_fclose()` when (ironically enough) the static allocators were enabled.
+  * It is now possible to toggle the inode hash cache on/off at runtime on a per-EFS basis. Leaving it on is highly recommended, but a large EFS (lots of entries) will require relatively large amounts of memory for the cache (about 8 bytes/entry).
 
 *23 June 2009*
   * All of the EFS caching elements can now be disabled at compile time. Work is underway to make them runtime-togglable.
