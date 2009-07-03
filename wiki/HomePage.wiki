@@ -19,7 +19,7 @@ It works by creating a "filesystem" inside a so-called container file (or in mem
    *  Provides two different approaches for I/O on "pseudofiles" inside an EFS. The lower-level API treats pseudofiles as random-access device objects. The higher-level API closely resembles the standard C file APIs (e.g. fopen(), fread()/read(), fwrite()/write(), etc.). The approaches are not mutually exclusive, and any given pseudofile can be accessed via either of the APIs.
    *  The EFS [WhefsFilesystem file format] is independent of the device or platform bitness/endianness. 
    *  Optimized for low memory consumption: small use cases can get away with less than 2kb of malloc()'d memory, and "normal" cases need less than 10k (as measured by Valgrind). If configured for absolute minimal memory consumption (see [WhefsTweakingEFS]) then small use cases (1 EFS and 2 opened pseudofiles) can get away with less than 1kb of `malloc()`d memory (448 bytes is the smallest i've seen, 352 of which came from `fopen()` and could not be avoided).
-   *  The source tree comes with [WhefsTools several tools for working with EFSes], e.g. for creating VFSes, listing their contents, and copying files into and out of an EFS.
+   *  The source tree comes with [WhefsTools several tools for working with EFSes], e.g. for creating EFSes, listing their contents, and copying files into and out of an EFS.
    *  Supports read-only as well as read-write operation, at the EFS and pseudofile levels.
    *  Has very liberal, non-viral licensing conditions, and is unhindered by licensing restrictions (or warranties, for that matter!). Googling has revealed little open-source work on embedded filesystems (but lots of commercial products), and i have been unable to find a comparable library released under non-restrictive (or non-viral) licensing terms.
    *  Designed to be easy to copy directly into a client source tree. See [WhefsAmalgamation the amalgamation page] for details.
@@ -47,8 +47,7 @@ See [RequirementsAndPlatforms].
 
 Let's call it "Very Beta." It "seems to work", but the nature of the problem means there is lots of room for errors and bugs. Do not make the mistake of using it for data which you can't afford to lose.
 
-That said, most of the basics are in place and working. There is plenty of cleaning up, tweaking, and refactoring to do, however.
-
+That said,the basics are in place and are believed to work fairly well. There are no known data loss/corruption cases except potentially crashes or C signals during write operations. There is plenty of cleaning up, tweaking, and refactoring to do, however.
 
 =Significant TODOs=
 
@@ -66,3 +65,4 @@ Some areas of improvement which specifically come to mind (and in which i could 
 
    *  Concurrency. See [WhefsConcurrency] for details.
    *  Caching/Performance. See [WhefsPerformance] for details.
+   *  Implementing a B-tree or AVL tree on top of the whio_dev interface for doing searches for pseudofiles by name. The current approach works but isn't very scalable.
