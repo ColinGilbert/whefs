@@ -136,7 +136,7 @@ whio_dev * whio_dev_for_fileno( int filedescriptor, char const * mode );
    Creates a new whio_dev object which wraps an in-memory buffer. The
    initial memory allocated by the buffer is allocated by this call.
    Whether or not the buffer is allowed to be expanded by write() or
-   seek() operations is defined by the remaining parameters.
+   truncate() operations is defined by the remaining parameters.
 
    The expFactor specifies a growth expansion value, as follows. If
    expFactor is less than 1.0 then the buffer will never be allowed to
@@ -152,7 +152,7 @@ whio_dev * whio_dev_for_fileno( int filedescriptor, char const * mode );
    1.5 is being shrunk, it will not release the allocated memory
    unless doing so will drop it below ((1024/1.5)=682) bytes. A very
    large expFactor (more than 2.0) is not disallowed, but may not be
-   good for your sanity.
+   healthy.
 
    For purposes of the following text, a membuf device with an
    expFactor of equal to or greater than 1.0 is said to be "growable".
@@ -575,6 +575,9 @@ whio_blockdev * whio_blockdev_alloc();
    the internally allocated resources. See those functions for details
    on which to use.
 
+   The device provides access to block_count blocks, each with an
+   incremental logical ID starting at 0.
+
    If bdev is passed to this function multiple times without a
    corresponding call to whio_blockdev_cleanup(), it will leak
    resources.
@@ -612,7 +615,8 @@ bool whio_blockdev_cleanup( whio_blockdev * bdev );
 void whio_blockdev_free( whio_blockdev * bdev );
 
 /**
-   Returns true if id is a valid block ID for bdev, else false.
+   Returns true if id is a valid block ID for bdev, else false. Block
+   indexes start at 0.
 */
 bool whio_blockdev_in_range( whio_blockdev const * bdev, whio_size_t id );
 
