@@ -29,13 +29,15 @@ static struct ThisApp_
 	size_t count;
     } funcs;
     bool didSomething;
+    bool oneMode; // "ls -1"
 } ThisApp =
     {
     { /* funcs */
     {0} /* f */,
     0 /*count*/
     },
-    false /* didSomething */
+    false /* didSomething */,
+    false /* oneMode */
     };
 
 /**
@@ -102,18 +104,25 @@ static int ls_inode_foreach_print( whefs_fs * fs, whefs_inode const * ino, void 
 {
     ls_foreach_info * info = (ls_foreach_info*)clientData;
     ++(info->matchCount);
-    time_t mt = (time_t)ino->mtime;
-    struct tm * t = 0;
-    t = localtime( &mt );
-    enum { bufSize = 40 };
-    char buf[bufSize];
-    memset( buf, 0, bufSize );
-    strftime( buf, bufSize-1, "%Y.%m.%d %H:%M:%S", t );
-    printf("%-6"WHEFS_ID_TYPE_PFMT"%9u%22s  %s\n",
-           ino->id,
-           ino->data_size,
-           buf,
-           info->name.string );
+    if( ThisApp.oneMode )
+    {
+        puts(info->name.string);
+    }
+    else
+    {
+        time_t mt = (time_t)ino->mtime;
+        struct tm * t = 0;
+        t = localtime( &mt );
+        enum { bufSize = 40 };
+        char buf[bufSize];
+        memset( buf, 0, bufSize );
+        strftime( buf, bufSize-1, "%Y.%m.%d %H:%M:%S", t );
+        printf("%-6"WHEFS_ID_TYPE_PFMT"%9u%22s  %s\n",
+               ino->id,
+               ino->data_size,
+               buf,
+               info->name.string );
+    }
     info->totalSize += ino->data_size;
     return whefs_rc.OK;
 }
@@ -125,17 +134,27 @@ static int ls_dump_inodes()
     ThisApp.didSomething = true;
     whefs_fs * fs = WHEFSApp.fs;
     int rc = 0;
-    puts("List of file entries:\n");
-    printf("%-10s%s%19s%10s\n",
-	   "Node ID:","Size:", "Timestamp: (YMD)","Name:" );
+    if( ! ThisApp.oneMode )
+    {
+        puts("List of file entries:\n");
+        printf("%-10s%s%19s%10s\n",
+               "Node ID:","Size:", "Timestamp: (YMD)","Name:" );
+    }
     ls_foreach_info foi = ls_foreach_info_init;
+    enum { bufSize = WHEFS_MAX_FILENAME_LENGTH + 1 };
+    char buf[bufSize] = {0};
+    foi.name.string = buf;
+    foi.name.alloced = bufSize;
     rc = whefs_inode_foreach( fs, ls_inode_predicate_name_matches, &foi, ls_inode_foreach_print, &foi );
-    whefs_string_clear( &foi.name, false );
+    //whefs_string_clear( &foi.name, false );
     //MARKER("foreach rc=%d, predicate checks=%"WHEFS_ID_TYPE_PFMT" \n",rc, foi.checkedInodesCount);
-    printf("%31s %"PRIu64" bytes\n", "Total:", foi.totalSize );
-    printf("%"WHEFS_ID_TYPE_PFMT" of %"WHEFS_ID_TYPE_PFMT" total inodes listed.\n",
-           foi.matchCount,
-           whefs_fs_options_get(fs)->inode_count );
+    if( ! ThisApp.oneMode )
+    {
+        printf("%31s %"PRIu64" bytes\n", "Total:", foi.totalSize );
+        printf("%"WHEFS_ID_TYPE_PFMT" of %"WHEFS_ID_TYPE_PFMT" total inodes listed.\n",
+               foi.matchCount,
+               whefs_fs_options_get(fs)->inode_count );
+    }
     return rc;
 }
 
@@ -328,6 +347,9 @@ static int ls_arg_push_cb( char const * key, char const * val, void const * d )
 
 static ArgSpec LsArgSpec[] =
     {
+    {"1",  ArgTypeBool, &ThisApp.oneMode,
+     "A simple list of files, one name per line.",
+     ls_arg_push_cb, &ls_cmd_dump_inodes },
     {"i",  ArgTypeIgnore, 0,
      "Show inode info (i.e. file list). This is the default.",
      ls_arg_push_cb, &ls_cmd_dump_inodes },
@@ -338,16 +360,16 @@ static ArgSpec LsArgSpec[] =
      "Shows block table.",
      ls_arg_push_cb, &ls_cmd_dump_blocks_table},
     {"s",  ArgTypeIgnore, 0,
-     "Shows some overall VFS stats.",
+     "Shows some overall EFS stats.",
      ls_arg_push_cb, &ls_cmd_dump_stats },
     {"dump-core-magic",  ArgTypeIgnore, 0,
-     "Dumps the library's file format version number. This can be used without specifying a VFS.",
+     "Dumps the library's file format version number. This can be used without specifying an EFS.",
      ls_dump_core_magic_cb, 0 },
     {"dump-mkfs-command",  ArgTypeIgnore, 0,
-     "Dumps the VFS options as arguments for passing to whefs-mkfs.",
+     "Dumps the EFS options as arguments for passing to whefs-mkfs.",
      ls_arg_push_cb, &ls_cmd_dump_mkfs_command },
     {"dump-options-code",  ArgTypeIgnore, 0,
-     "Dumps the VFS options as C source code.",
+     "Dumps the EFS options as C source code.",
      ls_arg_push_cb, &ls_cmd_dump_options_code },
     {0,0,0,0,0}
     };
@@ -356,7 +378,7 @@ int main( int argc, char const ** argv )
 {
     WHEFSApp.usageText = "[flags] vfs_file [filenames or quoted glob patterns]";
     WHEFSApp.helpText =
-	"Lists information about a VFS file and the files contained within it."
+	"Lists information about an EFS file and the files contained within it."
 	;
     bool gotHelp = false;
     int rc = WHEFSApp_init( argc, argv, WHEFSApp_OpenRO, &gotHelp, LsArgSpec );
