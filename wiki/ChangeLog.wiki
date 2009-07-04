@@ -5,6 +5,9 @@ This is the informal change list for whefs releases. Newest items are at the top
 
 ----
 
+*1 July 2009*
+  * Added C++ `std::istream` and `std::ostream` wrappers for `whio_stream`, so it's possible to import/export data via the C++ STL stream API.
+
 *26 June 2009*
   * Removed the full-string cache altogether. It _might_ be reintroduced in another form, but it's not on the immediate to-do list. The hash cache gives us 95% of what we need and requires much less memory.
   * Fixed a memleak of an inode name in `whefs_fclose()` when (ironically enough) the static allocators were enabled.
