@@ -123,9 +123,13 @@ static void mkfs_dump_info()
 static ArgSpec MkfsArgSpec[] = {
 {"n",  ArgTypeBool, &ThisApp.dryRun, "Dry-run mode (shows what WOULD be done, but doesn't do it).", 0, 0},
 {"i",  ArgTypeIDType, &ThisApp.fsopt.inode_count, "Number of inodes for the EFS.", 0, 0},
+{"inode-count",  ArgTypeIDType, &ThisApp.fsopt.inode_count, "Same as -i", 0, 0},
 {"c",  ArgTypeIDType, &ThisApp.fsopt.block_count, "Number of data blocks for the EFS.", 0, 0},
+{"block-count",  ArgTypeIDType, &ThisApp.fsopt.block_count, "Same as -c", 0, 0},
 {"b",  ArgTypeUInt32, &ThisApp.fsopt.block_size, "The size of each block, in bytes.", 0, 0},
+{"block-size",  ArgTypeUInt32, &ThisApp.fsopt.block_size, "Same as -b.", 0, 0},
 {"s",  ArgTypeUInt16, &ThisApp.fsopt.filename_length, "The maximum length of file names in the EFS.", 0, 0},
+{"string-length",  ArgTypeUInt16, &ThisApp.fsopt.filename_length, "Same as -s.", 0, 0},
 {0}
 };
 
