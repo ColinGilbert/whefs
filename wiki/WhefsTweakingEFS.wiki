@@ -27,7 +27,8 @@ The options described below correspond to the various command-line options for [
 struct whefs_fs_options
 {
     /**
-       The magic cookie of the vfs.
+       The magic cookie of the vfs. This is used to verify that the file
+       is an EFS.        
     */
     whefs_magic magic;
     /**
