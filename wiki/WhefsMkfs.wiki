@@ -4,26 +4,25 @@
 
 =whefs-mkfs=
 
-whefs-mkfs is a tool similar to the conventional <tt>mkfs</tt> command. It creates VFS container files.
+whefs-mkfs is a tool similar to the conventional <tt>mkfs</tt> command. It creates EFS container files.
 
 Usage: whefs-mkfs `[flags]` VFS_file
 
 Aside from the [WhefsTools common command flags], whefs-mkfs supports these flags:
 
-   *  -i### = set the number of inodes
-   *  -b### = set the size of each block (in bytes)
-   *  -c### = set the number of blocks (must be >= -i)
-   *  -s### = set the maximum filename length
-   *  -n = "dry run" mode - show what would be done, but don't do it.
-
+   *  `-i###` = set the number of inodes
+   *  `-b###` = set the size of each block (in bytes)
+   *  `-c###` = set the number of blocks (must be >= -i)
+   *  `-s###` = set the maximum filename length
+   *  `-n` = "dry run" mode - show what would be done, but don't do it.
 
 To understand what these values mean it may be helpful to read [WhefsFilesystem] and/or [WhefsTweakingEFS].
 
-All of these parameters have default values which may or may not be reasonable, so it is best to supply values for all parameters. The maximum values for the -i and -c values are determined by the compile-time constant <tt>WHEFS_ID_TYPE_BITS</tt>, which defaults to 16 bits (64k). The maximum value for -s is is the constant <tt>WHEFS_MAX_FILENAME_LENGTH</tt> (which defaults to 128 but a custom build of whefs may change that - see [WhefsTweakingEFS]). The maximum value for -b is theoretically (2^32-2), but in practice a value of 4k-32k is more realistic (and overflow/underflow may result when using extremely high values). Also, the library doesn't currently explicitly support "large files" (>2GB), so a block size that large doesn't make much sense.
+All of these parameters have default values which may or may not be reasonable, so it is best to supply values for all parameters. The maximum values for the `-i` and `-c` values are determined by the compile-time constant `WHEFS_ID_TYPE_BITS`, which defaults to 16 bits (64k). The maximum value for `-s` is is the constant `WHEFS_MAX_FILENAME_LENGTH` (which defaults to 128 but a custom build of whefs may change that - see [WhefsTweakingEFS]). The maximum value for `-b` is theoretically (2^32-2), but in practice a value of 4k-32k is more realistic. Also, the library doesn't currently explicitly support "large files" (>2GB), so a block size that large doesn't make much sense.
 
-==Creating a VFS for a given set of files...==
+==Creating an EFS for a given set of files...==
 
-The source tree comes with a script called <tt>whefs-mkfs-for-files.sh</tt> which creates a new VFS for a set of files, sizing the VFS to fit (well, it gets close, anyway). It is used like this:
+The source tree comes with a script called <tt>whefs-mkfs-for-files.sh</tt> which creates a new EFS for a set of files, sizing the EFS to fit (well, it gets close, anyway). It is used like this:
 
 {{{
 stephan@jareth:~/cvs/whefs/trunk/app$ ./whefs-mkfs-for-files.sh my.whefs *.c *.h
