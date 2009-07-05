@@ -493,9 +493,9 @@ void WHEFSApp_show_help()
 	   WHEFSApp.appName,
 	   WHEFSApp.usageText );
     printf( "%s\n\n", WHEFSApp.helpText );
-    puts("This program is for use with EFS files created by [a compatible version of] libwhefs:\n");
+    puts("This program is for use with libwhefs:\n");
     printf("\t\t%s\n\n", whefs_home_page_url());
-    puts("The first non-flag argument must be a EFS file.\n");
+    puts("The first non-flag argument must be a EFS container file.\n");
 
     puts("Shared arguments supported by the core whefs tools:\n");
     ArgSpec_show_help( WHEFSApp_SharedArgs );
@@ -562,14 +562,16 @@ void WHEFSApp_show_version()
    openMode must be one of the WHEFSApp_OpenModes values.
 
    If gotHelp is not null then it will be set to true if this function
-   things that the user needs help. That is: (A) if no arguments are given
-   or (B) if -? or --help is given. If it sets this value to true then
-   it calls the built-in help system. When it shows help it returns
-   whefs_rc.ArgError.
+   thinks that the user needs help. That is: (A) if no arguments are
+   given or (B) if -? or --help is given. If it sets this value to
+   true then it calls the built-in help system. When it shows help it
+   returns whefs_rc.ArgError but the application should conventionally
+   quit with code 0 i that case.
 
-   argspec is an array with a terminating entry with no name. It may
-   be null, in which case it is ignored. If it is not null, then argv
-   is compared against it to look for application arguments.
+   argspec is an array with a terminating entry which has a NULL
+   name. argspec may be null, in which case it is ignored (but an
+   internal/common args list is still checked). If it is not null,
+   then argv is compared against it to look for application arguments.
 */
 int WHEFSApp_init( int argc,
 		   char const ** argv,
@@ -665,7 +667,7 @@ int WHEFSApp_init( int argc,
         arr[1] = argspec;
         bool gotSpec = false;
         int i = 0;
-        for( i = 0; i <= 2; ++i )
+        for( i = 0; i < 2; ++i )
 	{
             ArgSpec * as = arr[i];
 	    for( ; as && as->name; ++as )
