@@ -317,7 +317,7 @@ typedef struct whefs_magic
        Must point to at least length bytes of data. The first
        length bytes are used as a magic cookie header.
     */
-    char const * data;
+    unsigned char const * data;
 } whefs_magic;
 
 /**
@@ -328,15 +328,15 @@ extern const whefs_magic whefs_magic_default;
 
 /** @struct whefs_fs_options
 
-   whefs_fs_options defines the major parameters of a vfs. Once they
-   are set, the must not be changed for the life of the vfs, as doing
-   so invalidates the vfs and will lead to data corruption. (The public
+   whefs_fs_options defines the major parameters of an EFS. Once they
+   are set, they must not be changed for the life of the EFS, as doing
+   so invalidates the EFS and will lead to data corruption. (The public
    API provides no way for the client to change these options after
-   a VFS is initialized.)
+   a EFS is initialized.)
 
-   Normally this type is used by clients only when creating a new vfs
+   Normally this type is used by clients only when creating a new EFS
    container file (e.g. via whefs_mkfs()). When opening an existing
-   vfs container, the options will be read in from the container.
+   container, the options will be read in from the container.
 */
 struct whefs_fs_options
 {
@@ -377,7 +377,7 @@ typedef struct whefs_fs_options whefs_fs_options;
    Initializer macro for inlined whefs_magic objects. Sets the magic
    to the given string.
 */
-#define WHEFS_MAGIC_INIT(STR) { sizeof(STR) -1, STR }
+#define WHEFS_MAGIC_INIT(STR) { sizeof(STR) -1, (unsigned char const *)STR }
 
 /**
    The default magic cookie used by the library.
@@ -387,7 +387,7 @@ typedef struct whefs_fs_options whefs_fs_options;
 /**
    A static initializer for an empty whefs_magic object.
 */
-#define WHEFS_MAGIC_NIL { 0, "\0" }
+#define WHEFS_MAGIC_NIL { 0, (unsigned char const *)"\0" }
 
 /**
    A static initializer for whefs_fs_options objects. It defaults
