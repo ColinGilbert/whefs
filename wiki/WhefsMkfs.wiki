@@ -10,15 +10,17 @@ Usage: whefs-mkfs `[flags]` VFS_file
 
 Aside from the [WhefsTools common command flags], whefs-mkfs supports these flags:
 
-   *  `-i###` = set the number of inodes
-   *  `-b###` = set the size of each block (in bytes)
-   *  `-c###` = set the number of blocks (must be >= -i)
-   *  `-s###` = set the maximum filename length
-   *  `-n` = "dry run" mode - show what would be done, but don't do it.
+|| *Parameter* || *Description* ||
+|| `-i###` || Sets the number of inodes. Valid range is 2 to (2^`WHEFS_ID_TYPE_BITS`-1). See [WhefsTweakingEFS]. ||
+|| `-b###` || Sets the size of each block, in bytes. Range is 32 to (theoretically) (2^32-2), but in practice 4k-32k is realistic and extremely large values (e.g. 100M) may exceed other limits of the EFS. ||
+|| `-c###` || Set the number of blocks. Must be at least the the same value as `-i`, but may be higher (theoretically up to (2^16-1)). ||
+||`-s###`  || Set the maximum filename length. Maximum value is `WHEFS_MAX_FILENAME_LENGTH` (see [WhefsTweakingEFS]). ||
+|| `-n` || "Dry run" mode - show what would be done, but don't do it. ||
 
 To understand what these values mean it may be helpful to read [WhefsFilesystem] and/or [WhefsTweakingEFS].
 
-All of these parameters have default values which may or may not be reasonable, so it is best to supply values for all parameters. The maximum values for the `-i` and `-c` values are determined by the compile-time constant `WHEFS_ID_TYPE_BITS`, which defaults to 16 bits (64k). The maximum value for `-s` is is the constant `WHEFS_MAX_FILENAME_LENGTH` (which defaults to 128 but a custom build of whefs may change that - see [WhefsTweakingEFS]). The maximum value for `-b` is theoretically (2^32-2), but in practice a value of 4k-32k is more realistic. Also, the library doesn't currently explicitly support "large files" (>2GB), so a block size that large doesn't make much sense.
+The library doesn't currently explicitly support "large files" (>2GB), so the combination of parameters should be low enough that they not exceed this limit. The `-n` parameter can be used to check this before creating the container.
+
 
 ==Creating an EFS for a given set of files...==
 
