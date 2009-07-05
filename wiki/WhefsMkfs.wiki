@@ -11,16 +11,28 @@ Usage: whefs-mkfs `[flags]` VFS_file
 Aside from the [WhefsTools common command flags], whefs-mkfs supports these flags:
 
 || *Parameter* || *Description* ||
-|| `-i###` || Sets the number of inodes. Valid range is 2 to (2^`WHEFS_ID_TYPE_BITS`-1). See [WhefsTweakingEFS]. ||
+|| `-i###` || Sets the number of inodes. Valid range is 2 to (2^`WHEFS_ID_TYPE_BITS`-1). ||
 || `-b###` || Sets the size of each block, in bytes. Range is 32 to (theoretically) (2^32-2), but in practice 4k-32k is realistic and extremely large values (e.g. 100M) may exceed other limits of the EFS. ||
-|| `-c###` || Set the number of blocks. Must be at least the the same value as `-i`, but may be higher (theoretically up to (2^16-1)). ||
-||`-s###`  || Set the maximum filename length. Maximum value is `WHEFS_MAX_FILENAME_LENGTH` (see [WhefsTweakingEFS]). ||
-|| `-n` || "Dry run" mode - show what would be done, but don't do it. ||
+|| `-c###` || Set the number of blocks. Must be at least the the same value as `-i`, but may be higher (theoretically up to (2^`WHEFS_ID_TYPE_BITS`-1)). ||
+||`-s###`  || Set the maximum filename length. Maximum value is `WHEFS_MAX_FILENAME_LENGTH`.||
+|| `-n` || "Dry run" mode - show what would be done, but don't do it. In dry run mode not all input ranges are fully checked because they happen at a higher level of the API which does not know what the valid ranges are. ||
 
-To understand what these values mean it may be helpful to read [WhefsFilesystem] and/or [WhefsTweakingEFS].
+To understand what some of these values mean it may be helpful to read [WhefsFilesystem] and/or [WhefsTweakingEFS].
 
-The library doesn't currently explicitly support "large files" (>2GB), so the combination of parameters should be low enough that they not exceed this limit. The `-n` parameter can be used to check this before creating the container.
+The library doesn't currently explicitly support "large files" (>2GB), so the combination of parameters should be low enough that they not exceed this limit. The `-n` parameter can be used to check this before creating the container. For example:
 
+{{{
+stephan@jareth:~/cvs/whefs/trunk/app$  ./whefs-mkfs -i700 -b8192 -n -c700 my.whefs
+Dry-run mode! (Not creating/changing EFS container file!)
+EFS container file: my.whefs
+	Block size: 8192
+	Block count: 700
+	inode count: 700
+	Free data bytes: 5734400
+	Max filename length: 64
+	Required container size (bytes): 5804480
+	Metadata-to-data ratio: 1.2073%
+}}}
 
 ==Creating an EFS for a given set of files...==
 
