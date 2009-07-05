@@ -26,76 +26,87 @@ All of these parameters have default values which may or may not be reasonable, 
 The source tree comes with a script called <tt>whefs-mkfs-for-files.sh</tt> which creates a new VFS for a set of files, sizing the VFS to fit (well, it gets close, anyway). It is used like this:
 
 {{{
-stephan@jareth:~/cvs/fossil/whefs$ ./whefs-mkfs-for-files.sh my.whefs whio*.c whio*.h
+stephan@jareth:~/cvs/whefs/trunk/app$ ./whefs-mkfs-for-files.sh my.whefs *.c *.h
 Using these whefs tools:  whefs-ls whefs-cp whefs-mkfs
-File [my.whefs] already exists. If you want to overwrite it as a VFS tap ENTER, otherwise tap Ctrl-C now.
+Size:        Blocks:    Name:
+2088         1          addblocks.c
+11524        2          avl.c
+1347         1          bin2c.c
+2383         1          cat.c
+4555         1          cp.c
+11769        2          ls.c
+4850         1          mkfs.c
+2163         1          rm.c
+2430         1          staticfs.c
+2033         1          subfs.c
+18668        3          test.c
+3558         1          whargv.c
+4092         1          whefs2c.c
+19901        3          WHEFSApp.c
+18428        3          whio-test.c
+101          1          x.c
+15586        2          avl_tree.h
+7286         1          bar.h
+54           1          foo.h
+6182         1          whargv.h
 
-9 file(s) totaling 102018 bytes.
+20 file(s) totaling 138998 bytes across 29 blocks.
 
 File sizes:
-    smallest: 200
-    average:  11336
-    largest:  29715
-Max filename length: 17
+    smallest: 54
+    average:  6950
+    middle:   9977
+    largest:  19901
+Max filename length: 11
 
 Using these parameters:
-    inode count: 10
-    block count: 55
-    block size: 2048
+    inode count: 21
+    block count: 29
+    block size: 8192
 
 Really continue creating (or overwriting) [my.whefs]?
 Tap Ctrl-C to abort to ENTER to continue...
 
-Creating VFS...
-+ ./whefs-mkfs -s17 -i10 -b2048 -c55 my.whefs
-VFS container file: my.whefs
-	Block size: 2048
-	Block count: 55
-	inode count: 10
-	Free data bytes: 112640
-	Max filename length: 17
-	Required container size (bytes): 114018
-	Filesystem-to-data overhead: 1.21%
-./whefs-mkfs: Done! Error code=0=[You win :)].
+Creating EFS...
++ ./whefs-mkfs -s11 -i21 -b8192 -c29 my.whefs
+EFS container file: my.whefs
+	Block size: 8192
+	Block count: 29
+	inode count: 21
+	Free data bytes: 237568
+	Max filename length: 11
+	Required container size (bytes): 238715
+	Metadata-to-data ratio: 0.4805%
+./whefs-mkfs [my.whefs]: Done! Error code=0=[You win :)].
 Importing files...
 Import complete. Contents look like:
-whefs.c:1473:whefs_fs_dump_info():
-	sizeof(whefs_fs) = 120
-	sizeof(whio_dev) = 12
-	sizeof(whefs_inode) = 160
-	on-disk sizeof whefs_inode = 43
-	sizeof(whefs_file) = 16
-	block size: 2048
-	block count: 55
-	max file/dir count: 10
-	max filename length: 17
-	magic cookie length: 23
-	Container size:
-		calculated =		114018
-		device-reported =	114018
-	Offsets:
-		CORE_MAGIC	= 0
-		SIZE	= 15
-		CLIENT_MAGIC	= 20
-		OPTIONS	= 48
-		INODES	= 68
-		BLOCKS	= 498
-		EOF	= 114018
-List of used inodes:
-Node ID:        First block:    Size:       Timestamp:      Name:           
-2               1               683         1231017161      whio.c
-3               2               11634       1231017161      whio_dev.c
-4               8               7441        1231017161      whio_dev_FILE.c
-5               12              20834       1231017161      whio_dev_mem.c
-6               23              9954        1231017161      whio_dev_subdev.c
-7               28              4858        1231017161      whio_common.h
-8               31              29715       1231017161      whio_dev.h
-9               46              16626       1231017161      whio_devs.h
-10              55              273         1231017161      whio.h
-                         Total: 102018 bytes
-9 of 10 inodes in use
-Done processing VFS container file [my.whefs]:
--rw-r--r-- 1 stephan stephan 114018 2009-01-03 22:12 my.whefs
+List of file entries:
+
+Node ID:  Size:   Timestamp: (YMD)     Name:
+2          2088   2009.07.05 12:54:34  addblocks.c
+3         11524   2009.07.05 12:54:34  avl.c
+4          1347   2009.07.05 12:54:34  bin2c.c
+5          2383   2009.07.05 12:54:34  cat.c
+6          4555   2009.07.05 12:54:34  cp.c
+7         11769   2009.07.05 12:54:34  ls.c
+8          4850   2009.07.05 12:54:34  mkfs.c
+9          2163   2009.07.05 12:54:34  rm.c
+10         2430   2009.07.05 12:54:34  staticfs.c
+11         2033   2009.07.05 12:54:34  subfs.c
+12        18668   2009.07.05 12:54:34  test.c
+13         3558   2009.07.05 12:54:34  whargv.c
+14         4092   2009.07.05 12:54:34  whefs2c.c
+15        19901   2009.07.05 12:54:34  WHEFSApp.c
+16        18428   2009.07.05 12:54:34  whio-test.c
+17          101   2009.07.05 12:54:34  x.c
+18        15586   2009.07.05 12:54:34  avl_tree.h
+19         7286   2009.07.05 12:54:34  bar.h
+20           54   2009.07.05 12:54:34  foo.h
+21         6182   2009.07.05 12:54:34  whargv.h
+                         Total: 138998 bytes
+20 of 21 total inodes listed.
+Done processing EFS container file [my.whefs]:
+-rw-r--r-- 1 stephan stephan 238715 2009-07-05 12:54 my.whefs
 }}}
 
 The script may need to be tweaked for certain data sets to avoid too much wasted space. For example, if packaging only very small files (under 2k) or only large files, you may want to change the default block size (4k). If someone can come up with a best-fit algorithm for the script i'd be more than happy to include it!
