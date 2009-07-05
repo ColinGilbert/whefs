@@ -5,19 +5,19 @@ vfs="$1"
 shift
 if [[ "x" = "$@x" ]]; then
 cat <<EOF 
-Usage: $0 VFS_FILE list of files to import
+Usage: $0 EFS_FILE list of files to import
 
 This is a utility for libwefs:
 
     http://fossil.wanderinghorse.net/repos/whefs/
 
-Pass it a VFS file name followed by a list of local files and it will
-construct a VFS and put those files in it. It "tries" to use the
-smallest VFS size necessary, but its calculation is *very* inexact and
-may leave a significant amount of slack space in the target VFS (on
+Pass it an EFS file name followed by a list of local files and it will
+construct an EFS and put those files in it. It "tries" to use the
+smallest EFS size necessary, but its calculation is *very* inexact and
+may leave a significant amount of slack space in the target EFS (on
 the order of 25%). By using a very small block size we can create a
-VFS with only 5-10% slack space, but then the VFS-to-FILE overhead
-ratio will go up, increasing the overall size of the VFS file.
+EFS with only 5-10% slack space, but then the EFS-to-FILE overhead
+ratio will go up, increasing the overall size of the EFS file.
 
 EOF
     exit 1
@@ -37,7 +37,7 @@ else
 fi
 
 if [[ -e "$vfs" ]]; then
-    echo "File [$vfs] already exists. If you want to overwrite it as a VFS tap ENTER, otherwise tap Ctrl-C now."
+    echo "File [$vfs] already exists. If you want to overwrite it as an EFS tap ENTER, otherwise tap Ctrl-C now."
     read
 fi
 
@@ -103,7 +103,7 @@ EOF
 # Tinker with this math to find a generically useful ratio. We could
 # calculate the exact number, but doing so (especially in shell code,
 # without access to some form of caching structure) would be tedious.
-INODES=$((FCOUNT + 1)) # 1 is reserved for the root VFS dir entry
+INODES=$((FCOUNT + 1)) # 1 is reserved for the root EFS dir entry
 #BLOCKSIZE=$SIZEAVG
 #BLOCKSIZE=$((SIZEMAX * 75 / 100))
 #BLOCKCOUNT=$((INODES * 15 / 10))
@@ -125,14 +125,14 @@ echo "Really continue creating (or overwriting) [${vfs}]?"
 echo "Tap Ctrl-C to abort to ENTER to continue..."
 read
 
-echo "Creating VFS..."
+echo "Creating EFS..."
 (set -x; $emkfs -s$SLENMAX -i$INODES -b$BLOCKSIZE -c$BLOCKCOUNT $vfs) || exit $?
 echo "Importing files..."
 $ecp $vfs $flist || {
     err=$?
     cat <<EOF
 The copy process failed. The most likely reason for this is that this script
-mis-estimated the number or size of VFS data blocks. Try hacking this script
+mis-estimated the number or size of EFS data blocks. Try hacking this script
 to fix it.
 EOF
     exit $err
@@ -142,5 +142,5 @@ echo "Import complete. Contents look like:"
 
 $els $vfs || exit $?
 
-echo "Done processing VFS container file [$vfs]:"
+echo "Done processing EFS container file [$vfs]:"
 ls -la $vfs
