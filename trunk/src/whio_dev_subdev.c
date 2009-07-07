@@ -303,9 +303,11 @@ static bool whio_dev_subdev_close( whio_dev * dev )
 {
     WHIO_subdev_DECL(false);
     dev->api->flush(dev);
+    if( dev->client.dtor ) dev->client.dtor( dev->client.data );
+    dev->client = whio_client_data_init;
     *sub = whio_dev_subdev_meta_init;
     whio_dev_subdev_meta_free( sub );
-    dev->impl.data = 0;
+    dev->impl = whio_impl_data_init;
     return true;
 }
 
