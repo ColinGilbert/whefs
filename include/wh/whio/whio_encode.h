@@ -394,12 +394,6 @@ size_t whio_dev_uint32_array_decode( whio_dev * dev, size_t n, uint32_t * list )
 int whio_dev_size_t_decode( whio_dev * dev, whio_size_t * tgt );
 
 /**
-   Encodes i using whio_size_t_encode(). Returns
-   whio_sizeof_encoded_size_t on success.
-*/
-size_t whio_dev_size_t_encode( whio_dev * fs, whio_size_t i );
-
-/**
    Encodes a C string into the device by writing a tag byte, the length of
    the string, and then the string bytes. If n is 0 then n is equivalent to
    strlen(s). Zero is also legal string length.
