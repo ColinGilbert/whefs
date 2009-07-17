@@ -1,5 +1,5 @@
 #summary A 'cat'-like tool for in-EFS files.
-#labels Category-UserDocs
+#labels Category-ToolDocs
 
 whefs-cat is a tool similar to the conventional <tt>cat</tt> command. It exports files from inside an EFS to standard output.
 
