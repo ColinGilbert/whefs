@@ -15,7 +15,7 @@ Assume we have an EFS file named my.whefs, which we want to statically embed int
 ~> whefs2c MyWHEFS < my.whefs > MyWHEFS.c
 }}}
 
-The name MyWHEFS is unimportant, but must be a legal C identifier name, as it will be used to name of a static global object and a pair of functions.
+The name MyWHEFS is unimportant, but must be a legal C identifier name, as it will be used to name a static global object and a pair of functions.
 
 Now we can use that in a client program like this:
 
