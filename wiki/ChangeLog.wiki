@@ -33,3 +33,6 @@ This is the informal change list for whefs releases. Newest items are at the top
 *19 June 2009*
   * Added public `whefs_fs_entry` type and `whefs_fs_entry_foreach()` to iterate over all in-use EFS entries.
   *  First packaged release.
+
+*16 June 2009*
+  * Moved the project over to Google code. This loses about 8 months of code history, but that's okay. The first commits were on 29 Nov 2008, and about 400 commits were made before moving to Google Code.
