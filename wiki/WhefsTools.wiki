@@ -32,7 +32,7 @@ Most of these tools also require that an EFS file be given as the first non-flag
 
 ==Debugging flags==
 
-If whefs is built in debug mode (i.e. with the optional debuggering information turned on - see [BuildAndInstall] for more details), the apps can use the <tt>-D</tt> or <tt>--debug-flags</tt> parameter to set send certain debugging messages. The arguments are used like <tt>-Dabc</tt> or <tt>--debug-flags=abc</tt>, where <tt>abc</tt> is one or more of the following letters (case-sensitive), each of which turns on a specific category of message:
+If whefs is built in debug mode (i.e. with the optional debuggering information turned on - see [BuildAndInstall] for more details), the apps can use the <tt>-D</tt> or <tt>--debug-flags</tt> parameter to enable certain debugging messages. The arguments are used like <tt>-Dabc</tt> or <tt>--debug-flags=abc</tt>, where <tt>abc</tt> is one or more of the following letters (case-sensitive), each of which turns on a specific category of message:
 
    *  <tt>'a'</tt> = All messages.
    *  <tt>'c'</tt> = Caching messages.
