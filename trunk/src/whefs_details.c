@@ -846,6 +846,11 @@ int whefs_fs_unlock_range( whefs_fs * fs, whefs_fs_range_locker const * range );
 
    Returns whefs_rc.OK on success. Errors
    include: !name, id is not valid for fs, or an i/o error.
+
+   Note that this function pays no attention whatsoever to the list of
+   opened inodes, and it is up to the caller to ensure that any opened
+   inodes have the same name. It also doesn't update any caches,
+   though it arguably should.
 */
 int whefs_fs_name_write( whefs_fs * fs, whefs_id_type id, char const * name );
 
