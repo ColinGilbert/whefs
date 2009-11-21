@@ -6,7 +6,6 @@
 This is my personal list of "immediate" TODOs (in no particular order):
 
    *  Several parts of the public API need to be rounded out.
-   *  Once the API settles down i'll provide an OO wrapper API for C++. Adding a stream wrapper for std::i/ostream shouldn't be difficult, either.
    *  Directories. See Issue #3 for thoughts on that.
    *  Re-model the inode string table as an on-disk b-tree or AVL tree (or similar). With this we could drop the hash cache altogether. It would cost i/o (not terribly much) but not much memory.
    *  Concurrency via advisory locks (POSIX `fcntl()`). See [WhefsConcurrency].
