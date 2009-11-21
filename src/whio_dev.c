@@ -338,6 +338,7 @@ whio_blockdev * whio_blockdev_alloc()
 
 void whio_blockdev_free( whio_blockdev * obj )
 {
+    if( ! obj ) return;
     whio_blockdev_cleanup( obj );
 #if WHIO_CONFIG_ENABLE_STATIC_MALLOC
     if( (obj < &whio_blockdev_alloc_slots.objs[0]) ||
@@ -354,7 +355,6 @@ void whio_blockdev_free( whio_blockdev * obj )
 	return;
     }
 #else
-    if( obj ) *obj = whio_blockdev_init;
     free(obj);
 #endif /* WHIO_CONFIG_ENABLE_STATIC_MALLOC */
 }
@@ -364,7 +364,11 @@ bool whio_blockdev_cleanup( whio_blockdev * self )
     if( ! self ) return false;
     if( self->impl.fence )
     {
-	self->impl.fence->api->finalize( self->impl.fence );
+        if( self->blocks.count )
+        {
+            self->impl.fence->api->finalize( self->impl.fence );
+        }
+        // else fence was pointing back to the parent device.
 	self->impl.fence = 0;
     }
     *self = whio_blockdev_init;
@@ -385,16 +389,27 @@ int whio_blockdev_setup( whio_blockdev * self, whio_dev * parent, whio_size_t pa
     return whio_rc.OK;
 }
 
+int whio_blockdev_setup2( whio_blockdev * self, whio_dev * parent, whio_size_t block_size, void const * prototype )
+{
+    if( ! self || ! parent || ! block_size ) return whio_rc.ArgError;
+    *self = whio_blockdev_init;
+    self->impl.fence = parent;
+    self->blocks.prototype = prototype;
+    self->blocks.size = block_size;
+    self->blocks.count = 0;
+    return whio_rc.OK;
+}
+
 int whio_blockdev_wipe( whio_blockdev * self, whio_size_t id )
 {
-    return whio_blockdev_write( self, id, self->blocks.prototype );
+    return self ? whio_blockdev_write( self, id, self->blocks.prototype ) : whio_rc.ArgError;
 }
 
 bool whio_blockdev_in_range( whio_blockdev const * self, whio_size_t id )
 {
     return !self
 	? false
-	: (id < self->blocks.count);
+	: (self->blocks.count ? (id < self->blocks.count) : true);
 }
 
 /**

@@ -136,7 +136,7 @@ whio_dev * whio_dev_for_fileno( int filedescriptor, char const * mode );
    Creates a new whio_dev object which wraps an in-memory buffer. The
    initial memory allocated by the buffer is allocated by this call.
    Whether or not the buffer is allowed to be expanded by write() or
-   truncate() operations is defined by the remaining parameters.
+   seek() operations is defined by the remaining parameters.
 
    The expFactor specifies a growth expansion value, as follows. If
    expFactor is less than 1.0 then the buffer will never be allowed to
@@ -152,7 +152,7 @@ whio_dev * whio_dev_for_fileno( int filedescriptor, char const * mode );
    1.5 is being shrunk, it will not release the allocated memory
    unless doing so will drop it below ((1024/1.5)=682) bytes. A very
    large expFactor (more than 2.0) is not disallowed, but may not be
-   healthy.
+   good for your sanity.
 
    For purposes of the following text, a membuf device with an
    expFactor of equal to or greater than 1.0 is said to be "growable".
@@ -558,15 +558,19 @@ extern const whio_blockdev whio_blockdev_init;
 whio_blockdev * whio_blockdev_alloc();
 
 /**
-   Initializes the given whio_blockdev object. bdev will use
-   parent_store as its storage device, but will only access the device
-   range [parent_offset,(block_size * block_count)). None of the
-   parameters may be 0 except prototype. If prototype is not null then
-   it must be valid memory at least block_size bytes long. When a
-   block is "wiped" (see whio_blockdev_wipe()), this prototype object
-   is written to it.
+   Initializes the given whio_blockdev object, which must have been
+   allocated using whio_blockdev_alloc() or created on the stack and
+   initialized using whio_blockdev_init or whio_blockdev_init_m.
 
-   The parent_store object must outlive bdev. Perforing any i/o on
+   bdev will use parent_store as its storage device, but will only
+   access the device range [parent_offset,(block_size *
+   block_count)). None of the parameters may be 0 except for
+   parent_offset and prototype. If prototype is not null then it must
+   be valid memory at least block_size bytes long. When a block is
+   "wiped" (see whio_blockdev_wipe()), this prototype object is
+   written to it.
+
+   The parent_store object must outlive bdev. Performing any i/o on
    bdev after the parent i/o device is invalidated will lead to
    undefined results.
 
@@ -575,17 +579,43 @@ whio_blockdev * whio_blockdev_alloc();
    the internally allocated resources. See those functions for details
    on which to use.
 
-   The device provides access to block_count blocks, each with an
-   incremental logical ID starting at 0.
-
    If bdev is passed to this function multiple times without a
    corresponding call to whio_blockdev_cleanup(), it will leak
    resources.
 
-   Returns whio_rc.OK on success, some other value on error.
+   Returns whio_rc.OK on success, some other value on error:
+
+   - whio_rc.AllocError if allocation of a subdevice fails.
+
+   - whio_rc.ArgError if any of bdev, parent_store, block_size, or
+   block_count are 0.
 */
 int whio_blockdev_setup( whio_blockdev * bdev, whio_dev * parent_store, whio_size_t parent_offset,
 			 whio_size_t block_size, whio_size_t block_count, void const * prototype );
+/**
+   Works similarly to whio_blockdev_setup(), but it uses the parent
+   device directly instead of an explicit subdevice, and does not
+   place an upper limit on the number of blocks it may write.
+
+   parent may be any API-compliant device, including a subdevice.
+   parent must outlive bdev. All i/o on the parent device starts at
+   offset 0 and happens in blocks of block_size.
+
+   whio_blockdev_in_range() will always return true for a blockdev
+   initialized this way.
+
+   See whio_blockdev_setup() for the allocation and cleanup
+   requirements of bdev.
+
+   Returns whio_rc.OK on success or whio_rc.ArgError if
+   !bdev, !parent, or !block_size.
+
+   This routine does not allocate any memory.
+   
+   @see whio_blockdev_free()
+*/
+int whio_blockdev_setup2( whio_blockdev * bdev, whio_dev * parent, whio_size_t block_size, void const * prototype );
+
 /**
    Cleans up internal memory owned by bdev but does not free bdev
    itself. After this, bdev may be passed to whio_blockdev_setup() to
@@ -604,9 +634,9 @@ bool whio_blockdev_cleanup( whio_blockdev * bdev );
 
 /**
    Destroys bdev and any internal memory it owns. ONLY pass this
-   object created using whio_blockdev_alloc() or malloc(). DO NOT pass
-   this an object which was created on the stack, as that will lead to
-   a segfault. For stack-allocated objects use whio_blockdev_cleanup()
+   object created using whio_blockdev_alloc(). DO NOT pass this an
+   object which was created on the stack, as that will lead to a
+   segfault. For stack-allocated objects use whio_blockdev_cleanup()
    instead.
 
    @see whio_blockdev_cleanup()
@@ -615,8 +645,11 @@ bool whio_blockdev_cleanup( whio_blockdev * bdev );
 void whio_blockdev_free( whio_blockdev * bdev );
 
 /**
-   Returns true if id is a valid block ID for bdev, else false. Block
-   indexes start at 0.
+   Returns true if id is a valid block ID for bdev, else false.
+
+   If bdev was initialized with whio_blockdev_setup2() then this
+   function will always return true, with the assumption that the
+   underlying device can indeed be grown if needed.
 */
 bool whio_blockdev_in_range( whio_blockdev const * bdev, whio_size_t id );
 
@@ -626,8 +659,19 @@ bool whio_blockdev_in_range( whio_blockdev const * bdev, whio_size_t id );
    returns whio_rc.OK. It returns an error code if bdev or src are
    null, id is not in bounds, or on an i/o error. src must be valid
    memory at least bdev->blocks.size bytes long.
+
+
+   Error conditions:
+
+   - If !bdev or !src: whio_rc.ArgError is returned.
+
+   - If whio_blockdev_in_range(bdev,id) returns false,
+   whio_rc.RangeError is returned.
+  
+   - If writing fails, whio_rc.IOError is returned.
 */
 int whio_blockdev_write( whio_blockdev * bdev, whio_size_t id, void const * src );
+
 /**
    Reads bdev->blocks.size bytes of memory from the block with the
    given id from bdev and copies it to dest. dest must be valid memory
@@ -636,9 +680,7 @@ int whio_blockdev_write( whio_blockdev * bdev, whio_size_t id, void const * src 
 int whio_blockdev_read( whio_blockdev * bdev, whio_size_t id, void * dest );
 
 /**
-   If a block prototype object was passed to whio_blockdev_setuo()
-   then that object is written to the given block of bdev, otherwise
-   whio_rc.ArgError is returned. Returns whio_rc.OK on success.
+   This is equivalent to whio_blockdev_wipe(bdev,id,bdev->impl.prototype).
 */
 int whio_blockdev_wipe( whio_blockdev * bdev, whio_size_t id );
 
