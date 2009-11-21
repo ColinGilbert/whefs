@@ -151,7 +151,7 @@ int whefs_inode_name_set( whefs_fs * fs, whefs_id_type nid, char const * name )
        Maintenance reminders:
 
        We write to disk before updating any opened inode because
-       writing is much more likely to fail then updating the opened
+       writing is much more likely to fail than updating the opened
        inode is, since the latter operation is either just a string
        copy and possibly a relatively small malloc for the name
        strings cache. So we do the ops in order of likely failure, to
@@ -647,7 +647,7 @@ int whefs_inode_by_name( whefs_fs * fs, char const * name, whefs_inode * tgt )
     else
     { // we know directly what inode record to jump to now...
         expectExact = true;
-        if(0) WHEFS_DBG_CACHE("Filename matched cached INDEX (%"WHEFS_ID_TYPE_PFMT") for hash code 0x%"WHEFS_HASHVAL_TYPE_PFMT" for name [%s]",i, nameHash,name);
+        WHEFS_DBG_CACHE("Filename matched cached INDEX (%"WHEFS_ID_TYPE_PFMT") for hash code 0x%"WHEFS_HASHVAL_TYPE_PFMT" for name [%s]",i, nameHash,name);
         whefs_hashid * H = &fs->cache.hashes->list[i];
         ++H->hits;
         i = H->id;
@@ -683,11 +683,11 @@ int whefs_inode_by_name( whefs_fs * fs, char const * name, whefs_inode * tgt )
         assert( (ns.string == (char const *)buf) && "Internal consistency error!");
         if( whefs_rc.OK != rc )
         {
-            WHEFS_DBG_ERR("whefs_string_read(fs,%"WHEFS_ID_TYPE_PFMT",&ns) returned error code %d. file name=[%s]", i, rc, name );
+            WHEFS_DBG_ERR("whefs_inode_name_get(fs,%"WHEFS_ID_TYPE_PFMT",&ns) returned error code %d. file name=[%s]", i, rc, name );
             break;
         }
         if( 0 && *ns.string ) WHEFS_DBG("Trying inode #%"WHEFS_ID_TYPE_PFMT": name [%s] =? [%s]", i, name, ns.string);
-        if( !*ns.string ) continue;
+        if( !*ns.string || !ns.length ) continue;
         rc = strcmp( ns.string, name );
         if( 0 == rc )
         {
