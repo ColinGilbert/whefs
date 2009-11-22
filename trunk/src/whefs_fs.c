@@ -36,9 +36,9 @@ extern "C" {
 #endif
 
 
-#define WHEFS_LOAD_CACHES_ON_OPEN 1 /* make sure and test whefs-cp and friends if setting this to 0. */
+#define WHEFS_LOAD_CACHES_ON_OPEN 0 /* make sure and test whefs-cp and friends if setting this to 0. */
 #if ! WHEFS_LOAD_CACHES_ON_OPEN
-#  warning "(0==WHEFS_LOAD_CACHES_ON_OPEN) is is known to cause bugs. Fix it!"
+//#warning "(0==WHEFS_LOAD_CACHES_ON_OPEN) is is known to cause bugs. Fix it!"
 /*
   Reminder to self: the problem here is one of "how do we distinguish empty names vs. not-cached names,"
 and is complicated by the voodoo we use to store the strings inside whefs_fs::cache::strings.
@@ -676,7 +676,7 @@ int whefs_inode_name_get( whefs_fs * restrict fs, whefs_id_type id, whefs_string
         //+ whio_sizeof_encoded_uint64 //skip hash field
         ;
     uint16_t sl = 0; // string length
-    rc = whio_uint16_decode( bufP, &sl );
+    rc = whio_decode_uint16( bufP, &sl );
     if( whio_rc.OK != rc )
     {
 	WHEFS_DBG_ERR("Could not decode string length token from inode #"WHEFS_ID_TYPE_PFMT"'s "
@@ -743,7 +743,7 @@ int whefs_fs_name_write( whefs_fs * restrict fs, whefs_id_type id, char const * 
     buf[0] = whefs_inode_name_tag_char;
     size_t off = 1;
     off += whefs_id_encode( buf + off, id );
-    off += whio_uint16_encode( buf + off, slen );
+    off += whio_encode_uint16( buf + off, slen );
     //uint64_t shash = 0UL; //whefs_bytes_hash( name, slen );
     //off += whefs_uint64_encode( buf + off, shash );
     memcpy( buf + off, name, slen );
@@ -992,6 +992,7 @@ static int whefs_fs_init_bitsets( whefs_fs * restrict fs )
 static int whefs_fs_inode_cache_load( whefs_fs * restrict fs )
 {
 #if WHEFS_CONFIG_ENABLE_BITSET_CACHE
+    WHEFS_DBG_CACHE("Loading inode bitset cache.");
     if( ! fs || !fs->dev ) return whefs_rc.ArgError;
     //return 0;
     const whefs_id_type nc = whefs_fs_options_get(fs)->inode_count;
@@ -1446,6 +1447,7 @@ static int whefs_openfs_stage2( whefs_fs * restrict fs )
 	return rc;
     }
 #if WHEFS_LOAD_CACHES_ON_OPEN
+    //WHEFS_DBG_CACHE("Pre-loading inode cache.");
     rc = whefs_fs_caches_load( fs );
     if( whefs_rc.OK != rc )
     {

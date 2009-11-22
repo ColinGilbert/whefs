@@ -87,9 +87,23 @@ whefs_id_type whefs_inode_hash_cache_search_ndx(whefs_fs * fs, char const * name
         WHEFS_DBG_CACHE("Achtung: auto-sorting dirty name cache before search starts.");
         whefs_inode_hash_cache_sort(fs);
     }
+#if 0
     return ( ! fs->cache.hashes )
         ? whefs_rc.IDTypeEnd
         : whefs_hashid_list_index_of( fs->cache.hashes, fs->cache.hashfunc(name) );
+#else
+    if( ! fs->cache.hashes )
+    {
+        WHEFS_DBG_CACHE("Cache check failed (cache is empty) for name [%s].",name);
+        return whefs_rc.IDTypeEnd;
+    }
+    else
+    {
+        whefs_id_type const rc = whefs_hashid_list_index_of( fs->cache.hashes, fs->cache.hashfunc(name) );
+        WHEFS_DBG_CACHE("Cache %s for name [%s].",((rc==whefs_rc.IDTypeEnd) ? "miss" : "hit"), name);
+        return rc;
+    }
+#endif    
 }
 
 whefs_id_type whefs_inode_hash_cache_search_id(whefs_fs * fs, char const * name )
@@ -97,6 +111,7 @@ whefs_id_type whefs_inode_hash_cache_search_id(whefs_fs * fs, char const * name 
     if( ! WHEFS_FS_HASH_CACHE_IS_ENABLED(fs) ) return 0;
     if( ! fs->cache.hashes ) return 0;
     whefs_id_type n = whefs_inode_hash_cache_search_ndx( fs, name );
+    WHEFS_DBG_CACHE("Cache %s for name [%s].",((n==whefs_rc.IDTypeEnd) ? "miss" : "hit"), name);
     return ( n == whefs_rc.IDTypeEnd )
         ? 0
         : fs->cache.hashes->list[n].id;
@@ -160,8 +175,8 @@ int whefs_inode_hash_cache( whefs_fs * fs, whefs_id_type id, char const * name )
                       h, id, ndx );
         return whefs_rc.InternalError;
     }
-    WHEFS_DBG_CACHE("ADDING: name cache count[%"WHEFS_ID_TYPE_PFMT"], alloced=[%"WHEFS_ID_TYPE_PFMT"], hash [%"WHEFS_HASHVAL_TYPE_PFMT"] for name [%s], ndx=[%"WHEFS_ID_TYPE_PFMT"]",
-                          fs->cache.hashes->count, fs->cache.hashes->alloced, h, name, ndx );
+    WHEFS_DBG_CACHE("ADDING: name cache count[%"WHEFS_ID_TYPE_PFMT"], alloced=[%"WHEFS_ID_TYPE_PFMT"], hash [%"WHEFS_HASHVAL_TYPE_PFMT"] for name [%s]",
+                          fs->cache.hashes->count, fs->cache.hashes->alloced, h, name );
 #endif
     whefs_hashid H = whefs_hashid_init;
     H.hash = h;

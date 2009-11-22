@@ -125,6 +125,17 @@ whio_size_t whio_dev_writeat( whio_dev * dev, whio_size_t pos, void const * data
 	: whio_dev_write( dev, data, n );
 }
 
+whio_size_t whio_dev_readat( whio_dev * dev, whio_size_t pos, void * data, whio_size_t n )
+{
+    if( ! dev || ! data || !n ) return 0;
+    //WHIO_DEBUG("Writing %u bytes at pos %u\n", n, pos );
+    whio_size_t rc = dev->api->seek( dev, pos, SEEK_SET );
+    return (whio_rc.SizeTError == rc)
+	? rc
+	: whio_dev_read( dev, data, n );
+}
+
+
 whio_size_t whio_dev_size( whio_dev * dev )
 {
     if( ! dev ) return whio_rc.SizeTError;
@@ -206,7 +217,7 @@ whio_size_t whio_dev_tell( whio_dev * dev )
     return dev ? dev->api->tell( dev ) : whio_rc.SizeTError;;
 }
 
-whio_size_t whio_dev_seek( whio_dev * dev, off_t pos, int whence )
+whio_size_t whio_dev_seek( whio_dev * dev, whio_off_t pos, int whence )
 {
     return dev ? dev->api->seek( dev, pos, whence ) : whio_rc.SizeTError;
 }
@@ -216,7 +227,7 @@ int whio_dev_flush( whio_dev * dev )
     return dev ? dev->api->flush( dev ) : whio_rc.ArgError;
 }
 
-int whio_dev_truncate( whio_dev * dev, off_t size )
+int whio_dev_truncate( whio_dev * dev, whio_off_t size )
 {
     return dev ? dev->api->truncate( dev, size ) : whio_rc.ArgError;
 }

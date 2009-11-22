@@ -174,7 +174,7 @@ static whio_size_t whio_dev_FILE_tell( whio_dev * dev )
     return (rc>=0) ? (whio_size_t)rc : whio_rc.SizeTError;
 }
 
-static whio_size_t whio_dev_FILE_seek( whio_dev * dev, off_t pos, int whence )
+static whio_size_t whio_dev_FILE_seek( whio_dev * dev, whio_off_t pos, int whence )
 {
     WHIO_FILE_DECL(whio_rc.SizeTError);
     if( 0 == fseeko( f->fp, pos, whence ) )
@@ -194,7 +194,7 @@ static int whio_dev_FILE_flush( whio_dev * dev )
 	: whio_rc.IOError;
 }
 
-static int whio_dev_FILE_trunc( whio_dev * dev, off_t len )
+static int whio_dev_FILE_trunc( whio_dev * dev, whio_off_t len )
 {
     WHIO_FILE_DECL(whio_rc.ArgError);
     return ftruncate( f->fileno, len );

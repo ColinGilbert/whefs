@@ -168,6 +168,7 @@ WHEFS_CLOSER_TYPE_DEV = 'd',
 /** Type flag for whio_stream objects. */
 WHEFS_CLOSER_TYPE_STREAM = 's'
 };
+
 /** @struct whefs_fs_closer_list
 
    A type for holding a list of "opened objects" which refer to
@@ -268,7 +269,7 @@ int whefs_fs_closer_dev_remove( whefs_fs * fs, whio_dev const * d );
 
 /**
    Adds s to fs's close-at-shutdown list. s MUST be a proxy for the
-   whio_dev d and d MUST have been added to fs via
+   whio_dev d, it MUST own d, and d MUST have been added to fs via
    whefs_fs_closer_dev_add(), or results are undefined.
 
    Closing s will automatically remove it from the list.

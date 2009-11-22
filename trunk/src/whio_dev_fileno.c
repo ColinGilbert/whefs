@@ -200,10 +200,11 @@ static int whio_dev_fileno_eof( whio_dev * dev )
 static whio_size_t whio_dev_fileno_tell( whio_dev * dev )
 {
     WHIO_fileno_DECL(whio_rc.SizeTError);
-    return (whio_size_t) lseek( f->fileno, 0L, SEEK_CUR );
+    off_t rc = lseek( f->fileno, 0L, SEEK_CUR );
+    return (rc>=0) ? (whio_size_t)rc : whio_rc.SizeTError;
 }
 
-static whio_size_t whio_dev_fileno_seek( whio_dev * dev, off_t pos, int whence )
+static whio_size_t whio_dev_fileno_seek( whio_dev * dev, whio_off_t pos, int whence )
 {
     WHIO_fileno_DECL(whio_rc.SizeTError);
     off_t rc = lseek( f->fileno, pos, whence );
@@ -217,7 +218,7 @@ static whio_size_t whio_dev_fileno_seek( whio_dev * dev, off_t pos, int whence )
 	*/
 	f->atEOF = false;
     }
-    return (whio_size_t) rc;
+    return (rc>=0) ? (whio_size_t) rc : whio_rc.SizeTError;
 }
 
 static int whio_dev_fileno_flush( whio_dev * dev )
@@ -228,7 +229,7 @@ static int whio_dev_fileno_flush( whio_dev * dev )
     *cough* Solaris *cough* don't appear to have it. */
 }
 
-static int whio_dev_fileno_trunc( whio_dev * dev, off_t len )
+static int whio_dev_fileno_trunc( whio_dev * dev, whio_off_t len )
 {
     WHIO_fileno_DECL(whio_rc.ArgError);
     int rc = ftruncate( f->fileno, len );

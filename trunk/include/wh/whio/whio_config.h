@@ -147,18 +147,22 @@ porting to machines with different size_t sizes.
 #  define WHIO_SIZE_T_PFMT PRIu8
 #  define WHIO_SIZE_T_SFMT SCNu8
     typedef uint8_t whio_size_t;
+    typedef int16_t whio_off_t;
 #elif WHIO_SIZE_T_BITS == 16
 #  define WHIO_SIZE_T_PFMT PRIu16
 #  define WHIO_SIZE_T_SFMT SCNu16
     typedef uint16_t whio_size_t;
+    typedef int32_t whio_off_t;
 #elif WHIO_SIZE_T_BITS == 32
 #  define WHIO_SIZE_T_PFMT PRIu32
 #  define WHIO_SIZE_T_SFMT SCNu32
     typedef uint32_t whio_size_t;
+    typedef int64_t whio_off_t;
 #elif WHIO_SIZE_T_BITS == 64
 #  define WHIO_SIZE_T_PFMT PRIu64
 #  define WHIO_SIZE_T_SFMT SCNu64
     typedef uint64_t whio_size_t;
+    typedef uint64_t whio_off_t;
 #else
 #  error "WHIO_SIZE_T_BITS must be one of: 8, 16, 32, 64"
 #endif

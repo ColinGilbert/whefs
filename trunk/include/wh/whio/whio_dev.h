@@ -200,7 +200,7 @@ struct whio_dev_api
      */
     int (*eof)( struct whio_dev * dev );
 
-    /**
+    /** @deprecated
        Returns the current position of the device, or
        whio_rc.SizeTError on error. An an example of an error, calling
        truncate() to truncate a device may leave its cursor out of
@@ -209,6 +209,10 @@ struct whio_dev_api
        fail to be able to read/write from/to the given position).
 
        On a non-i/o error (e.g. !dev), whio_rc.SizeTError is returned.
+
+       This function can be removed from the API, as the equivalent
+       can be done with seek(dev,0,SEEK_CUR). It may disappear
+       someday.
     */
     whio_size_t (*tell)( struct whio_dev * dev );
 
@@ -238,7 +242,7 @@ struct whio_dev_api
        not document what happens on SEEK_SET with a negative value, but
        we can hope that it fails in that case.
     */
-    whio_size_t (*seek)( struct whio_dev * dev, off_t pos, int whence );
+    whio_size_t (*seek)( struct whio_dev * dev, whio_off_t pos, int whence );
 
     /**
        Flushes the underying stream (not all streams support/need
@@ -261,7 +265,7 @@ struct whio_dev_api
        The underlying cursor position must not be changed by calling
        this function.
     */
-    int (*truncate)( struct whio_dev * dev, off_t size );
+    int (*truncate)( struct whio_dev * dev, whio_off_t size );
 
     /**
        ioctl() is a "back door" to give access to certain
@@ -460,6 +464,8 @@ whio_size_t whio_dev_write( whio_dev * dev, void const * data, whio_size_t n );
 */
 whio_size_t whio_dev_writeat( whio_dev * dev, whio_size_t pos, void const * data, whio_size_t n );
 
+whio_size_t whio_dev_readat( whio_dev * dev, whio_size_t pos, void * data, whio_size_t n );
+
 /**
    Copies all of src, from the beginning to EOF, to dest, starting
    at dest's current position. Returns whio_rc.OK on success.
@@ -554,7 +560,7 @@ whio_size_t whio_dev_tell( whio_dev * dev );
 /**
    Equivalent to dev->api->seek(...). If !dev, whio_rc.SizeTError is returned.
  */
-whio_size_t whio_dev_seek( whio_dev * dev, off_t pos, int whence );
+whio_size_t whio_dev_seek( whio_dev * dev, whio_off_t pos, int whence );
 
 /**
    Equivalent to dev->api->flush(...). If !dev, whio_rc.ArgError  is returned.
@@ -564,7 +570,7 @@ int whio_dev_flush( whio_dev * dev );
 /**
    Equivalent to dev->api->truncate(...). If !dev, whio_rc.ArgError is returned.
  */
-int whio_dev_truncate( whio_dev * dev, off_t size );
+int whio_dev_truncate( whio_dev * dev, whio_off_t size );
 
 /**
    Equivalent to dev->api->finalize(...). If !dev, this function does nothing.

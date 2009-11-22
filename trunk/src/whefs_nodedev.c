@@ -626,7 +626,7 @@ static whio_size_t whio_dev_inode_tell( whio_dev * dev )
     return meta->posabs;
 }
 
-static whio_size_t whio_dev_inode_seek( whio_dev * dev, off_t pos, int whence )
+static whio_size_t whio_dev_inode_seek( whio_dev * dev, whio_off_t pos, int whence )
 {
     WHIO_DEV_DECL(whio_rc.SizeTError);
     whio_size_t too = meta->posabs;
@@ -674,7 +674,7 @@ static int whio_dev_inode_flush( whio_dev * dev )
     return rc;
 }
 
-static int whio_dev_inode_trunc( whio_dev * dev, off_t len )
+static int whio_dev_inode_trunc( whio_dev * dev, whio_off_t len )
 {
     /* Man, this was a bitch to do! */
     WHIO_DEV_DECL(whio_rc.ArgError);

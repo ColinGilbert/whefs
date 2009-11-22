@@ -267,7 +267,8 @@ int test_multiple_files()
 
     do_foreach(fs);
 
-#if 1//set this to 0 to test fs' close-on-shutdown anti-leak check:
+    whefs_fs_setopt_autoclose_files( fs, true );
+#if 0//set this to 0 to test fs' close-on-shutdown anti-leak check:
     whefs_fclose( F );
 #else
     MARKER("You may see a warning next regarding unclosed objects. This is to test a memory leak.\n");
@@ -356,7 +357,7 @@ int test_encodings()
     memset( buf, 0, bufSize );
 
     uint16_t ui = 27;
-    size_t sz = whio_uint16_encode( buf, ui );
+    size_t sz = whio_encode_uint16( buf, ui );
     MARKER("sz=%u\n",sz);
     MARKER("Buffer bytes=");
     size_t i = 0;
@@ -365,7 +366,7 @@ int test_encodings()
 	printf("#%u=[0x%02x]\t", i, buf[i] );
     } puts("");
     uint16_t uid = (uint16_t)-1;
-    int rc = whio_uint16_decode( buf, & uid );
+    int rc = whio_decode_uint16( buf, & uid );
     MARKER("rc=%d uid=%"PRIu16"\n", rc, uid );
     MARKER("Buffer bytes=");
     for( i = 0; i < 5; ++i )
@@ -525,14 +526,14 @@ int test_caching()
        where the pfile size is exactly the block size (or a multiple
        of it).
     */
-    enum { count = 5, xpos = 4 /*see pname var*/, loops = 10 };
+    enum { count = 10, xpos = 4 /*see pname var*/, loops = 10 };
     assert( (count<=26) && "count must be less than 27!" );
 
     enum { bufSize = 1024*4 };
     char buf[bufSize] = {0};
 
     whefs_fs_options fopt = whefs_fs_options_default;
-    fopt.block_size = (bufSize*loops)/2;
+    fopt.block_size = (bufSize*(loops+1))/2;
     fopt.inode_count = 200;
     fopt.block_count = fopt.inode_count;
     fopt.filename_length = 64;
@@ -574,7 +575,6 @@ int test_caching()
             assert( (szck==bufSize) && "write didn't return the expected result!");
             putchar('w');
             ++writeCount;
-            //whefs_fflush( f );
         }
         //if( 1 == L ) whefs_inode_hash_cache_sort(fs);
         for( i = 0; i < count; ++i )
@@ -659,11 +659,11 @@ int main( int argc, char const ** argv )
     ThisApp.fsopts.block_size = 1024 * 2;
     //if(!rc) rc =  test_encodings();
     //if(!rc) rc =  test_hash();
-    if(!rc) rc = test_one();
-    if(!rc) rc =  test_ramfs();
-    if(!rc) rc =  test_multiple_files();
-    if(!rc) rc = test_streams();
-    if(!rc) rc =  test_truncate();
+    //if(!rc) rc = test_one();
+    //if(!rc) rc =  test_ramfs();
+    //if(!rc) rc =  test_multiple_files();
+    //if(!rc) rc = test_streams();
+    //if(!rc) rc =  test_truncate();
     if(!rc) rc =  test_caching();
     printf("Done rc=%d=[%s].\n",rc,
 	   (0==rc)
