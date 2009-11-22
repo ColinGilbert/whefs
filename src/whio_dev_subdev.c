@@ -207,7 +207,7 @@ static whio_size_t whio_dev_subdev_tell( whio_dev * dev )
     else return sub->pos - sub->lower;
 }
 
-static whio_size_t whio_dev_subdev_seek( whio_dev * dev, off_t pos, int whence )
+static whio_size_t whio_dev_subdev_seek( whio_dev * dev, whio_off_t pos, int whence )
 {
     WHIO_subdev_DECL(whio_rc.SizeTError);
     whio_size_t too = sub->pos;
@@ -267,7 +267,7 @@ short whio_dev_subdev_iomode( whio_dev * dev )
     return sub->dev->api->iomode( sub->dev );
 }
 
-static int whio_dev_subdev_trunc( whio_dev * dev, off_t len )
+static int whio_dev_subdev_trunc( whio_dev * dev, whio_off_t len )
 {
     return whio_rc.UnsupportedError;
     //WHIO_subdev_DECL(whio_rc.ArgError);

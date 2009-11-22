@@ -137,7 +137,7 @@ int whefs_block_flush( whefs_fs * fs, whefs_block const * bl )
     buf[0] = whefs_block_tag_char;
     whio_size_t off = 1;
     off += whefs_id_encode( buf + off, bl->id );
-    off += whio_uint8_encode( buf + off, bl->flags );
+    off += whio_encode_uint8( buf + off, bl->flags );
     whefs_id_encode( buf + off, bl->next_block );
     const whio_size_t wsz = fs->dev->api->write( fs->dev, buf, whefs_sizeof_encoded_block );
     if( whefs_sizeof_encoded_block != wsz )
@@ -171,7 +171,7 @@ int whefs_block_decode( whefs_block * dest, unsigned char const * src )
     rc = whefs_id_decode( x, &dest->id );
     RC;
     x += whefs_sizeof_encoded_id_type;
-    rc = whio_uint8_decode( x, &dest->flags );
+    rc = whio_decode_uint8( x, &dest->flags );
     RC;
     x += whio_sizeof_encoded_uint8;
     rc = whefs_id_decode( x, &dest->next_block );

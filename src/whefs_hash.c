@@ -204,7 +204,7 @@ int whefs_hashid_list_add( whefs_hashid_list * tgt, whefs_hashid const * restric
 
 whefs_id_type whefs_hashid_list_index_of( whefs_hashid_list const * src, whefs_hashval_type val )
 {
-    if( ! src || !src->count ) return whefs_rc.IDTypeEnd;
+    if( ! src || !src->count /*  || !val*/  ) return whefs_rc.IDTypeEnd;
     if( ! src->isSorted )
     { // horrible special case to avoid having to re-sort on every inode name-set
 #if 1
@@ -228,8 +228,8 @@ whefs_id_type whefs_hashid_list_index_of( whefs_hashid_list const * src, whefs_h
     if( ! f ) return whefs_rc.IDTypeEnd;
     whefs_id_type ndx = (((unsigned char const *)f) -((unsigned char const *)src->list)) / sizeof(whefs_hashid);
     while( ndx && (src->list[ndx-1].hash == val) ) --ndx;
-    // FIXME: check leftwards for more matches.
     //++(src->list[ndx].hits);
+    WHEFS_DBG_CACHE("Index of hash %"WHEFS_HASHVAL_TYPE_PFMT" = %"WHEFS_ID_TYPE_PFMT, val, ndx);
     return ndx;
 }
 

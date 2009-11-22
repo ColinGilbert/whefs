@@ -114,6 +114,7 @@ static whio_dev_membuf_meta * whio_dev_membuf_meta_alloc()
 
 static void whio_dev_membuf_meta_free( whio_dev_membuf_meta * obj )
 {
+    if( ! obj ) return;
 #if WHIO_CONFIG_ENABLE_STATIC_MALLOC
     if( (obj < &whio_dev_membuf_meta_alloc_slots.objs[0]) ||
 	(obj > &whio_dev_membuf_meta_alloc_slots.objs[whio_dev_membuf_meta_alloc_count-1]) )
@@ -240,7 +241,7 @@ static whio_size_t whio_dev_membuf_tell( whio_dev * dev )
     return mb->pos;
 }
 
-static whio_size_t whio_dev_membuf_seek( whio_dev * dev, off_t pos, int whence )
+static whio_size_t whio_dev_membuf_seek( whio_dev * dev, whio_off_t pos, int whence )
 {
     WHIO_MEMBUF_DECL(whio_rc.SizeTError);
     whio_size_t too = mb->pos;
@@ -273,7 +274,7 @@ static int whio_dev_membuf_flush( whio_dev * dev )
     return whio_rc.OK;
 }
 
-static int whio_dev_membuf_trunc( whio_dev * dev, off_t _len )
+static int whio_dev_membuf_trunc( whio_dev * dev, whio_off_t _len )
 {
     WHIO_MEMBUF_DECL(whio_rc.ArgError);
     if( _len < 0 ) return whio_rc.RangeError;
@@ -400,36 +401,9 @@ static int whio_dev_membuf_ioctl( whio_dev * dev, int arg, va_list vargs )
     return rc;
 }
 
-static bool whio_dev_membuf_close( whio_dev * dev )
-{
-    if( dev )
-    {
-	if( dev->client.dtor ) dev->client.dtor( dev->client.data );
-	dev->client = whio_client_data_init;
-	whio_dev_membuf_meta * f = (whio_dev_membuf_meta*)dev->impl.data;
-	if( f )
-	{
-	    dev->impl.data = 0;
-	    free(f->buffer);
-	    //*f = whio_dev_membuf_meta_init;
-	    //free(f);
-	    whio_dev_membuf_meta_free( f );
-	    return true;
-	}
-    }
-    return false;
-}
-
-static void whio_dev_membuf_finalize( whio_dev * dev )
-{
-    if( dev )
-    {
-	dev->api->close(dev);
-	whio_dev_free(dev);
-    }
-}
-#undef WHIO_MEMBUF_DECL
-
+static bool whio_dev_membuf_close( whio_dev * dev );
+static void whio_dev_membuf_finalize( whio_dev * dev );
+    
 const whio_dev_api whio_dev_api_membuf =
     {
     whio_dev_membuf_read,
@@ -455,6 +429,37 @@ const whio_dev_api whio_dev_api_membuf =
     } }
 
 static const whio_dev whio_dev_membuf_init = WHIO_DEV_MEMBUF_INIT;
+
+static bool whio_dev_membuf_close( whio_dev * dev )
+{
+    if( dev )
+    {
+	if( dev->client.dtor ) dev->client.dtor( dev->client.data );
+	dev->client = whio_client_data_init;
+	whio_dev_membuf_meta * f = (whio_dev_membuf_meta*)dev->impl.data;
+	if( f )
+	{
+	    dev->impl.data = 0;
+	    free(f->buffer);
+	    //*f = whio_dev_membuf_meta_init;
+	    //free(f);
+	    whio_dev_membuf_meta_free( f );
+	    return true;
+	}
+        *dev = whio_dev_membuf_init;
+    }
+    return false;
+}
+
+static void whio_dev_membuf_finalize( whio_dev * dev )
+{
+    if( dev )
+    {
+	dev->api->close(dev);
+	whio_dev_free(dev);
+    }
+}
+#undef WHIO_MEMBUF_DECL
 
 whio_dev * whio_dev_for_membuf( whio_size_t size, float expFactor )
 {
@@ -679,7 +684,7 @@ static whio_size_t whio_dev_memmap_tell( whio_dev * dev )
 #endif
 }
 
-static whio_size_t whio_dev_memmap_seek( whio_dev * dev, off_t pos, int whence )
+static whio_size_t whio_dev_memmap_seek( whio_dev * dev, whio_off_t pos, int whence )
 {
     WHIO_MEMMAP_DECL(whio_rc.SizeTError);
     whio_size_t too = mb->pos;
@@ -711,7 +716,7 @@ static int whio_dev_memmap_flush( whio_dev * dev )
     return whio_rc.OK;
 }
 
-static int whio_dev_memmap_trunc( whio_dev * dev, off_t _len )
+static int whio_dev_memmap_trunc( whio_dev * dev, whio_off_t _len )
 {
     WHIO_MEMMAP_DECL(whio_rc.ArgError);
     if( _len < 0 ) return whio_rc.RangeError;

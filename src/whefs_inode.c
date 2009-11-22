@@ -730,13 +730,13 @@ int whefs_inode_encode( whefs_inode const * src, unsigned char * dest )
     whefs_id_encode( x, src->id );
     x += whefs_sizeof_encoded_id_type;
 
-    whio_uint8_encode( x, src->flags );
+    whio_encode_uint8( x, src->flags );
     x += whio_sizeof_encoded_uint8;
 
-    whio_uint32_encode( x, src->mtime );
+    whio_encode_uint32( x, src->mtime );
     x += whio_sizeof_encoded_uint32;
 
-    whio_uint32_encode( x, src->data_size );
+    whio_encode_uint32( x, src->data_size );
     x += whio_sizeof_encoded_uint32;
 
     whefs_id_encode( x, src->first_block );
@@ -757,13 +757,13 @@ int whefs_inode_decode( whefs_inode * dest, unsigned char const * src )
     rc = whefs_id_decode( x, &dest->id );
     RC;
     x += whefs_sizeof_encoded_id_type;
-    rc = whio_uint8_decode( x, &dest->flags );
+    rc = whio_decode_uint8( x, &dest->flags );
     RC;
     x += whio_sizeof_encoded_uint8;
-    rc = whio_uint32_decode( x, &dest->mtime );
+    rc = whio_decode_uint32( x, &dest->mtime );
     RC;
     x += whio_sizeof_encoded_uint32;
-    rc = whio_uint32_decode( x,  &dest->data_size );
+    rc = whio_decode_uint32( x,  &dest->data_size );
     RC;
 #undef RC
     x += whio_sizeof_encoded_uint32;
