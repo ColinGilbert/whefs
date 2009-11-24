@@ -47,7 +47,7 @@ typedef struct whio_stream_dev_meta
     bool ownsDev;
 } whio_stream_dev_meta;
 
-static const whio_stream_dev_meta whio_stream_dev_meta_init =
+static const whio_stream_dev_meta whio_stream_dev_meta_empty =
     {
     0, /* dev */
     0 /* ownsDev */
@@ -96,7 +96,7 @@ bool whio_stream_dev_close( whio_stream * self )
         }
     }
     if( self->client.dtor ) self->client.dtor( self->client.data );
-    self->client = whio_client_data_init;
+    self->client = whio_client_data_empty;
     if( meta->dev && meta->ownsDev )
     {
         meta->dev->api->finalize( meta->dev );
@@ -134,7 +134,7 @@ whio_stream * whio_stream_for_dev( whio_dev * dev, bool takeOwnership )
 	return 0;
     }
     *str = whio_stream_dev;
-    *meta = whio_stream_dev_meta_init;
+    *meta = whio_stream_dev_meta_empty;
     str->impl.data = meta;
     meta->dev = dev;
     meta->ownsDev = takeOwnership;

@@ -47,11 +47,11 @@ static const unsigned int whefs_id_type_tag_char = 0x08 | 8;
 size_t whefs_dev_id_encode( whio_dev * dev, whefs_id_type v )
 {
 #if WHEFS_ID_TYPE_BITS == 64
-    return whio_dev_uint64_encode( dev, v );
+    return whio_dev_encode_uint64( dev, v );
 #elif WHEFS_ID_TYPE_BITS == 32
-    return whio_dev_uint32_encode( dev, v );
+    return whio_dev_encode_uint32( dev, v );
 #elif WHEFS_ID_TYPE_BITS == 16
-    return whio_dev_uint16_encode( dev, v );
+    return whio_dev_encode_uint16( dev, v );
 #elif WHEFS_ID_TYPE_BITS == 8
     if( ! dev ) return whefs_rc.ArgError;
     unsigned char buf[2];
@@ -84,11 +84,11 @@ size_t whefs_id_encode( unsigned char * dest, whefs_id_type v )
 int whefs_dev_id_decode( whio_dev * dev, whefs_id_type * v )
 {
 #if WHEFS_ID_TYPE_BITS == 64
-    return whio_dev_uint64_decode( dev, v );
+    return whio_dev_decode_uint64( dev, v );
 #elif WHEFS_ID_TYPE_BITS == 32
-    return whio_dev_uint32_decode( dev, v );
+    return whio_dev_decode_uint32( dev, v );
 #elif WHEFS_ID_TYPE_BITS == 16
-    return whio_dev_uint16_decode( dev, v );
+    return whio_dev_decode_uint16( dev, v );
 #elif WHEFS_ID_TYPE_BITS == 8
     if( ! v || ! dev ) return whefs_rc.ArgError;
     unsigned char buf[2] = {0,0};

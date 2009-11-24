@@ -72,7 +72,7 @@ static ls_foreach_info ls_foreach_info_init = {
 0U /*totalSize*/,
 0U /*checkedInodesCount*/,
 0U /*matchCount*/,
-whefs_string_init_m /*name*/
+whefs_string_empty_m /*name*/
 };
 
 static bool ls_inode_predicate_name_matches( whefs_fs * fs, whefs_inode const * n, void * clientData )
@@ -171,7 +171,7 @@ static int ls_dump_blocks()
     whefs_block bl;
     whefs_inode ino;
     size_t bcount = 0;
-    whefs_string name = whefs_string_init;
+    whefs_string name = whefs_string_empty;
     for( ; id <= nc; ++id )
     {
 	rc = whefs_inode_id_read( fs, id, &ino );

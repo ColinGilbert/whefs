@@ -153,18 +153,18 @@ struct whefs_fs_entry
        result in attempts to allocate huge amounts of memory or
        reallocate/re-use memory which doesn't belong to the string
        object. To avoid such problems, always initialize
-       whefs_fs_entry objects using the whefs_fs_entry_init object or
-       whefs_fs_entry_init_m macro.
+       whefs_fs_entry objects using the whefs_fs_entry_empty object or
+       whefs_fs_entry_empty_m macro.
      */
     whefs_string name;
 };
 typedef struct whefs_fs_entry whefs_fs_entry;
 
 /** Empty initialization object for whefs_fs_entry. */
-#define whefs_fs_entry_init_m { 0U/*inode_id*/, 0U/*block_id*/, 0U/*mtime*/, 0U/*size*/, whefs_string_init_m }
+#define whefs_fs_entry_empty_m { 0U/*inode_id*/, 0U/*block_id*/, 0U/*mtime*/, 0U/*size*/, whefs_string_empty_m }
 
 /** Empty initialization object for whefs_fs_entry. */
-extern const whefs_fs_entry whefs_fs_entry_init;
+extern const whefs_fs_entry whefs_fs_entry_empty;
 
 /**
    whefs_fs_entry_foreach_f describes a callback for use with

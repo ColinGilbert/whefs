@@ -24,9 +24,9 @@
 #include <wh/whio/whio_devs.h>
 #include <wh/whprintf.h>
 
-#define WHIO_DEV_EMPTY_INIT {0/*api*/, whio_impl_data_init_m, whio_client_data_init_m }
+#define WHIO_DEV_EMPTY_INIT {0/*api*/, whio_impl_data_empty_m, whio_client_data_empty_m }
 
-static const whio_dev whio_dev_empty_init = WHIO_DEV_EMPTY_INIT;
+static const whio_dev whio_dev_empty_empty = WHIO_DEV_EMPTY_INIT;
 
 #if WHIO_CONFIG_ENABLE_STATIC_MALLOC
 enum {
@@ -60,13 +60,13 @@ whio_dev * whio_dev_alloc()
     }
 #endif /* WHIO_CONFIG_ENABLE_STATIC_MALLOC */
     if( ! dev ) dev = (whio_dev *) malloc( sizeof(whio_dev) );
-    if( dev ) *dev = whio_dev_empty_init;
+    if( dev ) *dev = whio_dev_empty_empty;
     return dev;
 }
 
 void whio_dev_free( whio_dev * dev )
 {
-    if( dev ) *dev = whio_dev_empty_init;
+    if( dev ) *dev = whio_dev_empty_empty;
     else return;	
 #if WHIO_CONFIG_ENABLE_STATIC_MALLOC
     if( (dev < &whio_dev_alloc_slots.devs[0]) ||
@@ -312,7 +312,7 @@ int whio_dev_fetch_free_data( whio_fetch_result * r )
 }
 
 
-const whio_blockdev whio_blockdev_init = whio_blockdev_init_m;
+const whio_blockdev whio_blockdev_empty = whio_blockdev_empty_m;
 #if WHIO_CONFIG_ENABLE_STATIC_MALLOC
 enum {
 /**
@@ -326,7 +326,7 @@ static struct
 {
     whio_blockdev objs[whio_blockdev_alloc_count]; /* Flawfinder: ignore This is intentional. */
     char used[whio_blockdev_alloc_count]; /* Flawfinder: ignore This is intentional. */
-} whio_blockdev_alloc_slots = { { whio_blockdev_init_m }, {0} };
+} whio_blockdev_alloc_slots = { { whio_blockdev_empty_m }, {0} };
 #endif
 
 whio_blockdev * whio_blockdev_alloc()
@@ -343,7 +343,7 @@ whio_blockdev * whio_blockdev_alloc()
     }
 #endif /* WHIO_CONFIG_ENABLE_STATIC_MALLOC */
     if( ! obj ) obj = (whio_blockdev *) malloc( sizeof(whio_blockdev) );
-    if( obj ) *obj = whio_blockdev_init;
+    if( obj ) *obj = whio_blockdev_empty;
     return obj;
 }
 
@@ -361,7 +361,7 @@ void whio_blockdev_free( whio_blockdev * obj )
     else
     {
 	const size_t ndx = (obj - &whio_blockdev_alloc_slots.objs[0]);
-	whio_blockdev_alloc_slots.objs[ndx] = whio_blockdev_init;
+	whio_blockdev_alloc_slots.objs[ndx] = whio_blockdev_empty;
 	whio_blockdev_alloc_slots.used[ndx] = 0;
 	return;
     }
@@ -382,7 +382,7 @@ bool whio_blockdev_cleanup( whio_blockdev * self )
         // else fence was pointing back to the parent device.
 	self->impl.fence = 0;
     }
-    *self = whio_blockdev_init;
+    *self = whio_blockdev_empty;
     return true;
 }
 
@@ -391,7 +391,7 @@ int whio_blockdev_setup( whio_blockdev * self, whio_dev * parent, whio_size_t pa
 			   whio_size_t block_size, whio_size_t count, void const * prototype )
 {
     if( ! self || ! parent || ! count || ! block_size ) return whio_rc.ArgError;
-    *self = whio_blockdev_init;
+    *self = whio_blockdev_empty;
     self->impl.fence = whio_dev_subdev_create( parent, parent_offset, parent_offset + (count * block_size) );
     if( ! self->impl.fence ) return whio_rc.AllocError;
     self->blocks.prototype = prototype;
@@ -403,7 +403,7 @@ int whio_blockdev_setup( whio_blockdev * self, whio_dev * parent, whio_size_t pa
 int whio_blockdev_setup2( whio_blockdev * self, whio_dev * parent, whio_size_t block_size, void const * prototype )
 {
     if( ! self || ! parent || ! block_size ) return whio_rc.ArgError;
-    *self = whio_blockdev_init;
+    *self = whio_blockdev_empty;
     self->impl.fence = parent;
     self->blocks.prototype = prototype;
     self->blocks.size = block_size;

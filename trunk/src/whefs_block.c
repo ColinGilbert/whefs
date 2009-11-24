@@ -2,8 +2,8 @@
 #include "whefs_encode.h"
 #include <string.h> /* memset() */
 // FIXME: there are lots of size_t's which should be replaced by whio_size_t
-const whefs_block whefs_block_init = whefs_block_init_m;
-const whefs_block_list whefs_block_list_init = whefs_block_list_init_m;
+const whefs_block whefs_block_empty = whefs_block_empty_m;
+const whefs_block_list whefs_block_list_empty = whefs_block_list_empty_m;
 
 #if ! WHEFS_MACROIZE_SMALL_CHECKS
 bool whefs_block_id_is_valid( whefs_fs const * fs, whefs_id_type blid )
@@ -186,7 +186,7 @@ int whefs_block_read( whefs_fs * fs, whefs_id_type bid, whefs_block * bl )
     {
 	if( bl )
 	{ // WTF?
-	    *bl = whefs_block_init;
+	    *bl = whefs_block_empty;
 	    return whefs_rc.OK;
 	}
 	return whefs_rc.ArgError;
@@ -306,7 +306,7 @@ int whefs_block_wipe( whefs_fs * fs, whefs_block * bl,
 	}
 	const whefs_id_type oid = bl->id;
 	//WHEFS_DBG("Wiping block #%"WHEFS_ID_TYPE_PFMT". flags=0x%x",bl->id,bl->flags);
-	*bl = whefs_block_init;
+	*bl = whefs_block_empty;
 	bl->id = oid;
 	rc = whefs_block_flush( fs, bl );
 	if( whefs_rc.OK != rc )
@@ -338,7 +338,7 @@ int whefs_block_read_next( whefs_fs * fs, whefs_block const * bl, whefs_block * 
     size_t nb = bl->next_block;
     /** don't reference bl after this, for the case that (bl == nextBlock) */
     if( ! nb ) return whefs_rc.RangeError;
-    *nextBlock = whefs_block_init;
+    *nextBlock = whefs_block_empty;
     return whefs_block_read( fs, nb, nextBlock );
 }
 
@@ -351,7 +351,7 @@ int whefs_block_next_free( whefs_fs * restrict fs, whefs_block * restrict tgt, b
     {
 	i = fs->hints.unused_block_start = 1;
     }
-    whefs_block bl = whefs_block_init;
+    whefs_block bl = whefs_block_empty;
     for( ; i <= fs->options.block_count; ++i )
     {
 #if WHEFS_CONFIG_ENABLE_BITSET_CACHE
@@ -409,7 +409,7 @@ int whefs_block_append( whefs_fs * fs, whefs_block const * bl, whefs_block * tgt
     { // WTF did i do this for?
 	return whefs_block_next_free( fs, tgt, true );
     }
-    whefs_block tail = *bl;// = whefs_block_init;
+    whefs_block tail = *bl;// = whefs_block_empty;
     while( tail.next_block )
     {
 	rc = whefs_block_read_next( fs, &tail, &tail );

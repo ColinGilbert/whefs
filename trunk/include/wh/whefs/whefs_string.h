@@ -41,7 +41,7 @@ typedef uint16_t whefs_string_size_t;
    enum { bufSize = MaxPossibleSizeOfStrings + 1 }; // +1 for the trailing NULL
    char buf[bufSize];
    memset( buf, 0, bufSize );
-   whefs_string s = whefs_string_init;
+   whefs_string s = whefs_string_empty;
    s.string = buf;
    s.alloced = bufSize;
    whefs_string_copy_cstring( &s, sourceString );
@@ -82,12 +82,12 @@ typedef struct whefs_string whefs_string;
    Empty whefs_string initialization macro for places where static
    initialization is required (e.g. member whefs_string objects).
 */
-#define whefs_string_init_m { 0, 0, 0, 0 }
+#define whefs_string_empty_m { 0, 0, 0, 0 }
 
 /**
    Empty initialization object.
 */
-extern const whefs_string whefs_string_init;
+extern const whefs_string whefs_string_empty;
 
 /**
    Copies the null-terminated string str into tgt. Neither src nor tgt
@@ -104,7 +104,7 @@ extern const whefs_string whefs_string_init;
    Example usage:
 
    @code
-   whefs_string str = whefs_string_init; // Important! See below!
+   whefs_string str = whefs_string_empty; // Important! See below!
    whefs_string_copy_cstring( &str, "Hi, world!!" );
    ...
    whefs_string_copy_cstring( &str, "Bye, world!" );
@@ -117,7 +117,7 @@ extern const whefs_string whefs_string_init;
    objects. If the members of the object have uninitialized values
    this function may attempt to malloc() a huge amount of memory, use
    an uninitialized string, or otherwise misbehave (been there, done
-   that!). Use the whefs_string_init object to initialize new
+   that!). Use the whefs_string_empty object to initialize new
    whefs_string objects, as shown in the example above.
 
 */

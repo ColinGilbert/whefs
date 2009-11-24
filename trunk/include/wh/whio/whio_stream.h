@@ -195,7 +195,7 @@ typedef struct whio_stream whio_stream;
 /**
    Empty initialization object for whio_streams.
 */
-extern const whio_stream whio_stream_init;
+extern const whio_stream whio_stream_empty;
 
 /**
    An initializer macro for use in whio_stream subclass struct
@@ -205,7 +205,7 @@ extern const whio_stream whio_stream_init;
    followed by the type ID (which may be set to 0 if factory
    code will later set it to a valid value).
 */
-#define whio_stream_init_m(Read,Write,Destroy,Flush,IsGood,TypeID)	\
+#define whio_stream_empty_m(Read,Write,Destroy,Flush,IsGood,TypeID)	\
     { { Read, Write, Destroy, Flush, IsGood, { 0, TypeID } }
 
 /**

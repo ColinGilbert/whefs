@@ -48,7 +48,7 @@ int whefs_test_insert_dummy_files( whefs_fs * fs )
 
 #if 1
     //whefs_inode_next_free( fs, &ino, true );
-    //ino = whefs_inode_init; ino.id = nid;
+    //ino = whefs_inode_empty; ino.id = nid;
     whefs_inode_id_read( fs, ino.id, &ino );
     WHEFS_DBG("Trampling over inode #%u", ino.id );
     fname = "via whio_dev_inode";
@@ -136,7 +136,7 @@ int whefs_import_dev( whefs_fs * fs, whio_dev * src, char const * fname, bool ov
 {
     if( ! fs || !src || !fname || !*fname ) return whefs_rc.ArgError;
     int rc = whefs_rc.OK;
-    whefs_inode ino = whefs_inode_init;
+    whefs_inode ino = whefs_inode_empty;
     bool existed = false;
     rc = whefs_inode_by_name( fs, fname, &ino );
     if( rc == whefs_rc.OK )
@@ -252,14 +252,14 @@ int whefs_fs_dump_to_filename( whefs_fs * fs, char const * filename )
     return rc;
 }
 
-const whefs_fs_entry whefs_fs_entry_init = whefs_fs_entry_init_m;
+const whefs_fs_entry whefs_fs_entry_empty = whefs_fs_entry_empty_m;
 int whefs_fs_entry_foreach( whefs_fs * fs, whefs_fs_entry_foreach_f func, void * foreachData )
 {
     if( ! fs || !func ) return whefs_rc.ArgError;
     whefs_id_type i = 2;// skip root inode
-    whefs_inode n = whefs_inode_init;
+    whefs_inode n = whefs_inode_empty;
     int rc = whefs_rc.OK;
-    whefs_fs_entry ent = whefs_fs_entry_init;
+    whefs_fs_entry ent = whefs_fs_entry_empty;
     enum { bufSize = whefs_sizeof_max_filename + 1 };
     char buf[bufSize];
     memset(buf,0,bufSize);
@@ -308,8 +308,8 @@ whefs_string * whefs_ls( whefs_fs * fs, char const * pattern, whefs_id_type * co
     whefs_string * str = 0;
     whefs_string * prev = 0;
     if( count ) *count = 0;
-    whefs_string theString = whefs_string_init;
-    whefs_inode tmpn = whefs_inode_init;
+    whefs_string theString = whefs_string_empty;
+    whefs_inode tmpn = whefs_inode_empty;
     for( ; id <= nc; ++id )
     {
 #if WHEFS_CONFIG_ENABLE_BITSET_CACHE
@@ -348,7 +348,7 @@ whefs_string * whefs_ls( whefs_fs * fs, char const * pattern, whefs_id_type * co
 	if( ! str ) return head;
 	if( ! head ) head = str;
 	*str = theString;
-        theString = whefs_string_init; // take over ownership of theString.string
+        theString = whefs_string_empty; // take over ownership of theString.string
 	if( prev ) prev->next = str;
 	prev = str;
 	if( count ) ++(*count);

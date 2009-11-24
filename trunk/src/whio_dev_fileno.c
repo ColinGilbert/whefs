@@ -73,7 +73,7 @@ typedef struct whio_dev_fileno
     0, /* errstate */                       \
    -1 /*iomode*/ \
     }
-static const whio_dev_fileno whio_dev_fileno_meta_init = WHIO_DEV_fileno_INIT;
+static const whio_dev_fileno whio_dev_fileno_meta_empty = WHIO_DEV_fileno_INIT;
 
 #if WHIO_CONFIG_ENABLE_STATIC_MALLOC
 enum {
@@ -99,7 +99,7 @@ static whio_dev_fileno * whio_dev_fileno_alloc()
     {
 	if( whio_dev_fileno_alloc_slots.used[i] ) continue;
 	whio_dev_fileno_alloc_slots.used[i] = 1;
-	whio_dev_fileno_alloc_slots.objs[i] = whio_dev_fileno_meta_init;
+	whio_dev_fileno_alloc_slots.objs[i] = whio_dev_fileno_meta_empty;
 	obj = &whio_dev_fileno_alloc_slots.objs[i];
 	break;
     }
@@ -120,7 +120,7 @@ static void whio_dev_fileno_free( whio_dev_fileno * obj )
     else
     {
 	const size_t ndx = (obj - &whio_dev_fileno_alloc_slots.objs[0]);
-	whio_dev_fileno_alloc_slots.objs[ndx] = whio_dev_fileno_meta_init;
+	whio_dev_fileno_alloc_slots.objs[ndx] = whio_dev_fileno_meta_empty;
 	whio_dev_fileno_alloc_slots.used[ndx] = 0;
 	return;
     }
@@ -135,7 +135,7 @@ static void whio_dev_fileno_free( whio_dev_fileno * obj )
    parameter be-a whio_dev and that that device is-a whio_dev_fileno.
  */
 #define WHIO_fileno_DECL(RV) whio_dev_fileno * f = (dev ? (whio_dev_fileno*)dev->impl.data : 0); \
-    if( !f || !f->fp || ((void const *)&whio_dev_fileno_meta_init != dev->impl.typeID) ) return RV
+    if( !f || !f->fp || ((void const *)&whio_dev_fileno_meta_empty != dev->impl.typeID) ) return RV
 
 static whio_size_t whio_dev_fileno_read( whio_dev * dev, void * dest, whio_size_t n )
 {
@@ -312,13 +312,13 @@ static bool whio_dev_fileno_close( whio_dev * dev )
     {
 	dev->api->flush(dev);
 	if( dev->client.dtor ) dev->client.dtor( dev->client.data );
-	dev->client = whio_client_data_init;
+	dev->client = whio_client_data_empty;
 	whio_dev_fileno * f = (whio_dev_fileno*)dev->impl.data;
 	if( f )
 	{
 	    dev->impl.data = 0;
 	    if( f->fp ) fclose( f->fp );
-	    *f = whio_dev_fileno_meta_init;
+	    *f = whio_dev_fileno_meta_empty;
 	    whio_dev_fileno_free( f );
 	    return true;
 	}
@@ -353,12 +353,12 @@ static const whio_dev_api whio_dev_fileno_api =
     whio_dev_fileno_iomode
     };
 
-static const whio_dev whio_dev_fileno_init =
+static const whio_dev whio_dev_fileno_empty =
     {
     &whio_dev_fileno_api,
     { /* impl */
     0, /* data. Must be-a (whio_dev_fileno*) */
-    (void const *)&whio_dev_fileno_meta_init /* typeID */
+    (void const *)&whio_dev_fileno_meta_empty /* typeID */
     }
     };
 
@@ -398,8 +398,8 @@ static whio_dev * whio_dev_for_file_impl( char const * fname, int filenum, char 
         whio_dev_fileno_free(meta);
 	return 0;
     }
-    *dev = whio_dev_fileno_init;
-    *meta = whio_dev_fileno_meta_init;
+    *dev = whio_dev_fileno_empty;
+    *meta = whio_dev_fileno_meta_empty;
     dev->impl.data = meta;
     meta->fp = f;
     meta->fileno = fileno(f);

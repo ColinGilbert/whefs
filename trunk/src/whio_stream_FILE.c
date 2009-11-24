@@ -185,7 +185,7 @@ static bool whio_stream_FILE_close( whio_stream * self )
     if( ! meta ) return false;
     self->api->flush( self );
     if( self->client.dtor ) self->client.dtor( self->client.data );
-    self->client = whio_client_data_init;
+    self->client = whio_client_data_empty;
     self->impl.data = 0;
     if( meta->fp && meta->ownsFile )
     {

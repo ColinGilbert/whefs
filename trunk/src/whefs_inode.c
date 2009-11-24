@@ -15,9 +15,9 @@
 #include <time.h> /* gettimeofday() */
 #include <sys/time.h>
 
-const whefs_inode whefs_inode_init = whefs_inode_init_m;
+const whefs_inode whefs_inode_empty = whefs_inode_empty_m;
 
-const whefs_inode_list whefs_inode_list_init = whefs_inode_list_init_m;
+const whefs_inode_list whefs_inode_list_empty = whefs_inode_list_empty_m;
 
 
 /**
@@ -38,7 +38,7 @@ static struct
     whefs_inode_list objs[whefs_inode_list_alloc_count];
     char used[whefs_inode_list_alloc_count];
     size_t next;
-} whefs_inode_list_alloc_slots = { {whefs_inode_list_init_m}, {0}, 0 };
+} whefs_inode_list_alloc_slots = { {whefs_inode_list_empty_m}, {0}, 0 };
 #endif
 
 static whefs_inode_list * whefs_inode_list_alloc()
@@ -56,13 +56,13 @@ static whefs_inode_list * whefs_inode_list_alloc()
     }
 #endif /* WHEFS_CONFIG_ENABLE_STATIC_MALLOC */
     if( ! obj ) obj = (whefs_inode_list *) malloc( sizeof(whefs_inode_list) );
-    if( obj ) *obj = whefs_inode_list_init;
+    if( obj ) *obj = whefs_inode_list_empty;
     return obj;
 }
 
 static void whefs_inode_list_free( whefs_inode_list * obj )
 {
-    if( obj ) *obj = whefs_inode_list_init;
+    if( obj ) *obj = whefs_inode_list_empty;
     else return;
 #if WHEFS_CONFIG_ENABLE_STATIC_MALLOC
     if( (obj < &whefs_inode_list_alloc_slots.objs[0]) ||
@@ -124,7 +124,7 @@ int whefs_inode_name_set( whefs_fs * fs, whefs_id_type nid, char const * name )
     char const * nameCheck = name;
     enum { bufSize = WHEFS_MAX_FILENAME_LENGTH + 1 };
     char buf[bufSize] = {0};
-    whefs_string ncheck = whefs_string_init;
+    whefs_string ncheck = whefs_string_empty;
     ncheck.string = buf;
     ncheck.alloced = bufSize;
     if(1)
@@ -286,7 +286,7 @@ int whefs_inode_id_read( whefs_fs * fs, whefs_id_type nid, whefs_inode * tgt )
 int whefs_inode_read_flags( whefs_fs * fs, whefs_id_type nid, uint32_t * flags )
 {
     if( ! whefs_inode_id_is_valid( fs, nid ) || !fs->dev ) return whefs_rc.ArgError;
-    whefs_inode ino = whefs_inode_init;
+    whefs_inode ino = whefs_inode_empty;
     int rc = whefs_inode_id_read( fs, nid, &ino );
     if( whefs_rc.OK == rc )
     {
@@ -306,7 +306,7 @@ int whefs_inode_foreach( whefs_fs * fs, whefs_inode_predicate_f where, void * wh
 {
     if( ! fs || !func ) return whefs_rc.ArgError;
     whefs_id_type i = 2;// skip root inode
-    whefs_inode n = whefs_inode_init;
+    whefs_inode n = whefs_inode_empty;
     int rc = whefs_rc.OK;
     for( ; i <= fs->options.inode_count; ++i )
     {
@@ -339,7 +339,7 @@ int whefs_inode_next_free( whefs_fs * restrict fs, whefs_inode * restrict tgt, b
 	i = fs->hints.unused_inode_start = 2;
 	/* we skip the root node, which is reserved at ID 1. */
     }
-    whefs_inode n = whefs_inode_init;
+    whefs_inode n = whefs_inode_empty;
     if(0) WHEFS_DBG("i=%"WHEFS_ID_TYPE_PFMT", fs->hints.unused_inode_start=%"WHEFS_ID_TYPE_PFMT
 		    ", fs->options.inode_count=%"WHEFS_ID_TYPE_PFMT,
 		    i, fs->hints.unused_inode_start, fs->options.inode_count );
@@ -475,7 +475,7 @@ int whefs_inode_open( whefs_fs * fs, whefs_id_type nodeID, whefs_inode ** tgt, v
     */
     whefs_inode_list * ent = whefs_inode_list_alloc();
     if( ! ent ) return whefs_rc.AllocError;
-    *ent = whefs_inode_list_init;
+    *ent = whefs_inode_list_empty;
     
     ent->inode.id = nodeID;
     rc = whefs_inode_id_read( fs, nodeID, &ent->inode );
@@ -571,7 +571,7 @@ int whefs_inode_close( whefs_fs * fs, whefs_inode * src, void const * writer )
 	{
 	    free(np->blocks.list);
 	}
-	np->blocks = whefs_block_list_init;
+	np->blocks = whefs_block_list_empty;
 	whefs_inode_list_free(li);
     }
     if(0) WHEFS_DBG_FYI("%p %p Closed shared inode #%"WHEFS_ID_TYPE_PFMT": Use count=%u, data size=%u",
@@ -595,11 +595,11 @@ int whefs_inode_unlink( whefs_fs * fs, whefs_inode * ino )
     int rc = whefs_rc.OK;
     if( ino->first_block )
     {
-	whefs_block bl = whefs_block_init;
+	whefs_block bl = whefs_block_empty;
 	whefs_block_read( fs, ino->first_block, &bl );
  	rc = whefs_block_wipe( fs, &bl, true, true, true );
     }
-    *ino = whefs_inode_init;
+    *ino = whefs_inode_empty;
     ino->id = nid;
     return ( whefs_rc.OK != rc )
 	? rc
@@ -609,7 +609,7 @@ int whefs_inode_unlink( whefs_fs * fs, whefs_inode * ino )
 int whefs_inode_id_unlink( whefs_fs * fs, whefs_id_type nid )
 {
     if( ! whefs_inode_id_is_valid(fs,nid) ) return whefs_rc.ArgError;
-    whefs_inode ino = whefs_inode_init;
+    whefs_inode ino = whefs_inode_empty;
     int rc = whefs_inode_id_read( fs, nid, &ino );
     if( whefs_rc.OK == rc )
     {
@@ -628,7 +628,7 @@ int whefs_inode_by_name( whefs_fs * fs, char const * name, whefs_inode * tgt )
     {
 	return whefs_rc.RangeError;
     }
-    whefs_string ns = whefs_string_init;
+    whefs_string ns = whefs_string_empty;
     int rc = whefs_rc.OK;
     bool expectExact = false; // when true, we stop with error if first guess isn't correct
     const whefs_hashval_type nameHash = fs->cache.hashfunc( name );
@@ -709,7 +709,7 @@ int whefs_inode_by_name( whefs_fs * fs, char const * name, whefs_inode * tgt )
     assert( cname && "cname must be non-0 or we should have returned by now!" );
     do
     {
-        whefs_inode n = whefs_inode_init;
+        whefs_inode n = whefs_inode_empty;
         rc = whefs_inode_id_read( fs, i, &n );
         if( whefs_rc.OK != rc )
         {

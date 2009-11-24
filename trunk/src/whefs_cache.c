@@ -27,8 +27,8 @@ int whefs_inode_hash_cache_load( whefs_fs * fs )
         fs->cache.hashes->maxAlloc = fs->options.inode_count;
     }
 
-    //whefs_hashid h = whefs_hashid_init;
-    whefs_string name = whefs_string_init;
+    //whefs_hashid h = whefs_hashid_empty;
+    whefs_string name = whefs_string_empty;
     enum { bufSize = WHEFS_MAX_FILENAME_LENGTH+1 };
     unsigned char buf[bufSize];
     memset( buf, 0, bufSize );
@@ -134,7 +134,7 @@ void whefs_inode_name_uncache(whefs_fs * fs, char const * name )
     const whefs_id_type ndx = whefs_inode_hash_cache_search_ndx( fs, name );
     if( whefs_rc.IDTypeEnd != ndx )
     {
-        fs->cache.hashes->list[ndx] = whefs_hashid_init;
+        fs->cache.hashes->list[ndx] = whefs_hashid_empty;
         fs->cache.hashes->isSorted = false;
     }
 }
@@ -178,7 +178,7 @@ int whefs_inode_hash_cache( whefs_fs * fs, whefs_id_type id, char const * name )
     WHEFS_DBG_CACHE("ADDING: name cache count[%"WHEFS_ID_TYPE_PFMT"], alloced=[%"WHEFS_ID_TYPE_PFMT"], hash [%"WHEFS_HASHVAL_TYPE_PFMT"] for name [%s]",
                           fs->cache.hashes->count, fs->cache.hashes->alloced, h, name );
 #endif
-    whefs_hashid H = whefs_hashid_init;
+    whefs_hashid H = whefs_hashid_empty;
     H.hash = h;
     H.id = id;
     rc = whefs_hashid_list_add( fs->cache.hashes, &H );

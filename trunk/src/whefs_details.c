@@ -208,10 +208,10 @@ struct whefs_fs_closer_list
 typedef struct whefs_fs_closer_list whefs_fs_closer_list;
 
 /** Empty initialize object for whefs_fs_closer_list instances. */
-#define whefs_fs_closer_list_init_m { 0/*type*/,{/*item*/NULL},NULL/*next*/}
+#define whefs_fs_closer_list_empty_m { 0/*type*/,{/*item*/NULL},NULL/*next*/}
 
 /** Empty initialize object for whefs_fs_closer_list instances. */
-extern const whefs_fs_closer_list whefs_fs_closer_list_init;
+extern const whefs_fs_closer_list whefs_fs_closer_list_empty;
 
 /**
    Allocates a new whefs_fs_closer_list instance containing
@@ -428,7 +428,7 @@ struct whefs_fs
 };
 
 /** Empty initialization object. */
-extern const whefs_fs whefs_fs_init;
+extern const whefs_fs whefs_fs_empty;
 
 /** inode/block in-use caching... */
 #if WHEFS_CONFIG_ENABLE_BITSET_CACHE
@@ -721,7 +721,7 @@ struct whefs_file
     whefs_string name;
 };
 /** Empty initialization object. */
-extern const whefs_file whefs_file_init;
+extern const whefs_file whefs_file_empty;
 
 /**
    Writes an object of type whefs_id_type to the given
