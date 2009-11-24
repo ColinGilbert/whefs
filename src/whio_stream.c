@@ -39,7 +39,7 @@ int whio_stream_default_flush( whio_stream * ARG_UNUSED(self) )
 bool whio_stream_default_close( whio_stream * ARG_UNUSED(self) )
 {
     if( self->client.dtor ) self->client.dtor( self->client.data );
-    self->client = whio_client_data_init;
+    self->client = whio_client_data_empty;
     return false;
 }
 
@@ -53,7 +53,7 @@ void whio_stream_default_finalize( whio_stream * ARG_UNUSED(self) )
     }
 }
 
-const whio_stream_api whio_stream_api_init = 
+const whio_stream_api whio_stream_api_empty = 
     {
     whio_stream_default_read,
     whio_stream_default_write,
@@ -63,11 +63,11 @@ const whio_stream_api whio_stream_api_init =
     whio_stream_default_isgood
     };
 
-const whio_stream whio_stream_init = 
+const whio_stream whio_stream_empty = 
     {
-    &whio_stream_api_init,
-    whio_impl_data_init_m,
-    whio_client_data_init_m
+    &whio_stream_api_empty,
+    whio_impl_data_empty_m,
+    whio_client_data_empty_m
     };
 
 bool whio_stream_getchar( whio_stream * self, char * tgt )

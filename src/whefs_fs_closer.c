@@ -4,7 +4,7 @@
 #include "whefs_details.c"
 #include <stdlib.h> /* malloc() and co. */
 
-const whefs_fs_closer_list whefs_fs_closer_list_init = whefs_fs_closer_list_init_m;
+const whefs_fs_closer_list whefs_fs_closer_list_empty = whefs_fs_closer_list_empty_m;
 
 
 /**
@@ -31,7 +31,7 @@ static struct
     char used[whefs_fs_closer_list_alloc_count];
     size_t next;
     const size_t count;
-} whefs_fs_closer_list_alloc_slots = { { whefs_fs_closer_list_init_m }, {0}, 0, whefs_fs_closer_list_alloc_count };
+} whefs_fs_closer_list_alloc_slots = { { whefs_fs_closer_list_empty_m }, {0}, 0, whefs_fs_closer_list_alloc_count };
 #endif
 /**
    Allocates a new zero-initialized object. Ownership is passed
@@ -52,7 +52,7 @@ whefs_fs_closer_list * whefs_fs_closer_list_alloc()
     }
 #endif /* WHEFS_CONFIG_ENABLE_STATIC_MALLOC */
     if( ! obj ) obj = (whefs_fs_closer_list *) malloc( sizeof(whefs_fs_closer_list) );
-    if( obj ) *obj = whefs_fs_closer_list_init;
+    if( obj ) *obj = whefs_fs_closer_list_empty;
     return obj;
 }
 
@@ -68,14 +68,14 @@ void whefs_fs_closer_list_free( whefs_fs_closer_list * obj )
 	(obj > &whefs_fs_closer_list_alloc_slots.objs[whefs_fs_closer_list_alloc_slots.count-1]) )
     { /* it does not belong to us */
         whefs_fs_closer_list_unlink( obj );
-        *obj = whefs_fs_closer_list_init;
+        *obj = whefs_fs_closer_list_empty;
 	free(obj);
 	return;
     }
     else
     {
         whefs_fs_closer_list_unlink( obj );
-        *obj = whefs_fs_closer_list_init;
+        *obj = whefs_fs_closer_list_empty;
 	const size_t ndx = (obj - &whefs_fs_closer_list_alloc_slots.objs[0]);
 	whefs_fs_closer_list_alloc_slots.used[ndx] = 0;
 	if( ndx < whefs_fs_closer_list_alloc_slots.next ) whefs_fs_closer_list_alloc_slots.next = ndx;
@@ -83,7 +83,7 @@ void whefs_fs_closer_list_free( whefs_fs_closer_list * obj )
     }
 #else
     whefs_fs_closer_list_unlink( obj );
-    *obj = whefs_fs_closer_list_init;
+    *obj = whefs_fs_closer_list_empty;
     free(obj);
 #endif /* WHEFS_CONFIG_ENABLE_STATIC_MALLOC */
 }

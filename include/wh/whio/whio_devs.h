@@ -530,7 +530,7 @@ typedef struct whio_blockdev
    A whio_blockdev object for cases where static initialization is necessary
    (e.g. member whio_blockdev objects).
 */
-#define whio_blockdev_init_m {\
+#define whio_blockdev_empty_m {\
 	{ /* blocks */ \
 	    0 /*size*/,\
 	    0 /*count*/,\
@@ -544,7 +544,7 @@ typedef struct whio_blockdev
 /**
    Empty initialization object.
 */
-extern const whio_blockdev whio_blockdev_init;
+extern const whio_blockdev whio_blockdev_empty;
 
 
 /**
@@ -560,7 +560,7 @@ whio_blockdev * whio_blockdev_alloc();
 /**
    Initializes the given whio_blockdev object, which must have been
    allocated using whio_blockdev_alloc() or created on the stack and
-   initialized using whio_blockdev_init or whio_blockdev_init_m.
+   initialized using whio_blockdev_empty or whio_blockdev_empty_m.
 
    bdev will use parent_store as its storage device, but will only
    access the device range [parent_offset,(block_size *

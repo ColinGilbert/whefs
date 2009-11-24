@@ -57,7 +57,7 @@ typedef struct whio_dev_subdev_meta
     0, /* upper */ \
     0 /* pos */ \
     }
-static const whio_dev_subdev_meta whio_dev_subdev_meta_init = WHIO_DEV_SUBDEV_META_INIT;
+static const whio_dev_subdev_meta whio_dev_subdev_meta_empty = WHIO_DEV_SUBDEV_META_INIT;
 
 #if WHIO_CONFIG_ENABLE_STATIC_MALLOC
 enum {
@@ -83,7 +83,7 @@ whio_dev_subdev_meta * whio_dev_subdev_meta_alloc()
     {
 	if( whio_dev_subdev_meta_alloc_slots.used[i] ) continue;
 	whio_dev_subdev_meta_alloc_slots.used[i] = 1;
-	whio_dev_subdev_meta_alloc_slots.objs[i] = whio_dev_subdev_meta_init;
+	whio_dev_subdev_meta_alloc_slots.objs[i] = whio_dev_subdev_meta_empty;
 	obj = &whio_dev_subdev_meta_alloc_slots.objs[i];
 	//WHIO_DEBUG("Allocated device #%u @0x%p\n", i, (void const *)obj );
 	break;
@@ -118,7 +118,7 @@ void whio_dev_subdev_meta_free( whio_dev_subdev_meta * obj )
 		       (void const *)&whio_dev_subdev_meta_alloc_slots.objs[ndx] );
 	}
 
-	whio_dev_subdev_meta_alloc_slots.objs[ndx] = whio_dev_subdev_meta_init;
+	whio_dev_subdev_meta_alloc_slots.objs[ndx] = whio_dev_subdev_meta_empty;
 	whio_dev_subdev_meta_alloc_slots.used[ndx] = 0;
 	return;
     }
@@ -133,7 +133,7 @@ void whio_dev_subdev_meta_free( whio_dev_subdev_meta * obj )
    parameter be-a whio_dev and that that device is-a whio_dev_subdev.
  */
 #define WHIO_subdev_DECL(RV) whio_dev_subdev_meta * sub = (dev ? (whio_dev_subdev_meta*)dev->impl.data : 0); \
-    if( !sub || ((void const *)&whio_dev_subdev_meta_init != dev->impl.typeID) || (!sub->dev)) return RV
+    if( !sub || ((void const *)&whio_dev_subdev_meta_empty != dev->impl.typeID) || (!sub->dev)) return RV
 
 
 static whio_size_t whio_dev_subdev_read( whio_dev * dev, void * dest, whio_size_t n )
@@ -304,10 +304,10 @@ static bool whio_dev_subdev_close( whio_dev * dev )
     WHIO_subdev_DECL(false);
     dev->api->flush(dev);
     if( dev->client.dtor ) dev->client.dtor( dev->client.data );
-    dev->client = whio_client_data_init;
-    *sub = whio_dev_subdev_meta_init;
+    dev->client = whio_client_data_empty;
+    *sub = whio_dev_subdev_meta_empty;
     whio_dev_subdev_meta_free( sub );
-    dev->impl = whio_impl_data_init;
+    dev->impl = whio_impl_data_empty;
     return true;
 }
 
@@ -339,12 +339,12 @@ static const whio_dev_api whio_dev_api_subdev =
     whio_dev_subdev_iomode
     };
 
-static const whio_dev whio_dev_subdev_init =
+static const whio_dev whio_dev_subdev_empty =
     {
     &whio_dev_api_subdev,
     { /* impl */
     0, /* implData. Must be-a (whio_dev_subdev_meta*) */
-    (void const *)&whio_dev_subdev_meta_init /* typeID */
+    (void const *)&whio_dev_subdev_meta_empty /* typeID */
     }
     };
 
@@ -359,8 +359,8 @@ whio_dev * whio_dev_subdev_create( whio_dev * parent, whio_size_t lowerBound, wh
 	whio_dev_free(dev);
 	return 0;
     }
-    *dev = whio_dev_subdev_init;
-    *meta = whio_dev_subdev_meta_init;
+    *dev = whio_dev_subdev_empty;
+    *meta = whio_dev_subdev_meta_empty;
     dev->impl.data = meta;
     meta->dev = parent;
     meta->lower = lowerBound;
@@ -372,7 +372,7 @@ whio_dev * whio_dev_subdev_create( whio_dev * parent, whio_size_t lowerBound, wh
 int whio_dev_subdev_rebound( whio_dev * dev, whio_size_t lowerBound, whio_size_t upperBound )
 {
     if( !dev || (upperBound && (upperBound <= lowerBound)) ) return whio_rc.ArgError;
-    if( (void const *)&whio_dev_subdev_meta_init != dev->impl.typeID ) return whio_rc.TypeError;
+    if( (void const *)&whio_dev_subdev_meta_empty != dev->impl.typeID ) return whio_rc.TypeError;
     whio_dev_subdev_meta * sub = (whio_dev_subdev_meta*)dev->impl.data;
     if( ! sub || !sub->dev ) return whio_rc.InternalError;
     sub->lower = sub->pos = lowerBound;

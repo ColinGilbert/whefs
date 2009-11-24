@@ -6,12 +6,12 @@
 #include <stdlib.h> // malloc()/free()
 #include <string.h> // memset()
 
-const whefs_string whefs_string_init = whefs_string_init_m;
+const whefs_string whefs_string_empty = whefs_string_empty_m;
 
 whefs_string * whefs_string_alloc()
 {
     whefs_string * x = (whefs_string*)malloc(sizeof(whefs_string));
-    if( x ) *x = whefs_string_init;
+    if( x ) *x = whefs_string_empty;
     return x;
 }
 
@@ -67,7 +67,7 @@ int whefs_string_clear( whefs_string * tgt, bool clearChain )
     {
 	whefs_string * n = tgt->next;
         if( tgt->alloced && tgt->string ) free( tgt->string );
-	*tgt = whefs_string_init;
+	*tgt = whefs_string_empty;
 	if( ! clearChain ) break;
 	tgt = n;
     }
@@ -81,7 +81,7 @@ int whefs_string_finalize( whefs_string * tgt, bool clearChain )
     {
 	whefs_string * n = tgt->next;
 	free( tgt->string );
-	*tgt = whefs_string_init;
+	*tgt = whefs_string_empty;
 	free(tgt);
 	if( ! clearChain ) break;
 	tgt = n;

@@ -40,11 +40,11 @@ struct whefs_block
 };
 typedef struct whefs_block whefs_block;
 
-/** @def whefs_block_init_m
+/** @def whefs_block_empty_m
 
     Empty static initializer for whefs_block objects.
  */
-#define whefs_block_init_m  \
+#define whefs_block_empty_m  \
     { \
     0U, /* id */ \
     0U, /* next_block */                     \
@@ -52,7 +52,7 @@ typedef struct whefs_block whefs_block;
     }
 
 /** Empty initialization object for whefs_block objects. */
-extern const whefs_block whefs_block_init;
+extern const whefs_block whefs_block_empty;
 
 /** @def WHEFS_INODE_RELATIVES
 
@@ -84,11 +84,11 @@ typedef struct whefs_block_list
    Empty initialization object. Convenience macro for places where a
    whefs_block_list object must be statically initialized.
 */
-#define whefs_block_list_init_m {0,0,0}
+#define whefs_block_list_empty_m {0,0,0}
 /**
    Empty initialization object.
 */
-extern const whefs_block_list whefs_block_list_init;
+extern const whefs_block_list whefs_block_list_empty;
 
 /** @struct whefs_inode
 
@@ -147,7 +147,7 @@ typedef struct whefs_inode
 } whefs_inode;
 
 /** Empty inode initialization object. */
-#define whefs_inode_init_m { \
+#define whefs_inode_empty_m { \
 	0, /* id */ \
 	WHEFS_FLAG_Unused, /* flags */ \
         0, /* first_block */ \
@@ -155,10 +155,10 @@ typedef struct whefs_inode
         0, /* mtime */ \
         0, /* open_count */ \
         0, /* writer */ \
-	whefs_block_list_init_m /*blocks */ \
+	whefs_block_list_empty_m /*blocks */ \
     }
 /** Empty inode initialization object. */
-extern const whefs_inode whefs_inode_init;
+extern const whefs_inode whefs_inode_empty;
 
 /** @struct whefs_inode_list
 
@@ -172,9 +172,9 @@ typedef struct whefs_inode_list
     struct whefs_inode_list * prev;
 } whefs_inode_list;
 /** Empty inode_list initialization object. */
-#define whefs_inode_list_init_m { whefs_inode_init_m, 0, 0 }
+#define whefs_inode_list_empty_m { whefs_inode_empty_m, 0, 0 }
 /** Empty inode_list initialization object. */
-extern const whefs_inode_list whefs_inode_list_init;
+extern const whefs_inode_list whefs_inode_list_empty;
 
 
 /**
@@ -191,7 +191,7 @@ extern const whefs_inode_list whefs_inode_list_init;
    Typical usage:
 
    @code
-   whefs_inode ino = whefs_inode_init;
+   whefs_inode ino = whefs_inode_empty;
    whefs_inode_id_read( fs, 42, &ino );
    @endcode
 
@@ -455,7 +455,7 @@ int whefs_inode_name_set( whefs_fs * fs, whefs_id_type node_id, char const * nam
    @code
    enum { bufSize = WHEFS_MAX_FILENAME_LENGTH + 1 };
    char buf[bufSize] = {0};
-   whefs_string str = whefs_string_init;
+   whefs_string str = whefs_string_empty;
    str.string = buf;
    str.alloced = bufSize;
    int rc = whefs_inode_name_get( fs, id, &str );

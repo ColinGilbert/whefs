@@ -239,7 +239,7 @@ static bool whio_dev_FILE_close( whio_dev * dev )
     {
 	dev->api->flush(dev);
 	if( dev->client.dtor ) dev->client.dtor( dev->client.data );
-	dev->client = whio_client_data_init;
+	dev->client = whio_client_data_empty;
 	whio_dev_FILE * f = (whio_dev_FILE*)dev->impl.data;
 	if( f )
 	{

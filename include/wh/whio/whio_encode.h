@@ -73,8 +73,8 @@ whio_sizeof_encoded_int8 = 2,
    NOT INCLUDING the actual string bytes. i.e. this is the header
    size.
 
-   @see whio_cstring_decode()
-   @see whio_cstring_encode()
+   @see whio_decode_cstring()
+   @see whio_encode_cstring()
 */
 whio_sizeof_encoded_cstring = 1 + whio_sizeof_encoded_uint32,
 
@@ -109,6 +109,9 @@ whio_sizeof_encoded_size_t =
    @see whio_decode_uint32()
 */
 size_t whio_encode_uint32( unsigned char * dest, uint32_t i );
+/**
+   The unsigned counterpart of whio_encode_uint32().
+*/
 size_t whio_encode_int32( unsigned char * dest, int32_t i );
 
 /**
@@ -131,6 +134,9 @@ size_t whio_encode_int32( unsigned char * dest, int32_t i );
 
 */
 int whio_decode_uint32( unsigned char const * src, uint32_t * tgt );
+/**
+   The unsigned counterpart of whio_decode_uint32().
+*/
 int whio_decode_int32( unsigned char const * src, int32_t * tgt );
 
 /**
@@ -144,6 +150,9 @@ int whio_decode_int32( unsigned char const * src, int32_t * tgt );
    @see whio_decode_uint16()
 */
 size_t whio_encode_uint16( unsigned char * dest, uint16_t i );
+/**
+   The unsigned counterpart of whio_encode_uint16().
+*/
 size_t whio_encode_int16( unsigned char * dest, int16_t i );
 
 /**
@@ -160,6 +169,9 @@ size_t whio_encode_int16( unsigned char * dest, int16_t i );
 */
 
 int whio_decode_uint16( unsigned char const * src, uint16_t * tgt );
+/**
+   The unsigned counterpart of whio_decode_uint16().
+*/
 int whio_decode_int16( unsigned char const * src, int16_t * tgt );
 
 /**
@@ -168,6 +180,9 @@ int whio_decode_int16( unsigned char const * src, int16_t * tgt );
    error condition is that dest is null.
 */
 size_t whio_encode_uint8( unsigned char * dest, uint8_t i );
+/**
+   The unsigned counterpart of whio_encode_uint8().
+*/
 size_t whio_encode_int8( unsigned char * dest, int8_t i );
 
 /**
@@ -177,6 +192,9 @@ size_t whio_encode_int8( unsigned char * dest, int8_t i );
    is returned.
 */
 int whio_decode_uint8( unsigned char const * src, uint8_t * tgt );
+/**
+   The unsigned counterpart of whio_decode_uint8().
+*/
 int whio_decode_int8( unsigned char const * src, int8_t * tgt );
 
 
@@ -185,24 +203,24 @@ int whio_decode_int8( unsigned char const * src, int8_t * tgt );
    whio_encode_uint8(), whio_encode_uint16(), whio_encode_uint32() or
    whio_encode_uint64(), depending on the value of WHIO_SIZE_T_BITS.
 */
-whio_size_t whio_size_t_encode( unsigned char * dest, whio_size_t v );
+whio_size_t whio_encode_size_t( unsigned char * dest, whio_size_t v );
 
 /**
    Decodes v from src. This is just a proxy for one of:
    whio_decode_uint8(), whio_decode_uint16(), whio_decode_uint32() or
    whio_decode_uint64(), depending on the value of WHIO_SIZE_T_BITS.
 */
-int whio_size_t_decode( unsigned char const * src, whio_size_t * v );
+int whio_decode_size_t( unsigned char const * src, whio_size_t * v );
 
 /**
    Encodes v to dev using whio_size_t_encode().
 */
-whio_size_t whio_dev_size_t_encode( whio_dev * dev, whio_size_t v );
+whio_size_t whio_dev_encode_size_t( whio_dev * dev, whio_size_t v );
 
 /**
    Decodes v from dev using whio_size_t_decode().
 */
-int whio_dev_size_t_decode( whio_dev * dev, whio_size_t * v );
+int whio_dev_decode_size_t( whio_dev * dev, whio_size_t * v );
 
 /**
    The 64-bit variant of whio_encode_uint32(). Follows the same
@@ -214,6 +232,9 @@ int whio_dev_size_t_decode( whio_dev * dev, whio_size_t * v );
    whio_decode_uint64()
 */
 size_t whio_encode_uint64( unsigned char * dest, uint64_t i );
+/**
+   The unsigned counterpart of whio_encode_uint64().
+*/
 size_t whio_encode_int64( unsigned char * dest, int64_t i );
 
 /**
@@ -226,6 +247,9 @@ size_t whio_encode_int64( unsigned char * dest, int64_t i );
    whio_encode_uint64()
 */
 int whio_decode_uint64( unsigned char const * src, uint64_t * tgt );
+/**
+   The unsigned counterpart of whio_decode_uint64().
+*/
 int whio_decode_int64( unsigned char const * src, int64_t * tgt );
 
 /**
@@ -235,7 +259,7 @@ int whio_decode_int64( unsigned char const * src, int64_t * tgt );
 
    @see whio_encode_uint32()
 */
-size_t whio_uint32_array_encode( unsigned char * dest, size_t n, uint32_t const * list );
+size_t whio_encode_uint32_array( unsigned char * dest, size_t n, uint32_t const * list );
 
 /**
    Reads n consecutive numbers from src, populating list (which must
@@ -244,7 +268,7 @@ size_t whio_uint32_array_encode( unsigned char * dest, size_t n, uint32_t const 
 
    @see whio_decode_uint32()
 */
-size_t whio_uint32_array_decode( unsigned char const * src, size_t n, uint32_t * list );
+size_t whio_decode_uint32_array( unsigned char const * src, size_t n, uint32_t * list );
 
 /**
    Encodes a C string into the destination by writing a tag byte, the length of
@@ -259,12 +283,12 @@ size_t whio_uint32_array_decode( unsigned char const * src, size_t n, uint32_t *
    terminator (if any) is not stored and not counted in the length.
    s may contain null characters.
 
-   @see whio_cstring_decode()
+   @see whio_decode_cstring()
 */
-size_t whio_cstring_encode( unsigned char * dest, char const * s, uint32_t n );
+size_t whio_encode_cstring( unsigned char * dest, char const * s, uint32_t n );
 
 /**
-   The converse of whio_cstring_encode(), this routine tries to
+   The converse of whio_encode_cstring(), this routine tries to
    decode a string from the given source memory.
 
    src must contain at least (whio_sizeof_encoded_cstring + N) bytes,
@@ -290,22 +314,22 @@ size_t whio_cstring_encode( unsigned char * dest, char const * s, uint32_t n );
    - whio_rc.ArgError = dev or tgt are 0.
 
    - whio_rc.ConsistencyError = src does not contain a string written
-   by whio_cstring_encode().
+   by whio_encode_cstring().
 
    Example:
 
 @code
 char * str = 0;
 size_t len = 0;
-int rc = whio_cstring_decode( mySource, &str, &len );
+int rc = whio_decode_cstring( mySource, &str, &len );
 if( whio_rc.OK != rc ) ... error ...
 ... use str ...
 free(str);
 @endcode
 
-   @see whio_cstring_encode()
+   @see whio_encode_cstring()
 */
-int whio_cstring_decode( unsigned char const * src, char ** tgt, size_t * length );
+int whio_decode_cstring( unsigned char const * src, char ** tgt, size_t * length );
 
 
 /**
@@ -314,12 +338,12 @@ int whio_cstring_decode( unsigned char const * src, char ** tgt, size_t * length
    the number of bytes written, which will be equal to
    whio_dev_sizeof_uint32 on success.
 
-   @see whio_dev_uint32_decode()
+   @see whio_dev_decode_uint32()
 */
-size_t whio_dev_uint32_encode( whio_dev * dev, uint32_t i );
+size_t whio_dev_encode_uint32( whio_dev * dev, uint32_t i );
 
 /**
-   The converse of whio_dev_uint32_encode(), this tries to read an encoded
+   The converse of whio_dev_encode_uint32(), this tries to read an encoded
    32-bit value from the current position of dev. On success it returns
    whio_rc.OK and sets target to that value. On error it returns some
    other value from whio_rc and does not modify tgt.
@@ -331,24 +355,24 @@ size_t whio_dev_uint32_encode( whio_dev * dev, uint32_t i );
    - whio_rc.IOError = an error while reading the value (couldn't read enough bytes)
 
    - whio_rc.ConsistencyError = the bytes at the current location were not encoded
-   with whio_dev_uint32_encode().
+   with whio_dev_encode_uint32().
 
-   @see whio_dev_uint32_encode()
+   @see whio_dev_encode_uint32()
 
 */
-int whio_dev_uint32_decode( whio_dev * dev, uint32_t * tgt );
+int whio_dev_decode_uint32( whio_dev * dev, uint32_t * tgt );
 
 /**
-   Similar to whio_dev_uint32_encode(), with the same conventions, but
+   Similar to whio_dev_encode_uint32(), with the same conventions, but
    works on 16-bit numbers. Returns the number of bytes written, which
    will be equal to whio_dev_sizeof_uint16 on success.
 
-   @see whio_dev_uint16_decode()
+   @see whio_dev_decode_uint16()
 */
-size_t whio_dev_uint16_encode( whio_dev * dev, uint16_t i );
+size_t whio_dev_encode_uint16( whio_dev * dev, uint16_t i );
 
 /**
-   Similar to whio_dev_uint32_decode(), with the same conventions and
+   Similar to whio_dev_decode_uint32(), with the same conventions and
    error codes, but works on 16-bit numbers.  On success it returns
    whio_rc.OK and sets target to that value. On error it returns some
    other value from whio_rc and does not modify tgt.
@@ -356,60 +380,60 @@ size_t whio_dev_uint16_encode( whio_dev * dev, uint16_t i );
    @see whio_dev_uint16_encode()
 */
 
-int whio_dev_uint16_decode( whio_dev * dev, uint16_t * tgt );
+int whio_dev_decode_uint16( whio_dev * dev, uint16_t * tgt );
 
 
 /**
-   The 64-bit variant of whio_dev_uint32_encode(). Follows the same
+   The 64-bit variant of whio_dev_encode_uint32(). Follows the same
    conventions as that function but handles a uint64_t value instead
    of uint32_t.
 
    @see whio_dev_uint16_encode()
-   @see whio_dev_uint32_encode()
-   @see whio_dev_uint64_decode()
+   @see whio_dev_encode_uint32()
+   @see whio_dev_decode_uint64()
 */
-size_t whio_dev_uint64_encode( whio_dev * fs, uint64_t i );
+size_t whio_dev_encode_uint64( whio_dev * fs, uint64_t i );
 
 /**
-   The 64-bit variant of whio_dev_uint32_decode(). Follows the same
+   The 64-bit variant of whio_dev_decode_uint32(). Follows the same
    conventions as that function but handles a uint64_t value instead
    of uint32_t.
 
-   @see whio_dev_uint16_decode()
-   @see whio_dev_uint32_decode()
+   @see whio_dev_decode_uint16()
+   @see whio_dev_decode_uint32()
    @see whio_dev_uint64_encode()
 */
-int whio_dev_uint64_decode( whio_dev * dev, uint64_t * tgt );
+int whio_dev_decode_uint64( whio_dev * dev, uint64_t * tgt );
 
 /**
-   Uses whio_dev_uint32_encode() to write n elements from the given
+   Uses whio_dev_encode_uint32() to write n elements from the given
    array to dev.  Returns whio_rc.OK on success. Returns the number of
    items written.
 
-   @see whio_dev_uint32_encode()
+   @see whio_dev_encode_uint32()
 */
-size_t whio_dev_uint32_array_encode( whio_dev * dev, size_t n, uint32_t const * list );
+size_t whio_dev_encode_uint32_array( whio_dev * dev, size_t n, uint32_t const * list );
 
 /**
    Reads n consecutive numbers from dev, populating list (which must
    point to at least n uint32_t objects) with the results. Returns the
    number of items read, which will be less than n on error.
 
-   @see whio_dev_uint32_decode()
+   @see whio_dev_decode_uint32()
 */
-size_t whio_dev_uint32_array_decode( whio_dev * dev, size_t n, uint32_t * list );
+size_t whio_dev_decode_uint32_array( whio_dev * dev, size_t n, uint32_t * list );
 
 /**
    Decodes a whio_size_t object from dev. On success whio_rc.OK is returned
    and tgt (if not null) is modified, otherwise tgt is not modified.
 */
-int whio_dev_size_t_decode( whio_dev * dev, whio_size_t * tgt );
+int whio_dev_decode_size_t( whio_dev * dev, whio_size_t * tgt );
 
 /**
    Encodes i using whio_size_t_encode(). Returns
    whio_sizeof_encoded_size_t on success.
 */
-size_t whio_dev_size_t_encode( whio_dev * fs, whio_size_t i );
+size_t whio_dev_encode_size_t( whio_dev * fs, whio_size_t i );
 
 /**
    Encodes a C string into the device by writing a tag byte, the length of
@@ -419,12 +443,12 @@ size_t whio_dev_size_t_encode( whio_dev * fs, whio_size_t i );
    Returns the number of bytes written, which will be (n +
    whio_dev_size_cstring) on success, 0 if !dev or !s.
 
-   @see whio_dev_cstring_decode()
+   @see whio_dev_decode_cstring()
 */
-uint32_t whio_dev_cstring_encode( whio_dev * dev, char const * s, uint32_t n );
+uint32_t whio_dev_encode_cstring( whio_dev * dev, char const * s, uint32_t n );
 
 /**
-   The converse of whio_dev_cstring_encode(), this routine tries to
+   The converse of whio_dev_encode_cstring(), this routine tries to
    decode a string from the current location in the device.
 
    On success, tgt is assigned to the new (null-terminated) string
@@ -444,7 +468,7 @@ uint32_t whio_dev_cstring_encode( whio_dev * dev, char const * s, uint32_t n );
    - whio_rc.ArgError = dev or tgt are 0.
 
    - whio_rc.ConsistencyError = current position of the device does not
-   appear to be an encoded string written by whio_dev_cstring_encode().
+   appear to be an encoded string written by whio_dev_encode_cstring().
 
    - whio_rc.IOError = some form of IO error.
 
@@ -454,16 +478,16 @@ uint32_t whio_dev_cstring_encode( whio_dev * dev, char const * s, uint32_t n );
 @code
 char * str = 0;
 size_t len = 0;
-int rc = whio_dev_cstring_decode( myDevice, &str, &len );
+int rc = whio_dev_decode_cstring( myDevice, &str, &len );
 if( whio_rc.OK != rc ) ... error ...
 ... use str ...
 free(str);
 @endcode
 
 
-   @see whio_dev_cstring_encode()
+   @see whio_dev_encode_cstring()
 */
-int whio_dev_cstring_decode( whio_dev * dev, char ** tgt, uint32_t * length );
+int whio_dev_decode_cstring( whio_dev * dev, char ** tgt, uint32_t * length );
 /**
    Parses fmt in the same manner as whio_encode_pack() and returns
    the number of bytes which would be needed to encode that set
@@ -477,20 +501,19 @@ int whio_dev_cstring_decode( whio_dev * dev, char ** tgt, uint32_t * length );
    size_t itemCount = 0;
    size_t len = whio_encode_pack_calc_size("828",&itemCount);
    // len==24 and itemCount==3
-   @endif
+   @endcode
 
    Note that the encoded length is longer than the actual data because
    each encoded elements gets a consistency-checking byte added to it,
-   to allow the decode routines to more safely navigate their
-   input. The size also includes bytes for the packing structure
-   itself, and is not a mere accumulation of the types specified
-   in the format string.
+   to allow the decode routines to more safely navigate their input,
+   and the number of items in the list is stored in the encoding. The
+   size also includes bytes for the packing structure itself, and is
+   not a mere accumulation of the types specified in the format
+   string.
 */
 size_t whio_encode_pack_calc_size( char const * fmt, size_t *itemCount );
     
 /**
-   Experimental - don't use this.
-
    Encodes a series of values supported by the various whio_encode_xxx()
    routines as an atomic unit. They can be unpacked by using
    whio_decode_pack().
@@ -501,7 +524,7 @@ size_t whio_encode_pack_calc_size( char const * fmt, size_t *itemCount );
    - '2' means the corresponding (...) arg must be a uint16_t.
    - '4' means the corresponding (...) arg must be a uint32_t.
    - '8' means the corresponding (...) arg must be a uint64_t.
-   - '+' or '-' followed by a digit means the number is signed.
+   - '+' or '-' followed by a digit means the following number argument is signed.
 
    
    Returns the result of calling whio_encode_xxx() for each argument,
@@ -515,14 +538,17 @@ size_t whio_encode_pack_calc_size( char const * fmt, size_t *itemCount );
 
    @code
    size_t count = 0;
-   size_t rc = whio_encode_pack( mybuffer, &count, "144", myShort, myInt1, myInt2 );
+   size_t rc = whio_encode_pack( mybuffer, &count, "144", myUint16, myInt32a, myInt32b );
    // count should be 3 now.
    // rc will be the same as whio_encode_pack_calc_size("144",0).
    @endcode
 
+   You can use whio_encode_pack_calc_size() to figure out what the return value of whio_encode_pack()
+   _should_ be.
+   
    TODOS:
 
-   - Consider adding support for whio_cstring_encode(). The problem
+   - Consider adding support for whio_encode_cstring(). The problem
    here is that decoding it requires malloc()ing or some weird
    arg-passing conventions, e.g. fmt="s" requiring two args (char *
    dest,size_t destLen) (which wouldn't be all that bad for the uses i

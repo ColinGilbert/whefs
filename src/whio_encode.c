@@ -263,7 +263,7 @@ int whio_decode_int8( unsigned char const * src, int8_t * tgt )
 }
 
 
-size_t whio_uint32_array_encode( unsigned char * dest, size_t n, uint32_t const * list )
+size_t whio_encode_uint32_array( unsigned char * dest, size_t n, uint32_t const * list )
 {
     size_t i = (dest && n && list) ? 0 : n;
     size_t rc = 0;
@@ -277,7 +277,7 @@ size_t whio_uint32_array_encode( unsigned char * dest, size_t n, uint32_t const 
     return rc;
 }
 
-size_t whio_uint32_array_decode( unsigned char const * src, size_t n, uint32_t * list )
+size_t whio_decode_uint32_array( unsigned char const * src, size_t n, uint32_t * list )
 {
     size_t i = (src && n && list) ? 0 : n;
     size_t rc = 0;
@@ -292,7 +292,7 @@ size_t whio_uint32_array_decode( unsigned char const * src, size_t n, uint32_t *
 }
 
 static const unsigned char whio_cstring_tag_char = 0x80 | '"';
-size_t whio_cstring_encode( unsigned char * dest, char const * s, uint32_t n )
+size_t whio_encode_cstring( unsigned char * dest, char const * s, uint32_t n )
 {
     if( ! dest || !s ) return 0;
     if( ! n )
@@ -315,7 +315,7 @@ size_t whio_cstring_encode( unsigned char * dest, char const * s, uint32_t n )
     return rc;
 }
 
-int whio_cstring_decode( unsigned char const * src, char ** tgt, size_t * length )
+int whio_decode_cstring( unsigned char const * src, char ** tgt, size_t * length )
 {
     if( !src || ! tgt ) return whio_rc.ArgError;
 
@@ -351,7 +351,7 @@ int whio_cstring_decode( unsigned char const * src, char ** tgt, size_t * length
    tag byte for encoded whio_id_type objects.
 */
 static const unsigned int whio_size_t_tag_char = 0x08 | 'p';
-whio_size_t whio_size_t_encode( unsigned char * dest, whio_size_t v )
+whio_size_t whio_encode_size_t( unsigned char * dest, whio_size_t v )
 {
 #if WHIO_SIZE_T_BITS == 64
     return whio_encode_uint64( dest, v );
@@ -366,7 +366,7 @@ whio_size_t whio_size_t_encode( unsigned char * dest, whio_size_t v )
 #endif
 }
 
-int whio_size_t_decode( unsigned char const * src, whio_size_t * v )
+int whio_decode_size_t( unsigned char const * src, whio_size_t * v )
 {
 #if WHIO_SIZE_T_BITS == 64
     return whio_decode_uint64( src, v );
@@ -381,25 +381,25 @@ int whio_size_t_decode( unsigned char const * src, whio_size_t * v )
 #endif
 }
 
-whio_size_t whio_dev_size_t_encode( whio_dev * dev, whio_size_t v )
+whio_size_t whio_dev_encode_size_t( whio_dev * dev, whio_size_t v )
 {
     unsigned char buf[whio_sizeof_encoded_size_t];
-    whio_size_t_encode( buf, v );
+    whio_encode_size_t( buf, v );
     return dev->api->write( dev, &buf, whio_sizeof_encoded_size_t );
 }
 
-int whio_dev_size_t_decode( whio_dev * dev, whio_size_t * tgt )
+int whio_dev_decode_size_t( whio_dev * dev, whio_size_t * tgt )
 {
-    unsigned char buf[whio_sizeof_encoded_size_t]; /* Flawfinder: ignore This is intentional and safe as long as whio_sizeof_encoded_uint16 is the correct size. */
+    unsigned char buf[whio_sizeof_encoded_size_t]; /* Flawfinder: ignore This is intentional and safe as long as whio_sizeof_encoded_size_t is the correct size. */
     memset( buf, 0, whio_sizeof_encoded_size_t );
-    size_t rc = dev->api->read( dev, buf  /*Flawfinder: ignore  This is safe in conjunction with whio_sizeof_encoded_uint16*/, whio_sizeof_encoded_size_t );
+    size_t rc = dev->api->read( dev, buf  /*Flawfinder: ignore  This is safe in conjunction with whio_sizeof_encoded_xxx*/, whio_sizeof_encoded_size_t );
     return ( whio_sizeof_encoded_size_t == rc )
-        ? whio_size_t_decode( buf, tgt )
+        ? whio_decode_size_t( buf, tgt )
         : whio_rc.IOError;
 }
 
 
-size_t whio_dev_uint64_encode( whio_dev * dev, uint64_t i )
+size_t whio_dev_encode_uint64( whio_dev * dev, uint64_t i )
 {
     unsigned char buf[whio_sizeof_encoded_uint64]; /* Flawfinder: ignore This is intentional and safe as long as whio_sizeof_encoded_uint64 is the correct size. */
     size_t const x = whio_encode_uint64( buf, i );
@@ -408,7 +408,7 @@ size_t whio_dev_uint64_encode( whio_dev * dev, uint64_t i )
         : 0;
 }
 
-int whio_dev_uint64_decode( whio_dev * dev, uint64_t * tgt )
+int whio_dev_decode_uint64( whio_dev * dev, uint64_t * tgt )
 {
     if( ! dev || ! tgt ) return whio_rc.ArgError;
     unsigned char buf[whio_sizeof_encoded_uint64]; /* Flawfinder: ignore This is intentional and safe as long as whio_sizeof_encoded_uint64 is the correct size. */
@@ -420,7 +420,7 @@ int whio_dev_uint64_decode( whio_dev * dev, uint64_t * tgt )
 }
 
 
-size_t whio_dev_uint32_encode( whio_dev * dev, uint32_t i )
+size_t whio_dev_encode_uint32( whio_dev * dev, uint32_t i )
 {
     unsigned char buf[whio_sizeof_encoded_uint32]; /* Flawfinder: ignore This is intentional and safe as long as whio_sizeof_encoded_uint32 is the correct size. */
     size_t const x = whio_encode_uint32( buf, i );
@@ -429,7 +429,7 @@ size_t whio_dev_uint32_encode( whio_dev * dev, uint32_t i )
         : 0;
 }
 
-int whio_dev_uint32_decode( whio_dev * dev, uint32_t * tgt )
+int whio_dev_decode_uint32( whio_dev * dev, uint32_t * tgt )
 {
     if( ! dev || ! tgt ) return whio_rc.ArgError;
     unsigned char buf[whio_sizeof_encoded_uint32]; /* Flawfinder: ignore This is intentional and safe as long as whio_sizeof_encoded_uint32 is the correct size. */
@@ -442,7 +442,7 @@ int whio_dev_uint32_decode( whio_dev * dev, uint32_t * tgt )
 
 
 static const unsigned char whio_dev_uint16_tag_char = 0x80 | 16;
-size_t whio_dev_uint16_encode( whio_dev * dev, uint16_t i )
+size_t whio_dev_encode_uint16( whio_dev * dev, uint16_t i )
 {
     unsigned char buf[whio_sizeof_encoded_uint16]; /* Flawfinder: ignore This is intentional and safe as long as whio_sizeof_encoded_uint16 is the correct size. */
     size_t const x = whio_encode_uint16( buf, i );
@@ -451,7 +451,7 @@ size_t whio_dev_uint16_encode( whio_dev * dev, uint16_t i )
         : 0;
 }
 
-int whio_dev_uint16_decode( whio_dev * dev, uint16_t * tgt )
+int whio_dev_decode_uint16( whio_dev * dev, uint16_t * tgt )
 {
     if( ! dev || ! tgt ) return whio_rc.ArgError;
     unsigned char buf[whio_sizeof_encoded_uint16]; /* Flawfinder: ignore This is intentional and safe as long as whio_sizeof_encoded_uint16 is the correct size. */
@@ -462,13 +462,13 @@ int whio_dev_uint16_decode( whio_dev * dev, uint16_t * tgt )
         : whio_rc.IOError;
 }
 
-size_t whio_dev_uint32_array_encode( whio_dev * dev, size_t n, uint32_t const * list )
+size_t whio_dev_encode_uint32_array( whio_dev * dev, size_t n, uint32_t const * list )
 {
     size_t i = (dev && n && list) ? 0 : n;
     size_t rc = 0;
     for( ; i < n; ++i, ++rc )
     {
-	if( whio_sizeof_encoded_uint32 != whio_dev_uint32_encode( dev, *(list++) ) )
+	if( whio_sizeof_encoded_uint32 != whio_dev_encode_uint32( dev, *(list++) ) )
 	{
 	    break;
 	}
@@ -476,13 +476,13 @@ size_t whio_dev_uint32_array_encode( whio_dev * dev, size_t n, uint32_t const * 
     return rc;
 }
 
-size_t whio_dev_uint32_array_decode( whio_dev * dev, size_t n, uint32_t * list )
+size_t whio_dev_decode_uint32_array( whio_dev * dev, size_t n, uint32_t * list )
 {
     size_t i = (dev && n && list) ? 0 : n;
     size_t rc = 0;
     for( ; i < n; ++i, ++rc )
     {
-	if( whio_rc.OK != whio_dev_uint32_decode( dev, &list[i] ) )
+	if( whio_rc.OK != whio_dev_decode_uint32( dev, &list[i] ) )
 	{
 	    break;
 	}
@@ -491,7 +491,7 @@ size_t whio_dev_uint32_array_decode( whio_dev * dev, size_t n, uint32_t * list )
 }
 
 static const unsigned char whio_dev_cstring_tag_char = 0x80 | '"';
-whio_size_t whio_dev_cstring_encode( whio_dev * dev, char const * s, uint32_t n )
+whio_size_t whio_dev_encode_cstring( whio_dev * dev, char const * s, uint32_t n )
 {
     if( ! dev || !s ) return 0;
     if( ! n )
@@ -502,12 +502,12 @@ whio_size_t whio_dev_cstring_encode( whio_dev * dev, char const * s, uint32_t n 
     }
     whio_size_t rc = dev->api->write( dev, &whio_dev_cstring_tag_char, 1 );
     if( 1 != rc ) return rc;
-    rc += whio_dev_uint32_encode( dev, n );
+    rc += whio_dev_encode_uint32( dev, n );
     if( (1 + whio_sizeof_encoded_uint32) != rc ) return rc;
     return rc + dev->api->write( dev, s, (whio_size_t)n );
 }
 
-int whio_dev_cstring_decode( whio_dev * dev, char ** tgt, uint32_t * length )
+int whio_dev_decode_cstring( whio_dev * dev, char ** tgt, uint32_t * length )
 {
     if( !dev || ! tgt ) return whio_rc.ArgError;
 
@@ -520,7 +520,7 @@ int whio_dev_cstring_decode( whio_dev * dev, char ** tgt, uint32_t * length )
 	}
     }
     uint32_t slen = 0;
-    int rc = whio_dev_uint32_decode( dev, &slen );
+    int rc = whio_dev_decode_uint32( dev, &slen );
     if( whio_rc.OK != rc ) return rc;
     if( ! slen )
     {

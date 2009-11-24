@@ -6,7 +6,7 @@
 #include "whefs_hash.h"
 #include "whefs_details.c" // ONLY for the debugging code.
 
-const whefs_hashid whefs_hashid_init = whefs_hashid_init_m;
+const whefs_hashid whefs_hashid_empty = whefs_hashid_empty_m;
 
 whefs_hashval_type whefs_hash_cstring( char const * vstr)
 {
@@ -36,7 +36,7 @@ whefs_hashval_type whefs_hash_cstring( char const * vstr)
 /**
    A compare routine for bsearch(). Compares the hash fields of lhs
    and rhs based on their hash member. They must be (whefs_hashid
-   const *)-compatible.
+   const *).
 */
 static int whefs_hashid_cmp( void const * lhs, void const * rhs )
 {
@@ -55,8 +55,7 @@ static int whefs_hashid_cmp( void const * lhs, void const * rhs )
    and rhs based on their hits member. They must be (whefs_hashid
    const *)-compatible.
 */
-//static
-int whefs_hashid_cmp_hits( void const * lhs, void const * rhs )
+static int whefs_hashid_cmp_hits( void const * lhs, void const * rhs )
 {
     whefs_hashid const * l  = (whefs_hashid const *)lhs;
     whefs_hashid const * r  = (whefs_hashid const *)rhs;
@@ -70,7 +69,7 @@ int whefs_hashid_cmp_hits( void const * lhs, void const * rhs )
         : ( ( l->hits < r->hits ) ? -1 : 1);
 }
 
-const whefs_hashid_list whefs_hashid_list_init = whefs_hashid_list_init_m;
+const whefs_hashid_list whefs_hashid_list_empty = whefs_hashid_list_empty_m;
 
 int  whefs_hashid_list_sort( whefs_hashid_list * li )
 {
@@ -78,13 +77,12 @@ int  whefs_hashid_list_sort( whefs_hashid_list * li )
     li->isSorted = true;
     if( li->count < 2 ) return whefs_rc.OK;
     qsort( li->list, li->count, sizeof(whefs_hashid), whefs_hashid_cmp );
-    //qsort( li->_head, li->count, sizeof(whefs_hashid), whefs_hashid_cmp );
 #if 1
     // shave off zeroed items...
     whefs_id_type off = 0;
     whefs_hashid * h = li->list;
     while( ! h->id && (off<li->count) ) { ++off; ++h; }
-    // FIXME: simply move li->_head, so we can easily re-use those slots in whefs_hashid_list_add().
+    // FIXME???: simply move li->_head, so we can easily re-use those slots in whefs_hashid_list_add().
     if( (h != li->list) && (off < li->count) )
     {
         const whefs_id_type tail = li->alloced; /* li->count? */
@@ -105,7 +103,7 @@ int whefs_hashid_list_alloc( whefs_hashid_list ** tgt, whefs_id_type toAlloc )
         if( ! toAlloc ) return whefs_rc.OK;
         *tgt = (whefs_hashid_list*) malloc(sizeof(whefs_hashid_list));
         if( ! tgt ) return whefs_rc.AllocError;
-        **tgt = whefs_hashid_list_init;
+        **tgt = whefs_hashid_list_empty;
     }
     whefs_hashid_list * obj = *tgt;
     if( 0 == toAlloc )
@@ -115,7 +113,7 @@ int whefs_hashid_list_alloc( whefs_hashid_list ** tgt, whefs_id_type toAlloc )
             WHEFS_DBG_CACHE("Freeing whefs_hashid_list->list with %"WHEFS_ID_TYPE_PFMT"/%"WHEFS_ID_TYPE_PFMT" used/allocated items.",obj->count,obj->alloced);
             free( obj->list );
         }
-        *obj = whefs_hashid_list_init;
+        *obj = whefs_hashid_list_empty;
         obj->isSorted = true;
 	return whefs_rc.OK;
     }
@@ -123,7 +121,6 @@ int whefs_hashid_list_alloc( whefs_hashid_list ** tgt, whefs_id_type toAlloc )
     {
         return whefs_rc.OK;
     }
-    obj->isSorted = false;
     // else realloc...
     if( obj->maxAlloc )
     {
@@ -134,11 +131,11 @@ int whefs_hashid_list_alloc( whefs_hashid_list ** tgt, whefs_id_type toAlloc )
             return whefs_rc.AllocError;
         }
     }
-
     whefs_hashid * li = (whefs_hashid *) realloc( obj->list, toAlloc * sizeof(whefs_hashid) );
     if( ! li ) return whefs_rc.AllocError;
     obj->list = li;
     obj->alloced = toAlloc;
+    obj->isSorted = false; // ???needed/desired???
     whefs_id_type i = obj->count;
     if( toAlloc < obj->count )
     {
@@ -146,7 +143,7 @@ int whefs_hashid_list_alloc( whefs_hashid_list ** tgt, whefs_id_type toAlloc )
     }
     for( ; i < toAlloc; ++i )
     {
-	obj->list[i] = whefs_hashid_init;
+	obj->list[i] = whefs_hashid_empty;
     }
     return whefs_rc.OK;
 }
@@ -170,13 +167,12 @@ int whefs_hashid_list_chomp_lv( whefs_hashid_list * li )
         return whefs_rc.OK;
     }
     qsort( li->list, li->count, sizeof(whefs_hashid), whefs_hashid_cmp_hits );
-    //qsort( li->_head, li->count, sizeof(whefs_hashid), whefs_hashid_cmp_hits );
     whefs_id_type i;
     for( i = li->count/2; i < li->count; ++i )
     {
-        li->list[i] = whefs_hashid_init;
+        li->list[i] = whefs_hashid_empty;
     }
-    whefs_hashid_list_sort(li);
+    whefs_hashid_list_sort(li); // re-order by name hash
     return whefs_rc.OK;
 }
 
@@ -222,13 +218,13 @@ whefs_id_type whefs_hashid_list_index_of( whefs_hashid_list const * src, whefs_h
         return whefs_rc.IDTypeEnd;
 #endif
     }
-    whefs_hashid hv = whefs_hashid_init;
+    whefs_hashid hv = whefs_hashid_empty;
     hv.hash = val;
     void const * f = bsearch( &hv, src->list, src->count, sizeof(whefs_hashid), whefs_hashid_cmp );
     if( ! f ) return whefs_rc.IDTypeEnd;
     whefs_id_type ndx = (((unsigned char const *)f) -((unsigned char const *)src->list)) / sizeof(whefs_hashid);
     while( ndx && (src->list[ndx-1].hash == val) ) --ndx;
-    //++(src->list[ndx].hits);
+    ++(src->list[ndx].hits);
     WHEFS_DBG_CACHE("Index of hash %"WHEFS_HASHVAL_TYPE_PFMT" = %"WHEFS_ID_TYPE_PFMT, val, ndx);
     return ndx;
 }
@@ -244,7 +240,7 @@ int whefs_hashid_list_wipe_index( whefs_hashid_list * tgt, whefs_id_type ndx )
 {
     if( ! tgt ) return whefs_rc.ArgError;
     if( tgt->count <= ndx ) return whefs_rc.RangeError;
-    tgt->list[ndx] = whefs_hashid_init;
+    tgt->list[ndx] = whefs_hashid_empty;
     tgt->isSorted = false;
     return whefs_rc.OK;
 }
@@ -272,7 +268,7 @@ int whefs_hashid_list_add_slots( whefs_hashid_list * li, whefs_id_type pos, whef
     whefs_id_type i;
     for( i = pos; i < last; ++i )
     {
-        li->list[i] = whefs_hashid_init;
+        li->list[i] = whefs_hashid_empty;
     }
     return whefs_rc.OK;
 }

@@ -90,8 +90,8 @@ but i need to look closer to be sure.
 /**
    An empty whefs_fs object for us in initializing new objects.
 */
-//const whefs_fs whefs_fs_init =
-#define whefs_fs_init_m { \
+//const whefs_fs whefs_fs_empty =
+#define whefs_fs_empty_m { \
     /* flags */ (WHEFS_CONFIG_ENABLE_STRINGS_HASH_CACHE ? WHEFS_FLAG_FS_EnableHashCache : 0), \
     0, /* err */ \
     {0}, /* offsets */ \
@@ -108,7 +108,7 @@ but i need to look closer to be sure.
     WHEFS_FS_STRUCT_THREAD_INFO, \
     WHEFS_FS_STRUCT_CACHE,       \
     } /* end of whefs_fs */
-const whefs_fs whefs_fs_init = whefs_fs_init_m;
+const whefs_fs whefs_fs_empty = whefs_fs_empty_m;
 
 #if WHEFS_CONFIG_ENABLE_STATIC_MALLOC
 enum {
@@ -123,7 +123,7 @@ static struct
     whefs_fs objs[whefs_fs_alloc_count];
     char used[whefs_fs_alloc_count];
     size_t next;
-} whefs_fs_alloc_slots = { {whefs_fs_init_m}, {0}, 0 };
+} whefs_fs_alloc_slots = { {whefs_fs_empty_m}, {0}, 0 };
 #endif
 /** @internal
 
@@ -147,7 +147,7 @@ static whefs_fs * whefs_fs_alloc()
     }
 #endif /* WHEFS_CONFIG_ENABLE_STATIC_MALLOC */
     if( ! obj ) obj = (whefs_fs *) malloc( sizeof(whefs_fs) );
-    if( obj ) *obj = whefs_fs_init;
+    if( obj ) *obj = whefs_fs_empty;
     return obj;
 }
 /** @internal
@@ -156,7 +156,7 @@ static whefs_fs * whefs_fs_alloc()
 */
 static void whefs_fs_free( whefs_fs * obj )
 {
-    if( obj ) *obj = whefs_fs_init;
+    if( obj ) *obj = whefs_fs_empty;
     else return;
 #if WHEFS_CONFIG_ENABLE_STATIC_MALLOC
     if( (obj < &whefs_fs_alloc_slots.objs[0]) ||
@@ -565,9 +565,9 @@ static int whefs_mkfs_write_magic( whefs_fs * restrict fs )
       fs->offsets[WHEFS_OFF_SIZE]
     */
     fs->dev->api->seek( fs->dev, 0L, SEEK_SET );
-    whio_dev_uint32_array_encode( fs->dev, whefs_fs_magic_bytes_len, whefs_fs_magic_bytes );
-    whio_dev_uint32_encode( fs->dev, fs->filesize /*will be overwritten at end of mkfs*/ );
-    whio_dev_uint16_encode( fs->dev, fs->options.magic.length );
+    whio_dev_encode_uint32_array( fs->dev, whefs_fs_magic_bytes_len, whefs_fs_magic_bytes );
+    whio_dev_encode_uint32( fs->dev, fs->filesize /*will be overwritten at end of mkfs*/ );
+    whio_dev_encode_uint16( fs->dev, fs->options.magic.length );
     const whio_size_t wrc = whio_dev_write( fs->dev, fs->options.magic.data, fs->options.magic.length );
     return (wrc == fs->options.magic.length)
 	? whefs_rc.OK
@@ -582,12 +582,12 @@ static int whefs_mkfs_write_options( whefs_fs * restrict fs )
 {
     whefs_fs_seek( fs, fs->offsets[WHEFS_OFF_OPTIONS], SEEK_SET );
     assert( fs->dev->api->tell( fs->dev ) == fs->offsets[WHEFS_OFF_OPTIONS] );
-    size_t pos = whio_dev_uint32_encode( fs->dev, fs->options.block_size );
+    size_t pos = whio_dev_encode_uint32( fs->dev, fs->options.block_size );
     size_t sz = whefs_dev_id_encode( fs->dev, fs->options.block_count );
     if( whefs_sizeof_encoded_id_type != sz ) return whefs_rc.IOError;
     sz = whefs_dev_id_encode( fs->dev, fs->options.inode_count );
     if( whefs_sizeof_encoded_id_type != sz ) return whefs_rc.IOError;
-    pos += whio_dev_uint16_encode( fs->dev, fs->options.filename_length );
+    pos += whio_dev_encode_uint16( fs->dev, fs->options.filename_length );
     return (pos>0) /* <--- this is not technically correct. */
 	? whefs_rc.OK
 	: whefs_rc.IOError;
@@ -821,7 +821,7 @@ static int whefs_mkfs_write_blocklist( whefs_fs * restrict fs )
     int rc = whefs_rc.OK;
     whefs_fs_seek( fs, fs->offsets[WHEFS_OFF_BLOCKS], SEEK_SET );
     assert( fs->dev->api->tell( fs->dev ) == fs->offsets[WHEFS_OFF_BLOCKS] );
-    whefs_block bl = whefs_block_init;
+    whefs_block bl = whefs_block_empty;
     for( i = 1; (i <= fs->options.block_count) && (whefs_rc.OK == rc); ++i )
     {
 	bl.id = i;
@@ -844,7 +844,7 @@ static int whefs_mkfs_write_inodelist( whefs_fs * restrict fs )
     assert( fs->dev->api->tell( fs->dev ) == fs->offsets[WHEFS_OFF_INODES_NO_STR] );
     size_t i = 0;
     int rc = whefs_rc.OK;
-    whefs_inode node = whefs_inode_init;
+    whefs_inode node = whefs_inode_empty;
     enum { bufSize = whefs_sizeof_encoded_inode };
     unsigned char buf[bufSize];
     memset( buf, 0, bufSize );
@@ -1000,7 +1000,7 @@ static int whefs_fs_inode_cache_load( whefs_fs * restrict fs )
     int rc = 0;
     uint32_t flags;
     //whefs_id_type count = 0;
-    whefs_inode ino = whefs_inode_init;
+    whefs_inode ino = whefs_inode_empty;
     for( ; id <= nc; ++id )
     {
 	//WHEFS_DBG("Trying to cache inode #%"WHEFS_ID_TYPE_PFMT"'s state.", id);
@@ -1043,7 +1043,7 @@ static int whefs_fs_block_cache_load( whefs_fs * restrict fs )
     whefs_block bl;
     for( ; id <= bc; ++id )
     {
-	bl = whefs_block_init;
+	bl = whefs_block_empty;
 	rc = whefs_block_read( fs, id, &bl ); /* this will update the used-blocks cache */
 	if( whefs_rc.OK != rc )
 	{
@@ -1182,7 +1182,7 @@ static int whefs_mkfs_stage1( whefs_fs_options const * opt, whefs_fs ** tgt )
     }
     whefs_fs * fs = whefs_fs_alloc();
     if( ! fs ) return whefs_rc.AllocError;
-    *fs = whefs_fs_init;
+    *fs = whefs_fs_empty;
     fs->flags |= WHEFS_FLAG_ReadWrite;
     fs->options = *opt;
 
@@ -1207,7 +1207,7 @@ static int whefs_mkfs_stage1( whefs_fs_options const * opt, whefs_fs ** tgt )
 static int whefs_fs_write_filesize( whefs_fs * restrict fs )
 {
     fs->dev->api->seek( fs->dev, fs->offsets[WHEFS_OFF_SIZE], SEEK_SET );
-    const whio_size_t ck = whio_dev_uint32_encode( fs->dev, fs->filesize );
+    const whio_size_t ck = whio_dev_encode_uint32( fs->dev, fs->filesize );
     return ( whio_sizeof_encoded_uint32 == ck )
         ? whefs_rc.OK
         : whefs_rc.IOError;
@@ -1369,7 +1369,7 @@ static int whefs_openfs_stage2( whefs_fs * restrict fs )
 
     while(1)
     {
-	if( whefs_fs_magic_bytes_len != whio_dev_uint32_array_decode( fs->dev, whefs_fs_magic_bytes_len, coreMagic ) )
+	if( whefs_fs_magic_bytes_len != whio_dev_decode_uint32_array( fs->dev, whefs_fs_magic_bytes_len, coreMagic ) )
 	{
 	    WHEFS_DBG_ERR("Error reading the core magic bytes.");
 	    rc = whefs_rc.BadMagicError;
@@ -1396,7 +1396,7 @@ static int whefs_openfs_stage2( whefs_fs * restrict fs )
     }
 
     uint32_t fsize = 0;
-    rc = whio_dev_uint32_decode( fs->dev, &fsize );
+    rc = whio_dev_decode_uint32( fs->dev, &fsize );
     if( whefs_rc.OK != rc )
     {
 	WHEFS_DBG_ERR("Doesn't seem to be a whefs file! error code=%d",rc);
@@ -1420,19 +1420,19 @@ static int whefs_openfs_stage2( whefs_fs * restrict fs )
     /* Read FS options... */
     // FIXME: factor this out into whefs_options_read():
     fs->dev->api->seek( fs->dev, fs->offsets[WHEFS_OFF_CLIENT_MAGIC], SEEK_SET );
-    rc = whio_dev_uint16_decode( fs->dev, &opt->magic.length );
+    rc = whio_dev_decode_uint16( fs->dev, &opt->magic.length );
     CHECK;
     ///fs->offsets[WHEFS_OFF_OPTIONS] = 
     fs->dev->api->seek( fs->dev, opt->magic.length, SEEK_CUR );
     /* FIXME: store the opt->magic.data somewhere! Ownership requires some changes in other code. */
     // FIXME: add whio_dev_size_t_en/decode()
-    rc = whio_dev_uint32_decode( fs->dev, &opt->block_size );
+    rc = whio_dev_decode_uint32( fs->dev, &opt->block_size );
     CHECK;
     rc = whefs_dev_id_decode( fs->dev, &opt->block_count );
     CHECK;
     rc = whefs_dev_id_decode( fs->dev, &opt->inode_count );
     CHECK;
-    rc = whio_dev_uint16_decode( fs->dev, &opt->filename_length );
+    rc = whio_dev_decode_uint16( fs->dev, &opt->filename_length );
     CHECK;
 #undef CHECK
     whefs_fs_init_sizes( fs );
@@ -1464,7 +1464,7 @@ int whefs_openfs_dev( whio_dev * restrict dev, whefs_fs ** tgt, bool takeDev )
     if( ! dev || !tgt ) return whefs_rc.ArgError;
     whefs_fs * fs = whefs_fs_alloc();
     if( ! fs ) return whefs_rc.AllocError;
-    *fs = whefs_fs_init;
+    *fs = whefs_fs_empty;
     // FIXME: do a 1-byte write test to see if the device is writeable,
     // or add a parameter to the function defining the write mode.
     fs->flags |= WHEFS_FLAG_ReadWrite; /* we're guessing!!! */
@@ -1487,7 +1487,7 @@ int whefs_openfs( char const * filename, whefs_fs ** tgt, bool writeMode )
     if( ! filename || !tgt ) return whefs_rc.ArgError;
     whefs_fs * fs = whefs_fs_alloc();
     if( ! fs ) return whefs_rc.AllocError;
-    *fs = whefs_fs_init;
+    *fs = whefs_fs_empty;
     fs->flags |= (writeMode ? WHEFS_FLAG_ReadWrite : WHEFS_FLAG_Read);
     if( ! whefs_open_FILE( filename, fs, writeMode, false ) )
     {
@@ -1617,7 +1617,7 @@ int whefs_fs_append_blocks( whefs_fs * restrict fs, whefs_id_type count )
     whefs_fs_write_filesize( fs );
     whefs_mkfs_write_options( fs );
     whefs_fs_init_bitset_blocks( fs ); // will re-alloc the bitset cache.
-    whefs_block bl = whefs_block_init;
+    whefs_block bl = whefs_block_empty;
     whefs_id_type id;
     for( id = (oldCount+1); id <= opt->block_count; ++id )
     {

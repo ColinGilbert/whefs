@@ -58,8 +58,9 @@ struct whefs_hashid
        get a sizeof(8).
 
        Note that we can easily overflow with a 16-bit counter, but for
-       the purposes we're using this number for that won't hurt us. The
-       extra bytes for uint32_t aren't worth it here.
+       the purposes we're using this number for that won't hurt us (it
+       may cause the entry to get dropped if we do LRU shaving, but
+       that's it). The extra bytes for uint32_t aren't worth it here.
     */
     uint16_t hits;
 };
@@ -67,11 +68,11 @@ typedef struct whefs_hashid whefs_hashid;
 /**
    Empty initializer object for whefs_hashid.
 */
-#define whefs_hashid_init_m {0/*hash*/,0/*id*/,0/*hits*/}
+#define whefs_hashid_empty_m {0/*hash*/,0/*id*/,0/*hits*/}
 /**
    Empty initializer object for whefs_hashid.
 */
-extern const whefs_hashid whefs_hashid_init;
+extern const whefs_hashid whefs_hashid_empty;
 
 
 /** @struct whefs_hashid_list
@@ -94,20 +95,23 @@ struct whefs_hashid_list
     whefs_id_type alloced;
     /** Real number of entries. */
     whefs_id_type count;
-    /** A hint to the allocator to say we'll never need more than this. */
+    /** A hint to the allocator to say we'll never need more than this
+        many entries. If set to 0 it is ignored, which may cause some
+        over-allocation in the worst case.
+     */
     whefs_id_type maxAlloc;
     /** The list of items. */
     whefs_hashid * list;
     /** Functions which unsort a list set this to false. whefs_hashid_list_sort() sets it to true. */
     bool isSorted;
-    /** Internal optimization. */
+    /** Internal optimization hack to avoid auto-sorting when we're inserting many items in a loop. */
     bool skipAutoSort;
 };
 typedef struct whefs_hashid_list whefs_hashid_list;
 /** Empty initializer object. */
-#define whefs_hashid_list_init_m {0U/*alloced*/,0U/*count*/,0U/*maxAlloc*/,0/*list*/,false/*isSorted*/,false/*skipAutoSort*/}
+#define whefs_hashid_list_empty_m {0U/*alloced*/,0U/*count*/,0U/*maxAlloc*/,0/*list*/,false/*isSorted*/,false/*skipAutoSort*/}
 /** Empty initializer object. */
-extern const whefs_hashid_list whefs_hashid_list_init;
+extern const whefs_hashid_list whefs_hashid_list_empty;
 
 /**
    Sorts the entries in li by hash value. It is not specified whether
@@ -138,7 +142,7 @@ int whefs_hashid_list_sort( whefs_hashid_list * li );
    Newly-created entries will be initialized to empty values.
  
    tgt may not be 0, but *tgt may be 0. If *tgt is not 0 then it must point
-   to an object (specifically, it may not be an uninitialized pointer).
+   to a valid object (specifically, it may not be an uninitialized object).
  
    The tgt object must eventually be freed using whefs_hashid_list_free().
 
@@ -148,13 +152,13 @@ int whefs_hashid_list_sort( whefs_hashid_list * li );
    function allocates the object).
 
    If (*tgt)->alloced is greater than or equal to toAlloc then this
-   function does nothing, has no side-effects, and returns success.
+   function has no side-effects and returns success.
 */
 int whefs_hashid_list_alloc( whefs_hashid_list ** tgt, whefs_id_type toAlloc );
 
 /**
-   Frees a list created by whefs_hashid_list_alloc(). After calling this,
-   tgt is an invalid object.
+   Frees a list created by whefs_hashid_list_alloc(), including all of
+   its entries. After calling this, tgt is an invalid object.
 */
 void whefs_hashid_list_free( whefs_hashid_list * tgt );
 
@@ -176,12 +180,12 @@ int whefs_hashid_list_add( whefs_hashid_list * tgt, whefs_hashid const * restric
 
 /**
    The item at the given index is zeroed out, which is the internal
-   equivalent of erasure. During the next sort(), any zeroed items
+   equivalent of erasure. During the next sort, any zeroed items
    will be removed from the list. This function, to simplify the
    implementation and speed up certain fs operations, does not
    actually modify the structure of the list or change li->count. The
    change in size is deferred until the next sort. When that happens,
-   the zeroed items get sorted to the start of the list, then then get
+   the zeroed items get sorted to the start of the list, then get
    pruned.
 
    A side effect of the mark-for-removal approach is that this routine
@@ -220,8 +224,6 @@ int whefs_hashid_list_wipe_index( whefs_hashid_list * li, whefs_id_type ndx );
    IFF !src->isSorted then we fall back to a linear search. The alternative
    would be to sort the list here automatically if needed, but that could
    invalidate data held by loops if this was called in a loop.
-
-
 */
 whefs_id_type whefs_hashid_list_index_of( whefs_hashid_list const * src, whefs_hashval_type hash );
 
@@ -254,10 +256,12 @@ size_t whefs_hashid_list_sizeof( whefs_hashid_list const * li );
 
 
 /**
-   Removes the least-visited items from li using the simple heuristic of
-   sorting by visit count, lopping off the bottom half, and re-sorting.
-   li need not be sorted before calling this. The returned list will be
-   sorted and will likely have fewer items in it.
+   Removes the least-visited items from li using the simple heuristic
+   of sorting by visit count, lopping off the bottom half, and
+   re-sorting.  li need not be sorted before calling this. The
+   returned list will be sorted and will likely have fewer items in
+   it. Performance is effectively O(N), where N = li->count, plus the
+   cost the of underlying (unspecified) sort.
 */
 int whefs_hashid_list_chomp_lv( whefs_hashid_list * li );
 

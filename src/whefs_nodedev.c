@@ -34,7 +34,7 @@ static int whefs_inode_block_list_reserve( whefs_fs * fs,
     else if( 0 == count )
     {
 	free( ino->blocks.list );
-	ino->blocks = whefs_block_list_init;
+	ino->blocks = whefs_block_list_empty;
 	return whefs_rc.OK;
     }
     //WHEFS_DBG("(Re)sizing inode block cache to %u items for inode #%u[%s].", count, ino->id, ino->name );
@@ -48,7 +48,7 @@ static int whefs_inode_block_list_reserve( whefs_fs * fs,
     whefs_id_type i = ino->blocks.count;
     for( ; i < count; ++i )
     {
-	li[i] = whefs_block_init;
+	li[i] = whefs_block_empty;
     }
     return whefs_rc.OK;
 }
@@ -142,7 +142,7 @@ static int whefs_inode_block_list_load( whefs_fs * fs,
 		       ino->id);
 	return whefs_rc.OK;
     }
-    whefs_block bl = whefs_block_init;
+    whefs_block bl = whefs_block_empty;
     int rc = whefs_block_read( fs, ino->first_block, &bl );
     if( whefs_rc.OK != rc ) return rc;
 #if 0
@@ -260,7 +260,7 @@ static int whefs_block_for_pos( whefs_fs * restrict fs, whefs_inode * restrict i
 	return whefs_rc.RangeError;
     }
     // TODO: check number of available inodes here, and don't try to expand if we can't reach the end
-    whefs_block bl = whefs_block_init;
+    whefs_block bl = whefs_block_empty;
     //WHEFS_DBG("About to search inode #%u for %u block(s) (size=%u) to find position %u", ino->id, bc, bs, pos );
     rc = whefs_rc.OK;
     whefs_block * blP = 0;
@@ -331,7 +331,7 @@ false, /* read/write */ \
 0 /* inode */  \
 }
 
-static const whio_dev_inode_meta whio_dev_inode_meta_init = WHIO_DEV_INODE_META_INIT;
+static const whio_dev_inode_meta whio_dev_inode_meta_empty = WHIO_DEV_INODE_META_INIT;
 
 
 #if WHEFS_CONFIG_ENABLE_STATIC_MALLOC /* see whio_common.h for details */
@@ -365,13 +365,13 @@ static whio_dev_inode_meta * whio_dev_inode_meta_alloc()
     }
 #endif /* WHEFS_CONFIG_ENABLE_STATIC_MALLOC */
     if( ! obj ) obj = (whio_dev_inode_meta *) malloc( sizeof(whio_dev_inode_meta) );
-    if( obj ) *obj = whio_dev_inode_meta_init;
+    if( obj ) *obj = whio_dev_inode_meta_empty;
     return obj;
 }
 
 static void whio_dev_inode_meta_free( whio_dev_inode_meta * obj )
 {
-    if( obj ) *obj = whio_dev_inode_meta_init;
+    if( obj ) *obj = whio_dev_inode_meta_empty;
     else return;
 #if WHEFS_CONFIG_ENABLE_STATIC_MALLOC
     if( (obj < &whio_dev_inode_meta_alloc_slots.objs[0]) ||
@@ -398,7 +398,7 @@ static void whio_dev_inode_meta_free( whio_dev_inode_meta * obj )
    parameter be-a whio_dev and that that device is-a whio_dev_inode_meta.
  */
 #define WHIO_DEV_DECL(RV) whio_dev_inode_meta * meta = (dev ? (whio_dev_inode_meta*)dev->impl.data : 0); \
-    if( !meta || ((void const *)&whio_dev_inode_meta_init != dev->impl.typeID) ) return RV
+    if( !meta || ((void const *)&whio_dev_inode_meta_empty != dev->impl.typeID) ) return RV
 
 /**
    Internal implementation of whio_dev_inode_read(). All arguments
@@ -427,7 +427,7 @@ static whio_size_t whio_dev_inode_read_impl( whio_dev * dev,
     else if( meta->posabs >= meta->inode->data_size ) return 0;
     int rc = 0;
     //whio_size_t eofpos = meta->inode->data_size;
-    whefs_block block = whefs_block_init;
+    whefs_block block = whefs_block_empty;
     rc = whefs_block_for_pos( meta->fs, meta->inode, meta->posabs, &block, false );
     if( whefs_rc.OK != rc )
     {
@@ -537,7 +537,7 @@ static whio_size_t whio_dev_inode_write_impl( whio_dev * dev,
     *keepGoing = false;
     int rc = 0;
     //whio_size_t eofpos = meta->inode->data_size;
-    whefs_block block = whefs_block_init;
+    whefs_block block = whefs_block_empty;
     rc = whefs_block_for_pos( meta->fs, meta->inode, meta->posabs, &block, true );
     if( whefs_rc.OK != rc )
     {
@@ -690,7 +690,7 @@ static int whio_dev_inode_trunc( whio_dev * dev, whio_off_t len )
 	// (WTF?) FIXME: update ino->blocks.list[0]
         if( meta->inode->first_block ) 
         {
-            whefs_block block = whefs_block_init;
+            whefs_block block = whefs_block_empty;
             int rc = whefs_block_read( meta->fs, meta->inode->first_block, &block ); // ensure we pick up whole block chain
             if( whefs_rc.OK != rc )
             {
@@ -723,7 +723,7 @@ static int whio_dev_inode_trunc( whio_dev * dev, whio_off_t len )
 	return rc;
     }
     /* Update block info... */
-    whefs_block bl = whefs_block_init;
+    whefs_block bl = whefs_block_empty;
     rc = whefs_block_for_pos( meta->fs, meta->inode, off, &bl, true );
     if( whefs_rc.OK != rc )
     {
@@ -838,10 +838,10 @@ static int whio_dev_inode_ioctl( whio_dev * dev, int arg, va_list vargs )
 
 static bool whio_dev_inode_close( whio_dev * dev )
 {
-    if( dev && ((void const *)&whio_dev_inode_meta_init == dev->impl.typeID))
+    if( dev && ((void const *)&whio_dev_inode_meta_empty == dev->impl.typeID))
     {
 	if( dev->client.dtor ) dev->client.dtor( dev->client.data );
-	dev->client = whio_client_data_init;
+	dev->client = whio_client_data_empty;
 	whio_dev_inode_meta * meta = (whio_dev_inode_meta*)dev->impl.data;
 	if( meta )
 	{
@@ -865,7 +865,7 @@ static bool whio_dev_inode_close( whio_dev * dev )
 
 static void whio_dev_inode_finalize( whio_dev * dev )
 {
-    if( dev && ((void const *)&whio_dev_inode_meta_init == dev->impl.typeID))
+    if( dev && ((void const *)&whio_dev_inode_meta_empty == dev->impl.typeID))
     {
 	if(0)
 	{
@@ -882,7 +882,7 @@ static void whio_dev_inode_finalize( whio_dev * dev )
     }
 }
 
-static const whio_dev_api whio_dev_api_inode_init =
+static const whio_dev_api whio_dev_api_inode_empty =
     {
     whio_dev_inode_read,
     whio_dev_inode_write,
@@ -899,12 +899,12 @@ static const whio_dev_api whio_dev_api_inode_init =
     whio_dev_inode_iomode
     };
 
-static const whio_dev whio_dev_inode_init =
+static const whio_dev whio_dev_inode_empty =
     {
-    &whio_dev_api_inode_init,
+    &whio_dev_api_inode_empty,
     { /* impl */
     0, /* data. Must be-a (whio_dev_inode_meta*) */
-    (void const *)&whio_dev_inode_meta_init /* typeID */
+    (void const *)&whio_dev_inode_meta_empty /* typeID */
     }
     };
 
@@ -935,8 +935,8 @@ whio_dev * whefs_dev_for_inode( whefs_fs * fs, whefs_id_type nid, bool writeMode
 	whio_dev_free(dev);
 	return 0;
     }
-    *dev = whio_dev_inode_init;
-    *meta = whio_dev_inode_meta_init;
+    *dev = whio_dev_inode_empty;
+    *meta = whio_dev_inode_meta_empty;
     dev->impl.data = meta;
     meta->fs = fs;
     meta->rw = writeMode;

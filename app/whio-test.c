@@ -58,7 +58,7 @@ int test_iodev()
 	assert( dev && "whio_dev open failed!");
 	MARKER("Opened on-disk device file [%s].\n", fname );
 	//dev->api->write( dev, "hi, world!", 9 );
-	size_t wrc = whio_dev_cstring_encode( dev, "hi, world!", 0 );
+	size_t wrc = whio_dev_encode_cstring( dev, "hi, world!", 0 );
 	MARKER("wrc=%u\n",wrc);
 	assert( (wrc == 10 + whio_sizeof_encoded_cstring) && "write failed!" );
 	dev->api->seek( dev, whio_sizeof_encoded_cstring + 2, SEEK_SET );
@@ -72,7 +72,7 @@ int test_iodev()
 	assert( dev && "whio_dev open failed!");
 	char * rstr = 0;
 	size_t rslen = 0;
-	whio_dev_cstring_decode( dev, &rstr, &rslen );
+	whio_dev_decode_cstring( dev, &rstr, &rslen );
 	assert( rstr && "Read of string failed!" );
 	MARKER("Read string of %u bytes: [%s]\n", rslen, rstr );
 	free(rstr);
@@ -605,8 +605,40 @@ int test_tar()
 #endif
     return 0;
 }
+#define TEST_WHIO_ENCODE 0
 
+#if TEST_WHIO_ENCODE
+whio_size_t whio_encode_fv( void * dest, char const * fmt, va_list va );
+whio_size_t whio_encode_f( void * dest, char const * fmt, ... );
 
+int test_encode()
+{
+    whio_dev * dev = 0;
+    char const * fname = "encode.iodev";
+    dev = whio_dev_for_filename( fname, "w+" );
+    enum { BufSize =
+#define ESZ(N) whio_sizeof_encoded_uint##N
+           ESZ(8)
+           + ESZ(16)
+           + ESZ(32)
+           + ESZ(64)
+#undef ESZ
+    };
+    uint8_t a1 = 33;
+    uint16_t a2 = a1;
+    uint32_t a3 = a2;
+    uint64_t a4 = a3;
+    unsigned char buf[BufSize];
+    memset( buf, BufSize, 0 );
+    whio_size_t erc = whio_encode_f( buf, "csil", a1, a2, a3, a4 );
+    assert( (BufSize == erc) && "Unexpected result from whio_encode_f()!" );
+    MARKER("BufSize=%d erc=%"WHIO_SIZE_T_PFMT"\n",BufSize,erc);
+    dev->api->write( dev, buf, erc );
+    dev->api->finalize(dev);
+    MARKER("Encoding test output file is %s.\n",fname);
+    return 0;
+}
+#endif //TEST_WHIO_ENCODE
 
 void my_atexit()
 {
@@ -628,13 +660,16 @@ int main( int argc, char const ** argv )
     if(!rc) rc =  test_stream();
     if(!rc) rc =  test_subdev();
 #if WHIO_ENABLE_ZLIB
-    //if(!rc) rc =  test_gzip();
+    if(!rc) rc =  test_gzip();
 #endif
     if(!rc) rc =  test_stuff();
     if(!rc) rc =  test_popen();
     //if(!rc) rc =  test_tar();
 #if TRY_MMAP
     if(!rc) rc =  test_mmap();
+#endif
+#if TEST_WHIO_ENCODE
+    if(!rc) rc =  test_encode();
 #endif
     printf("Done rc=%d=[%s].\n",rc,
 	   (0==rc)

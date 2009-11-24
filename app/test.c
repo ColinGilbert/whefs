@@ -384,7 +384,7 @@ int test_hash()
     whefs_hashid_list_alloc( &li, 10 );
     MARKER("hash list sizes: alloced=%"WHEFS_ID_TYPE_PFMT", count=%"WHEFS_ID_TYPE_PFMT"\n",
            li->alloced, li->count );
-    whefs_hashid h = whefs_hashid_init;
+    whefs_hashid h = whefs_hashid_empty;
 
     whefs_id_type i;
 

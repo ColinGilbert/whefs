@@ -10,14 +10,14 @@
 #include "whefs_details.c"
 #include <wh/whio/whio_streams.h> /* whio_stream_for_dev() */
 
-#define whefs_file_init_m { \
+#define whefs_file_empty_m { \
     0, /* fs */ \
     0, /* flags */ \
     0, /* dev */ \
     0 /* inode_id */                       \
     }
 
-const whefs_file whefs_file_init = whefs_file_init_m;
+const whefs_file whefs_file_empty = whefs_file_empty_m;
 #define WHEFS_FILE_ISOPENED(F) ((F) && ((F)->flags & WHEFS_FLAG_Opened))
 #define WHEFS_FILE_ISRO(F) ((F) && ((F)->flags & WHEFS_FLAG_Read))
 #define WHEFS_FILE_ISRW(F) ((F) && ((F)->flags & WHEFS_FLAG_Write))
@@ -38,7 +38,7 @@ static struct
 {
     whefs_file objs[whefs_file_alloc_count];
     char used[whefs_file_alloc_count];
-} whefs_file_alloc_slots = { {whefs_file_init_m}, {0} };
+} whefs_file_alloc_slots = { {whefs_file_empty_m}, {0} };
 #endif
 
 static whefs_file * whefs_file_alloc()
@@ -50,7 +50,7 @@ static whefs_file * whefs_file_alloc()
     {
 	if( whefs_file_alloc_slots.used[i] ) continue;
 	whefs_file_alloc_slots.used[i] = 1;
-	whefs_file_alloc_slots.objs[i] = whefs_file_init;
+	whefs_file_alloc_slots.objs[i] = whefs_file_empty;
 	obj = &whefs_file_alloc_slots.objs[i];
 	break;
     }
@@ -58,7 +58,7 @@ static whefs_file * whefs_file_alloc()
     if( ! obj )
     {
         obj = (whefs_file *) malloc( sizeof(whefs_file) );
-        if( obj ) *obj = whefs_file_init;
+        if( obj ) *obj = whefs_file_empty;
     }
     return obj;
 }
@@ -70,19 +70,19 @@ static void whefs_file_free( whefs_file * restrict obj )
     if( (obj < &whefs_file_alloc_slots.objs[0]) ||
 	(obj > &whefs_file_alloc_slots.objs[whefs_file_alloc_count-1]) )
     { /* it does not belong to us */
-        *obj = whefs_file_init;
+        *obj = whefs_file_empty;
 	free(obj);
 	return;
     }
     else
     {
 	const size_t ndx = (obj - &whefs_file_alloc_slots.objs[0]);
-	whefs_file_alloc_slots.objs[ndx] = whefs_file_init;
+	whefs_file_alloc_slots.objs[ndx] = whefs_file_empty;
 	whefs_file_alloc_slots.used[ndx] = 0;
 	return;
     }
 #else
-    *obj = whefs_file_init;
+    *obj = whefs_file_empty;
     free(obj);
 #endif /* WHEFS_CONFIG_ENABLE_STATIC_MALLOC */
 }
@@ -97,7 +97,7 @@ static void whefs_file_free( whefs_file * restrict obj )
 */
 static int whefs_fopen_ro( whefs_file * restrict f, char const * name )
 {
-    whefs_inode n = whefs_inode_init;
+    whefs_inode n = whefs_inode_empty;
     int rc = whefs_inode_by_name( f->fs, name, &n );
     if( whefs_rc.OK == rc )
     {
@@ -124,7 +124,7 @@ static int whefs_fopen_rw( whefs_file * restrict f, char const * name )
 {
     if( ! f || ! name ) return whefs_rc.ArgError;
     if( ! whefs_fs_is_rw(f->fs) ) return whefs_rc.AccessError;
-    whefs_inode n = whefs_inode_init;
+    whefs_inode n = whefs_inode_empty;
     int rc = whefs_inode_by_name( f->fs, name, &n );
     if( whefs_rc.OK != rc ) do
     {
@@ -183,7 +183,7 @@ whefs_file * whefs_fopen( whefs_fs * fs, char const * name, char const * mode )
     }
     whefs_file * f = whefs_file_alloc();
     if( ! f ) return 0;
-    *f = whefs_file_init;
+    *f = whefs_file_empty;
     f->fs = fs;
     f->flags = flags;
     int rc = whefs_rc.IOError;
@@ -212,7 +212,7 @@ whio_dev * whefs_dev_open( whefs_fs * fs, char const * name, bool writeMode )
     {
 	return 0;
     }
-    whefs_inode ino = whefs_inode_init;
+    whefs_inode ino = whefs_inode_empty;
     if( whefs_rc.OK != whefs_inode_by_name( fs, name, &ino ) )
     { // Try to create one...
 	if( ! writeMode )
@@ -438,7 +438,7 @@ int whefs_unlink_file( whefs_file * restrict )
     if( ! f ) return whefs_rc.ArgError;
     f->dev->api->finalize(f->dev);
     f->dev = 0;
-    whefs_inode ino = whefs_inode_init;
+    whefs_inode ino = whefs_inode_empty;
     ino.id = f->inode;
     whefs_inode_read( f->fs, &ino );
     int rc = whefs_inode_unlink( f->fs, &ino );
@@ -450,7 +450,7 @@ int whefs_unlink_file( whefs_file * restrict )
 int whefs_unlink_filename( whefs_fs * fs, char const * fname )
 {
     if( ! fs || !fname ) return whefs_rc.ArgError;
-    whefs_inode ino = whefs_inode_init;
+    whefs_inode ino = whefs_inode_empty;
     int rc = whefs_inode_by_name( fs, (char const *) /* FIXME: signedness*/ fname, &ino );
     if( whefs_rc.OK == rc )
     {
@@ -465,7 +465,7 @@ int whefs_unlink_filename( whefs_fs * fs, char const * fname )
    state. Relying on compiler default values is a bad idea
    (been there, done that).
 */
-static const whefs_file_stats whefs_file_stats_init =
+static const whefs_file_stats whefs_file_stats_empty =
     {
     0, /* bytes */
     0, /* inode */
@@ -475,14 +475,14 @@ static const whefs_file_stats whefs_file_stats_init =
 int whefs_fstat( whefs_file const * f, whefs_file_stats * st )
 {
     if( ! f || !st ) return whefs_rc.ArgError;
-    *st = whefs_file_stats_init;
+    *st = whefs_file_stats_empty;
     st->inode = f->inode;
-    whefs_inode ino = whefs_inode_init;
+    whefs_inode ino = whefs_inode_empty;
     int rc = whefs_inode_id_read( f->fs, f->inode, &ino );
     if( whefs_rc.OK != rc ) return rc;
     st->bytes = ino.data_size;
     whefs_id_type bid = ino.first_block;
-    whefs_block bl = whefs_block_init;
+    whefs_block bl = whefs_block_empty;
     bl.id = bid;
     while( bl.id )
     {

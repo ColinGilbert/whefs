@@ -77,7 +77,7 @@ typedef struct whio_dev_membuf_meta
 /**
    Initialization object for new whio_dev_membuf objects.
 */
-static const whio_dev_membuf_meta whio_dev_membuf_meta_init = WHIO_DEV_MEMBUF_META_INIT;
+static const whio_dev_membuf_meta whio_dev_membuf_meta_empty = WHIO_DEV_MEMBUF_META_INIT;
 
 #if WHIO_CONFIG_ENABLE_STATIC_MALLOC
 enum {
@@ -103,7 +103,7 @@ static whio_dev_membuf_meta * whio_dev_membuf_meta_alloc()
     {
 	if( whio_dev_membuf_meta_alloc_slots.used[i] ) continue;
 	whio_dev_membuf_meta_alloc_slots.used[i] = 1;
-	whio_dev_membuf_meta_alloc_slots.objs[i] = whio_dev_membuf_meta_init;
+	whio_dev_membuf_meta_alloc_slots.objs[i] = whio_dev_membuf_meta_empty;
 	obj = &whio_dev_membuf_meta_alloc_slots.objs[i];
 	break;
     }
@@ -125,7 +125,7 @@ static void whio_dev_membuf_meta_free( whio_dev_membuf_meta * obj )
     else
     {
 	const size_t ndx = (obj - &whio_dev_membuf_meta_alloc_slots.objs[0]);
-	whio_dev_membuf_meta_alloc_slots.objs[ndx] = whio_dev_membuf_meta_init;
+	whio_dev_membuf_meta_alloc_slots.objs[ndx] = whio_dev_membuf_meta_empty;
 	whio_dev_membuf_meta_alloc_slots.used[ndx] = 0;
 	return;
     }
@@ -428,25 +428,25 @@ const whio_dev_api whio_dev_api_membuf =
     (void const *)&whio_dev_api_membuf /* typeID */ \
     } }
 
-static const whio_dev whio_dev_membuf_init = WHIO_DEV_MEMBUF_INIT;
+static const whio_dev whio_dev_membuf_empty = WHIO_DEV_MEMBUF_INIT;
 
 static bool whio_dev_membuf_close( whio_dev * dev )
 {
     if( dev )
     {
 	if( dev->client.dtor ) dev->client.dtor( dev->client.data );
-	dev->client = whio_client_data_init;
+	dev->client = whio_client_data_empty;
 	whio_dev_membuf_meta * f = (whio_dev_membuf_meta*)dev->impl.data;
 	if( f )
 	{
 	    dev->impl.data = 0;
 	    free(f->buffer);
-	    //*f = whio_dev_membuf_meta_init;
+	    //*f = whio_dev_membuf_meta_empty;
 	    //free(f);
 	    whio_dev_membuf_meta_free( f );
 	    return true;
 	}
-        *dev = whio_dev_membuf_init;
+        *dev = whio_dev_membuf_empty;
     }
     return false;
 }
@@ -465,14 +465,14 @@ whio_dev * whio_dev_for_membuf( whio_size_t size, float expFactor )
 {
     whio_dev * dev = whio_dev_alloc();
     if( ! dev ) return 0;
-    *dev = whio_dev_membuf_init;
+    *dev = whio_dev_membuf_empty;
     whio_dev_membuf_meta * mb = whio_dev_membuf_meta_alloc();
     if( !mb )
     {
 	whio_dev_free(dev);
 	return 0;
     }
-    *mb = whio_dev_membuf_meta_init;
+    *mb = whio_dev_membuf_meta_empty;
     dev->impl.data = mb;
     //mb->alloc_policy = expandable ? whio_dev_membuf_alloc_policy_133 : 0;
     mb->expandable = (expFactor >= 1.0);
@@ -536,7 +536,7 @@ typedef struct whio_dev_memmap
     0 /* ro */ \
     }
 
-static const whio_dev_memmap whio_dev_memmap_init = WHIO_DEV_MEMMAP_INIT;
+static const whio_dev_memmap whio_dev_memmap_empty = WHIO_DEV_MEMMAP_INIT;
 
 
 #if WHIO_CONFIG_ENABLE_STATIC_MALLOC
@@ -563,7 +563,7 @@ static whio_dev_memmap * whio_dev_memmap_alloc()
     {
 	if( whio_dev_memmap_alloc_slots.used[i] ) continue;
 	whio_dev_memmap_alloc_slots.used[i] = 1;
-	whio_dev_memmap_alloc_slots.objs[i] = whio_dev_memmap_init;
+	whio_dev_memmap_alloc_slots.objs[i] = whio_dev_memmap_empty;
 	obj = &whio_dev_memmap_alloc_slots.objs[i];
 	break;
     }
@@ -584,7 +584,7 @@ static void whio_dev_memmap_free( whio_dev_memmap * obj )
     else
     {
 	const size_t ndx = (obj - &whio_dev_memmap_alloc_slots.objs[0]);
-	whio_dev_memmap_alloc_slots.objs[ndx] = whio_dev_memmap_init;
+	whio_dev_memmap_alloc_slots.objs[ndx] = whio_dev_memmap_empty;
 	whio_dev_memmap_alloc_slots.used[ndx] = 0;
 	return;
     }
@@ -777,12 +777,12 @@ static bool whio_dev_memmap_close( whio_dev * dev )
     if( dev )
     {
 	if( dev->client.dtor ) dev->client.dtor( dev->client.data );
-	dev->client = whio_client_data_init;
+	dev->client = whio_client_data_empty;
 	whio_dev_memmap * f = (whio_dev_memmap*)dev->impl.data;
 	if( f )
 	{
 	    dev->impl.data = 0;
-	    *f = whio_dev_memmap_init;
+	    *f = whio_dev_memmap_empty;
 	    whio_dev_memmap_free(f);
 	    return true;
 	}
@@ -817,7 +817,7 @@ const whio_dev_api whio_dev_api_memmap =
     whio_dev_memmap_iomode
     };
 
-static const whio_dev whio_dev_memmap_dev_init =
+static const whio_dev whio_dev_memmap_dev_empty =
     {
     &whio_dev_api_memmap,
     { /* impl */
@@ -858,14 +858,14 @@ static whio_dev * whio_dev_for_memmap( void * rw, void const * ro, whio_size_t s
     }
     whio_dev * dev = whio_dev_alloc();
     if( ! dev ) return 0;
-    *dev = whio_dev_memmap_dev_init;
+    *dev = whio_dev_memmap_dev_empty;
     whio_dev_memmap * mb = whio_dev_memmap_alloc();
     if( !mb )
     {
 	whio_dev_free(dev);
 	return 0;
     }
-    *mb = whio_dev_memmap_init;
+    *mb = whio_dev_memmap_empty;
     dev->impl.data = mb;
     mb->size = mb->maxsize = size;
     mb->rw = rw;
