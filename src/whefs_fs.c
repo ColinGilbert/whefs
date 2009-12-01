@@ -574,6 +574,65 @@ static int whefs_mkfs_write_magic( whefs_fs * restrict fs )
 	: whefs_rc.IOError;
 }
 
+
+static const unsigned char whefs_hints_tag = 'h';
+/** UNTESTED! */
+int whefs_fs_hints_write( whefs_fs * restrict fs )
+{
+    if( ! fs || !fs->dev ) return whefs_rc.ArgError;
+    if( !whefs_fs_is_rw(fs) ) return whefs_rc.AccessError;
+    fs->dev->api->seek( fs->dev, fs->offsets[WHEFS_OFF_HINTS], SEEK_SET );
+    whefs_id_type h[] = {
+        fs->hints.unused_inode_start,
+        fs->hints.unused_block_start
+    };
+    const whefs_id_type hlen = (sizeof(h)/sizeof(h[0]));
+    enum { Len = whefs_sizeof_encoded_hints };
+    unsigned char buf[Len];
+    unsigned char * bp = buf;
+    *(bp++) = whefs_hints_tag;
+    for( whefs_id_type i = 0; i < hlen; ++i )
+    {
+        bp += whefs_id_encode( bp, h[i] );
+    }
+    const whio_size_t wrc = whio_dev_write( fs->dev,
+                                            buf,
+                                            Len );
+    return fs->err =
+        (wrc == Len)
+	? whefs_rc.OK
+	: whefs_rc.IOError;
+}
+/** UNTESTED! */
+int whefs_fs_hints_read( whefs_fs * restrict fs )
+{
+    if( ! fs || !fs->dev ) return whefs_rc.ArgError;
+    whio_size_t sk = fs->dev->api->seek( fs->dev, fs->offsets[WHEFS_OFF_HINTS], SEEK_SET );
+    if( sk != fs->offsets[WHEFS_OFF_HINTS] )
+    {
+        return whefs_rc.IOError;
+    }
+    enum { Len = whefs_sizeof_encoded_hints };
+    unsigned char buf[Len];
+    unsigned char * bp = buf;
+    if( Len
+        != whio_dev_read( fs->dev, buf, Len ) )
+    {
+        return fs->err = whefs_rc.IOError;
+    }
+    if( whefs_hints_tag != *(bp++) )
+    {
+        return fs->err = whefs_rc.ConsistencyError;
+    }
+    int rc = whefs_id_decode( bp, &fs->hints.unused_inode_start );
+    if( whefs_rc.OK == rc )
+    {
+        bp += Len;
+        rc = whefs_id_decode( bp, &fs->hints.unused_block_start );
+    }
+    return fs->err = rc;
+}
+
 /**
    Writes fs->options to the current position of the stream.  Returns
    whefs_rc.OK on success.
@@ -1089,7 +1148,7 @@ static void whefs_fs_init_sizes( whefs_fs * restrict fs )
     fs->sizes[WHEFS_SZ_INODE_NAME] = whefs_fs_sizeof_name( &fs->options );
     fs->sizes[WHEFS_SZ_BLOCK] = whefs_fs_sizeof_block( &fs->options );
     fs->sizes[WHEFS_SZ_OPTIONS] = whefs_fs_sizeof_options();
-
+    fs->sizes[WHEFS_SZ_HINTS] = whefs_sizeof_encoded_hints;
     fs->offsets[WHEFS_OFF_CORE_MAGIC] = 0;
 
     size_t sz =	/* core magic len */
@@ -1112,6 +1171,10 @@ static void whefs_fs_init_sizes( whefs_fs * restrict fs )
 	fs->offsets[WHEFS_OFF_CLIENT_MAGIC]
 	+ sz;
 
+    // TODO:
+    //fs->offsets[WHEFS_OFF_HINTS] = TODO;
+
+    
     fs->offsets[WHEFS_OFF_INODE_NAMES] =
 	fs->offsets[WHEFS_OFF_OPTIONS]
 	+ fs->sizes[WHEFS_SZ_OPTIONS];
@@ -1143,17 +1206,18 @@ static void whefs_fs_init_sizes( whefs_fs * restrict fs )
     OFF(SIZE);
     OFF(CLIENT_MAGIC);
     OFF(OPTIONS);
+    OFF(HINTS);
     OFF(INODE_NAMES);
-    OFF(INODES);
     OFF(INODES_NO_STR);
     OFF(BLOCKS);
     OFF(EOF);
 #undef OFF
 #define OFF(X) fprintf(stdout,"\t\tfs->sizes[%s]\t= %u\n",# X, fs->sizes[WHEFS_SZ_ ## X])
-    OFF(INODE);
+    OFF(INODE_NO_STR);
     OFF(INODE_NAME);
     OFF(BLOCK);
     OFF(OPTIONS);
+    OFF(HINTS);
     fflush(stdout);
     //assert(0 && "on purpose");
 #undef OFF
@@ -1572,6 +1636,7 @@ void whefs_fs_dump_info( whefs_fs const * restrict fs, FILE * out )
     OFF(SIZE);
     OFF(CLIENT_MAGIC);
     OFF(OPTIONS);
+    OFF(HINTS);
     OFF(INODE_NAMES);
     OFF(INODES_NO_STR);
     OFF(BLOCKS);
@@ -1607,7 +1672,7 @@ int whefs_fs_append_blocks( whefs_fs * restrict fs, whefs_id_type count )
         WHEFS_DBG_ERR("Could not truncate fs to %u bytes to add %"WHEFS_ID_TYPE_PFMT" blocks!",newEOF, count);
         fs->dev->api->truncate( fs->dev, oldEOF ); // just to be sure
         whefs_fs_mmap_connect(fs);
-        return rc;
+        return fs->err = rc;
     }
     fs->offsets[WHEFS_OFF_EOF] = newEOF;
     fs->filesize = newEOF;

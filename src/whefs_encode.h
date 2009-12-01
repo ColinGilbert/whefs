@@ -78,7 +78,13 @@ whefs_sizeof_encoded_inode_name = 1 /* tag bytes */
 whefs_sizeof_encoded_block = 1 /* tag char */
     + whefs_sizeof_encoded_id_type /* bl->id */
     + whio_sizeof_encoded_uint16 /* bl->flags */
-    + whefs_sizeof_encoded_id_type /* bl->next_block */
+    + whefs_sizeof_encoded_id_type /* bl->next_block */,
+
+/** Not yet used. */
+whefs_sizeof_encoded_hints = 1 /* tag char */
+    + whefs_sizeof_encoded_id_type /* bl->hints.unused_inode_start */
+    + whefs_sizeof_encoded_id_type /* bl->hints.unused_block_start */
+    + 0
 
 };
 
