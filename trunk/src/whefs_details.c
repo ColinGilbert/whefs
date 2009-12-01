@@ -131,6 +131,7 @@ WHEFS_OFF_SIZE = 0,
 WHEFS_OFF_CORE_MAGIC,
 WHEFS_OFF_CLIENT_MAGIC,
 WHEFS_OFF_OPTIONS,
+WHEFS_OFF_HINTS/*not yet used*/,
 WHEFS_OFF_INODE_NAMES,
 WHEFS_OFF_INODES_NO_STR,
 WHEFS_OFF_BLOCK_TABLE,
@@ -147,6 +148,7 @@ WHEFS_SZ_INODE_NO_STR,
 WHEFS_SZ_INODE_NAME,
 WHEFS_SZ_BLOCK,
 WHEFS_SZ_OPTIONS,
+WHEFS_SZ_HINTS,
 WHEFS_SZ_COUNT /* must be the last entry! */
 };
 
@@ -293,9 +295,38 @@ struct whefs_fs
     */
     unsigned int flags;
     /**
-       Error code.
+       Error code. Not yet used everywhere it should be.
+
+       It should be set by routines which discover any
+       unrecoverable error, such as the following:
+
+       - whefs_rc.ConsistencyError
+       - whefs_rc.IOError
+       - whefs_rc.InternalError
+       - any state which signifies that the object really
+       should not be used any more.
+
+       If should not normally be set for:
+
+       - whefs_rc.ArgError
+       - whefs_rc.RangeError
+
+       as those might signify a recoverable error.
+
+       It _might_ be useful to set it for:
+       
+       - whefs_rc.UnsupportedError
+       - whefs_rc.AccessError
+       - whefs_rc.FSFull
+       - whefs_rc.NYIError
+
+       But that's not yet clear, and may be case-specific.
+
+       Certain routines should error out if the fs->err
+       is set, but that can't be done until fs->err is used
+       as cleared properly everywhere.
      */
-    unsigned int err;
+    int err;
     /**
        Stores file position offsets for commonly-used
        reference points within a vfs.
@@ -861,7 +892,20 @@ int whefs_fs_name_write( whefs_fs * fs, whefs_id_type id, char const * name );
    or 0 if !opt.
 */
 size_t whefs_fs_sizeof_name( whefs_fs_options const * opt );
+    /**
+       NYI.
+       
+       When it's done it will write the current fs->hints values to
+       the position fs->offets[WHEFS_OFF_HINTS] in the efs.
+    */
+    int whefs_fs_hints_write( whefs_fs * restrict fs );
+    /**
+       NYI.
 
+       When it's done it will populate fs->hints from
+       the position fs->offets[WHEFS_OFF_HINTS] in the efs.
+    */
+    int whefs_fs_hints_read( whefs_fs * restrict fs );
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
