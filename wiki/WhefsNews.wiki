@@ -3,6 +3,9 @@
 
 =whefs News (most recent items at the top)=
 
+*29 Nov 2009:*
+  * whefs turns one year old this week. The first commits i could trace go back to one year ago today. The library wasn't really functional until the end of December, 2008, though.
+
 *22 June 2009:*
   * Added optional `mmap()` support for file-based storage, which speeds up access considerably and drastically cuts the overall amount of seek operations which actually have to refer to disk.
 
