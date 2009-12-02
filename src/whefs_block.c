@@ -104,7 +104,7 @@ int whefs_block_seek_data( whefs_fs const * fs, whefs_block const * bl, whio_siz
 /**
    On-disk blocks are prefixed with this character.
 */
-static const unsigned char whefs_block_tag_char = 0xdf /* sharp S, becase it looks like a B */;
+static const unsigned char whefs_block_tag_char = 'B';//0xdf /* sharp S, becase it looks like a B */;
 
 int whefs_block_flush( whefs_fs * fs, whefs_block const * bl )
 {
