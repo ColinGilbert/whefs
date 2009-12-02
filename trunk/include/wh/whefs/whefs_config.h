@@ -153,7 +153,7 @@ in place of hard-coding the printf format specifier.
 
     @see WHEFS_MAGIC_STRING_PREFIX WHEFS_MAGIC_STRING
 */
-static const uint32_t whefs_fs_magic_bytes[] = { 2009, 6, 9, WHEFS_ID_TYPE_BITS, 0 };
+static const uint32_t whefs_fs_magic_bytes[] = { 2009, 12, 1, WHEFS_ID_TYPE_BITS, 0 };
 /** @def WHEFS_MAGIC_STRING_PREFIX
 
     WHEFS_MAGIC_STRING_PREFIX is an internal helper macro to avoid
@@ -164,7 +164,7 @@ static const uint32_t whefs_fs_magic_bytes[] = { 2009, 6, 9, WHEFS_ID_TYPE_BITS,
 
     @see whefs_fs_magic_bytes WHEFS_MAGIC_STRING
 */
-#define WHEFS_MAGIC_STRING_PREFIX "whefs version 20090609 with "
+#define WHEFS_MAGIC_STRING_PREFIX "whefs version 20091201 with "
 
 #if WHEFS_ID_TYPE_BITS == 8
 /* for very, very limited filesystems. There's lots of room for overflows here! */

@@ -490,6 +490,7 @@ void whefs_fs_finalize( whefs_fs * restrict fs )
     if( ! fs ) return;
     whefs_fs_flush(fs);
     whefs_fs_mmap_disconnect( fs );
+    whefs_fs_hints_write( fs );
     if( fs->closers )
     {
         if( ! (fs->flags & WHEFS_FLAG_FS_NoAutoCloseFiles) )
@@ -575,8 +576,7 @@ static int whefs_mkfs_write_magic( whefs_fs * restrict fs )
 }
 
 
-static const unsigned char whefs_hints_tag = 'h';
-/** UNTESTED! */
+static const unsigned char whefs_hints_tag_char = 'H';
 int whefs_fs_hints_write( whefs_fs * restrict fs )
 {
     if( ! fs || !fs->dev ) return whefs_rc.ArgError;
@@ -590,7 +590,7 @@ int whefs_fs_hints_write( whefs_fs * restrict fs )
     enum { Len = whefs_sizeof_encoded_hints };
     unsigned char buf[Len];
     unsigned char * bp = buf;
-    *(bp++) = whefs_hints_tag;
+    *(bp++) = whefs_hints_tag_char;
     for( whefs_id_type i = 0; i < hlen; ++i )
     {
         bp += whefs_id_encode( bp, h[i] );
@@ -603,34 +603,34 @@ int whefs_fs_hints_write( whefs_fs * restrict fs )
 	? whefs_rc.OK
 	: whefs_rc.IOError;
 }
-/** UNTESTED! */
 int whefs_fs_hints_read( whefs_fs * restrict fs )
 {
     if( ! fs || !fs->dev ) return whefs_rc.ArgError;
     whio_size_t sk = fs->dev->api->seek( fs->dev, fs->offsets[WHEFS_OFF_HINTS], SEEK_SET );
     if( sk != fs->offsets[WHEFS_OFF_HINTS] )
     {
-        return whefs_rc.IOError;
+        return fs->err = whefs_rc.IOError;
     }
     enum { Len = whefs_sizeof_encoded_hints };
-    unsigned char buf[Len];
+    unsigned char buf[Len+1];
     unsigned char * bp = buf;
-    if( Len
-        != whio_dev_read( fs->dev, buf, Len ) )
+    if( Len != whio_dev_read( fs->dev, buf, Len ) )
     {
         return fs->err = whefs_rc.IOError;
     }
-    if( whefs_hints_tag != *(bp++) )
+    buf[Len] = 0;
+    if( whefs_hints_tag_char != *(bp++) )
     {
         return fs->err = whefs_rc.ConsistencyError;
     }
     int rc = whefs_id_decode( bp, &fs->hints.unused_inode_start );
     if( whefs_rc.OK == rc )
     {
-        bp += Len;
+        bp += whefs_sizeof_encoded_id_type;
         rc = whefs_id_decode( bp, &fs->hints.unused_block_start );
+        if( whefs_rc.OK != rc ) fs->err = rc;
     }
-    return fs->err = rc;
+    return rc;
 }
 
 /**
@@ -699,7 +699,7 @@ static size_t whefs_name_pos( whefs_fs const * restrict fs, whefs_id_type id )
 /**
    Tag byte for use in encoding inode name table entries.
 */
-static unsigned char const whefs_inode_name_tag_char = 0x80 | '\'';
+static unsigned char const whefs_inode_name_tag_char = '"';
 
 int whefs_inode_name_get( whefs_fs * restrict fs, whefs_id_type id, whefs_string * tgt )
 { /* Maintenance reminder: this "should" be in whefs_inode.c, but it's not because
@@ -862,6 +862,7 @@ whio_size_t whefs_fs_calculate_size( whefs_fs_options const * opt )
 	+ whio_sizeof_encoded_uint16 // client magic size
 	+ opt->magic.length
 	+ whefs_fs_sizeof_options()
+        + whefs_sizeof_encoded_hints
 	+ (whefs_fs_sizeof_name( opt ) * opt->inode_count)/* inode names table */
 	+ (whefs_sizeof_encoded_inode * opt->inode_count) /* inode table */
 	+ (whefs_fs_sizeof_block( opt ) * opt->block_count)/* blocks table */
@@ -1171,13 +1172,13 @@ static void whefs_fs_init_sizes( whefs_fs * restrict fs )
 	fs->offsets[WHEFS_OFF_CLIENT_MAGIC]
 	+ sz;
 
-    // TODO:
-    //fs->offsets[WHEFS_OFF_HINTS] = TODO;
-
+    fs->offsets[WHEFS_OFF_HINTS] =
+        fs->offsets[WHEFS_OFF_OPTIONS]
+        + fs->sizes[WHEFS_SZ_OPTIONS];
     
     fs->offsets[WHEFS_OFF_INODE_NAMES] =
-	fs->offsets[WHEFS_OFF_OPTIONS]
-	+ fs->sizes[WHEFS_SZ_OPTIONS];
+	fs->offsets[WHEFS_OFF_HINTS]
+	+ fs->sizes[WHEFS_SZ_HINTS];
     sz = /* names table size */
 	(fs->options.inode_count * fs->sizes[WHEFS_SZ_INODE_NAME]);
 
@@ -1219,7 +1220,7 @@ static void whefs_fs_init_sizes( whefs_fs * restrict fs )
     OFF(OPTIONS);
     OFF(HINTS);
     fflush(stdout);
-    //assert(0 && "on purpose");
+    assert(0 && "on purpose");
 #undef OFF
 #endif
 }
@@ -1254,7 +1255,7 @@ static int whefs_mkfs_stage1( whefs_fs_options const * opt, whefs_fs ** tgt )
 
     int rc = whefs_fs_init_bitsets( fs );
     if( whefs_rc.OK != rc )
-    {
+    {    
 	WHEFS_DBG_ERR("Init of bitsets failed with rc %d!", rc);
 	whefs_fs_finalize( fs );
 	return rc;
@@ -1307,6 +1308,8 @@ static int whefs_mkfs_stage2( whefs_fs * restrict fs )
     CHECKRC;
     rc = whefs_mkfs_write_options( fs );
     CHECKRC;
+    rc = whefs_fs_hints_write( fs );
+    CHECKRC;
     rc = whefs_mkfs_write_names_table( fs );
     CHECKRC;
     rc = whefs_mkfs_write_inodelist( fs );
@@ -1318,7 +1321,7 @@ static int whefs_mkfs_stage2( whefs_fs * restrict fs )
     fs->filesize = whio_dev_size( fs->dev );
     //WHEFS_DBG("File size is(?) %u", fs->filesize );
 
-    szcheck = whefs_fs_calculate_size(&fs->options);
+    //szcheck = whefs_fs_calculate_size(&fs->options);
     if( szcheck != fs->filesize )
     {
 	WHEFS_DBG_ERR("EFS size error: the calculated size (%u) does not match the real size (%u)!", szcheck, fs->filesize );
@@ -1507,6 +1510,13 @@ static int whefs_openfs_stage2( whefs_fs * restrict fs )
 	/* we could treat this as non-fatal we we changed how
 	   cache-is-on checking is done elsewhere. */
 	WHEFS_DBG_ERR("Init of bitsets failed with rc %d!", rc);
+	whefs_fs_finalize( fs );
+	return rc;
+    }
+    rc = whefs_fs_hints_read( fs );
+    if( whefs_rc.OK != rc )
+    {    
+	WHEFS_DBG_ERR("Reading of hints failed rc %d!", rc);
 	whefs_fs_finalize( fs );
 	return rc;
     }

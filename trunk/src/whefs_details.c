@@ -892,20 +892,25 @@ int whefs_fs_name_write( whefs_fs * fs, whefs_id_type id, char const * name );
    or 0 if !opt.
 */
 size_t whefs_fs_sizeof_name( whefs_fs_options const * opt );
-    /**
-       NYI.
-       
-       When it's done it will write the current fs->hints values to
-       the position fs->offets[WHEFS_OFF_HINTS] in the efs.
-    */
-    int whefs_fs_hints_write( whefs_fs * restrict fs );
-    /**
-       NYI.
+/**
+    Writes the current fs->hints values to the position
+    fs->offets[WHEFS_OFF_HINTS] in the efs. On error it sets fs->err
+    and returns that value.
 
-       When it's done it will populate fs->hints from
-       the position fs->offets[WHEFS_OFF_HINTS] in the efs.
-    */
-    int whefs_fs_hints_read( whefs_fs * restrict fs );
+    if !whefs_fs_is_rw(fs) then this will return whefs_rc.AccessError
+    but will not set fs->err.
+
+    On success, fs->err is not modified.
+*/
+int whefs_fs_hints_write( whefs_fs * restrict fs );
+/**
+   Populates fs->hints from the position fs->offets[WHEFS_OFF_HINTS]
+   in the efs.
+
+   On error, fs->err is modified and that value is returned. If this
+   routine fails then an i/o or consistency error was encountered.
+*/
+int whefs_fs_hints_read( whefs_fs * restrict fs );
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

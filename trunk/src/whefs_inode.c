@@ -217,7 +217,7 @@ int whefs_inode_seek( whefs_fs * fs, whefs_inode const * n )
    On-disk inodes are prefixed with this character as a
    consistency-checking measure.
 */
-static const unsigned char whefs_inode_tag_char = 0xef /* small i with diaeresis */;
+static const unsigned char whefs_inode_tag_char = 'I';//0xef /* small i with diaeresis */;
 
 int whefs_inode_flush( whefs_fs * fs, whefs_inode const * n )
 {
