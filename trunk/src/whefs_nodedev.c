@@ -30,13 +30,13 @@ static int whefs_inode_block_list_reserve( whefs_fs * fs,
 					whefs_id_type count )
 {
     if( ! ino ) return whefs_rc.ArgError;
-    if( ino->blocks.alloced >= count ) return whefs_rc.OK;
     else if( 0 == count )
     {
 	free( ino->blocks.list );
 	ino->blocks = whefs_block_list_empty;
 	return whefs_rc.OK;
     }
+    else if( ino->blocks.alloced >= count ) return whefs_rc.OK;
     //WHEFS_DBG("(Re)sizing inode block cache to %u items for inode #%u[%s].", count, ino->id, ino->name );
     whefs_block * li = (whefs_block *)realloc( ino->blocks.list, count * sizeof(whefs_block) );
     if( ! li )
