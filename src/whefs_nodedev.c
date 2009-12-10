@@ -229,7 +229,7 @@ static int whefs_inode_block_list_load( whefs_fs * fs,
 static int whefs_block_for_pos( whefs_fs * restrict fs, whefs_inode * restrict ino, whio_size_t pos, whefs_block * restrict tgt, bool expand )
 {
     //if(  !tgt || !whefs_inode_is_valid( fs, ino ) ) return whefs_rc.ArgError;
-    if( (ino->data_size < pos) && !expand )
+    if( (ino->data_size <= pos) && !expand )
     {
 	//WHEFS_DBG("return whefs_rc.RangeError");
 	return whefs_rc.RangeError;
