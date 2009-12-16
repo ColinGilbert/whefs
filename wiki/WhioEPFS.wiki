@@ -1,0 +1,29 @@
+#summary Overview of whio_epfs
+#labels Category-Internals,Phase-Design
+
+= whio_epfs =
+
+whoi_epfs (hereafter called EPFS) is a component of the whio i/o library on top of which whefs is built. It is currently (December, 2009) being developed to replace the internals of whefs.
+
+EPFS is basically whefs stripped of inode names support. The reasons for this are...
+
+There are many options for mapping names to inodes, with varying storage and memory requirements, as well as widely varying performance characteristics. Within whefs, an estimated 20-30% of the code has _something_ to do with inode names (loading, saving, searching, or caching them). Since, however, i haven't been 90% (or more) satisfied with any one inode naming solution, i decided to refactor whefs into two layers:
+
+  * whio_epfs provides all of the primary basic features, namely random read/write access to inodes.
+  * whefs will then be refactored to use EPFS as its base, and add inode naming support on top of that.
+
+It is anticipated that the whefs public API will not have to change much for this, and that more than 50% of the private API will be factored out.
+
+Benefits of the restructuring include:
+
+  * The EPFS layer now takes care of all the trickiest parts.
+  * The EPFS layer can get by with very, very little memory (under 500 bytes for small use cases). Its memory costs depend only on how many pseudofiles are currently opened and how many data blocks each of those inodes contains. If inodes are never opened, it never has to allocate any memory.
+  * The EPFS layer has support for its own internal memory allocator which can use client-provided memory (e.g. a stack-allocated buffer) for its internal allocations, allowing it to run without ever calling malloc() (for most use cases, anyway).
+  * We can experiment with different name-to-inode mapping approaches in whefs without touching the core EFS code, which should help keep that code stabler.
+
+Some other side effects (not necessarily benefits) of the restructuring include:
+
+  * The EPFS container must be embedded within the whefs container (as a whio subdevice). whefs will then manage only the parts of the container which have to do with its inode/names mapping, and leave the rest to EPFS.
+  * flock()-style locking becomes more difficult because of the previous point, as the EPFS needs to know the offset at which it lives in the whefs container so that it can flock() the proper ranges. i'm not happy with this leak in the abstraction, however.
+  * whefs will be able to add blocks dynamically to the EFS, but the inode count is still capped when the EFS container is created.
+  * We can tell EPFS to fall back to system memory allocators if the memory pool runs out, or we can tell it to fail if it needs more memory than we give it. This will give us fairly flexible control over EPFS' memory consumption.
