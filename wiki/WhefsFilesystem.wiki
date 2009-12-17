@@ -26,8 +26,6 @@ In the whefs documentation inodes are often referred to as pseudofiles. In whefs
 
 The EFS does not currently (and may never) support the concept of directories. Instead, it has a flat namespace. Files may have arbitrary names, e.g. `/my/file.foo`, as long as they do not exceed the maximum filename length specified by the EFS (see below for more information on that).
 
-While adding support for directories should not be all that difficult to do, it would have a significant memory cost. More specifically, it would require that we often call `malloc()` to allocate memory small amounts of memory for the path parsing process, and reducing calls to `malloc()` is an explicit project goal.
-
 =The filesystem layout=
 
 (Achtung: the filesystem layout is subject to change as the library evolves. This document may not always 100% reflect the current state.)
@@ -44,7 +42,7 @@ An EFS container file essentially looks like this:
 -> (EOF)                 It had to come sometime, didn't it?
 }}}
 
-(Achtung: that's subject to change from version to version until the library stablizes.)
+(Achtung again: that's subject to change from version to version until the library stablizes.)
 
 As one can probably infer from this, the number of inodes and the size of each data block must be fixed when the EFS is created. The format currently allows for blocks to be added to the end of the EFS, but whether or not to add that as a feature is undecided, as there may be other (potentially more interesting) uses for the space after the data blocks (e.g. client-specified data).
 
