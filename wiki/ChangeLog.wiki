@@ -4,6 +4,10 @@
 This is the informal change list for whefs releases. Newest items are at the top. Only an overview is provided here - the exact list of changes is tracked only via the source repository.
 
 ----
+
+*18 Dec 2009:*
+  * New release release due to a compilation bug i overlooked in the last one.
+
 *1 Dec 2009:*
   * A slight performance hack required a small change in the EFS format. That invalidates older EFS containers.
 
