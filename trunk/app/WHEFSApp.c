@@ -97,6 +97,7 @@ static struct WHEFSApp_
 "fill out WHEFSApp.usageText!",  /* usageText */
 "fill out WHEFSApp.helpText!", /* helpText */
 0, /* fsName */
+0, /* debugFlags*/
 0, /* fs */
 0,  /* fe */
 false, /* verbose */
