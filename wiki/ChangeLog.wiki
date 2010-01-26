@@ -5,6 +5,9 @@ This is the informal change list for whefs releases. Newest items are at the top
 
 ----
 
+*26 Jan 2010:*
+  * Apparently the compile fix from the last release didn't really get into the release tarball. Releasing again to fix that.
+
 *18 Dec 2009:*
   * New release release due to a compilation bug i overlooked in the last one.
 
