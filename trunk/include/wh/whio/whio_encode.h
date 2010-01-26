@@ -218,9 +218,10 @@ int whio_decode_size_t( unsigned char const * src, whio_size_t * v );
 whio_size_t whio_dev_encode_size_t( whio_dev * dev, whio_size_t v );
 
 /**
-   Decodes v from dev using whio_size_t_decode().
+   Decodes a whio_size_t object from dev. On success whio_rc.OK is returned
+   and tgt (if not null) is modified, otherwise tgt is not modified.
 */
-int whio_dev_decode_size_t( whio_dev * dev, whio_size_t * v );
+int whio_dev_decode_size_t( whio_dev * dev, whio_size_t * tgt );
 
 /**
    The 64-bit variant of whio_encode_uint32(). Follows the same
@@ -422,12 +423,6 @@ size_t whio_dev_encode_uint32_array( whio_dev * dev, size_t n, uint32_t const * 
    @see whio_dev_decode_uint32()
 */
 size_t whio_dev_decode_uint32_array( whio_dev * dev, size_t n, uint32_t * list );
-
-/**
-   Decodes a whio_size_t object from dev. On success whio_rc.OK is returned
-   and tgt (if not null) is modified, otherwise tgt is not modified.
-*/
-int whio_dev_decode_size_t( whio_dev * dev, whio_size_t * tgt );
 
 /**
    Encodes a C string into the device by writing a tag byte, the length of
