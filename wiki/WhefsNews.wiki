@@ -4,7 +4,7 @@
 =whefs News (most recent items at the top)=
 
 *16 Feb 2010:*
-  * Work has been underway the past couple of months to prepare whefs for a major refactoring, where it will be split into two parts: [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_epfs|whio_epfs], now functional and largely feature-complete, will provide the basic i/o features, e.g. the inode-to-block mappings and the inode-as-whio_dev translation. whefs will then add the inode-to-filename mapping support on top of that. Since whefs will have to be completely gutted and rewritten for this, it's likely to be a good while before it gets done. i will probably go ahead and fork off whefs2 for that purpose (it'd be simpler, overall).
+  * Work has been underway the past couple of months to prepare whefs for a major refactoring, where it will be split into two parts: [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_epfs whio_epfs], now functional and largely feature-complete, will provide the basic i/o features, e.g. the inode-to-block mappings and the inode-as-whio_dev translation. whefs will then add the inode-to-filename mapping support on top of that. Since whefs will have to be completely gutted and rewritten for this, it's likely to be a good while before it gets done. i will probably go ahead and fork off whefs2 for that purpose (it'd be simpler, overall).
 
 *29 Nov 2009:*
   * whefs turns one year old this week. The first commits i could trace go back to one year ago today. The library wasn't really functional until the end of December, 2008, though.
