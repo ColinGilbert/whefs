@@ -3,6 +3,9 @@
 
 =whefs News (most recent items at the top)=
 
+*4 March 2010:*
+  * The new bits which will eventually replace much of whefs internals (mentioned below) are functionally complete and seem to work well, providing all of the core features of whefs except the ability to map names to inodes (which will be provided by the whefs layer). At some point work will begin on rewriting whefs on top of [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_epfs whio_epfs], but it is likely to be some months before i start on it (for lack of energy).
+
 *16 Feb 2010:*
   * Work has been underway the past couple of months to prepare whefs for a major refactoring, where it will be split into two parts: [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_epfs whio_epfs], now functional and largely feature-complete, will provide the basic i/o features, e.g. the inode-to-block mappings and the inode-as-whio_dev translation. whefs will then add the inode-to-filename mapping support on top of that. Since whefs will have to be completely gutted and rewritten for this, it's likely to be a good while before it gets done. i will probably go ahead and fork off whefs2 for that purpose (it'd be simpler, overall).
 
