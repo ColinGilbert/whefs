@@ -3,6 +3,9 @@
 
 =whefs News (most recent items at the top)=
 
+*10 March 2010:*
+  * Over in the [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_epfs whio_epfs] source tree (which will eventually become the basis of a refactored whefs), the two most glaring performance bottlenecks have been removed: the find-the-next-free-record operations for inodes and data blocks are now O(1) plus a small amount i/o to update the free-list links (zero, one, or two linked records). These ops have so far been O(1) for the average case but degrade to O(N) worst case. With that out of the way, the internal filesystem engine can scale to much larger sizes than before without a notable runtime performance hit.
+
 *4 March 2010:*
   * The new bits which will eventually replace much of whefs internals (mentioned below) are functionally complete and seem to work well, providing all of the core features of whefs except the ability to map names to inodes (which will be provided by the whefs layer). At some point work will begin on rewriting whefs on top of [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_epfs whio_epfs], but it is likely to be some months before i start on it (for lack of energy).
 
