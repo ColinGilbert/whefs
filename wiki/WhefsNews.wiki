@@ -3,6 +3,9 @@
 
 =whefs News (most recent items at the top)=
 
+*12 March 2010:*
+  * Woohoo! Early this morning i got a new whio_dev-based "micro database" (UDB) API working. It is a storage-based hashtable with amortized O(1) insert/search/remove, uses arbitrary whio_dev storage, has constant memory requirements (only 1-2 allocations), and will make a _perfect_ replacement for the current inode-name management bits. :-D
+
 *10 March 2010:*
   * Over in the [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_epfs whio_epfs] source tree (which will eventually become the basis of a refactored whefs), the two most glaring performance bottlenecks have been removed: the find-the-next-free-record operations for inodes and data blocks are now O(1) plus a small amount i/o to update the free-list links (zero, one, or two linked records). These ops have so far been O(1) for the average case but degrade to O(N) worst case. With that out of the way, the internal filesystem engine can scale to much larger sizes than before without a notable runtime performance hit.
 
