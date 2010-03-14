@@ -316,7 +316,7 @@ int whglob_matches_like( char const *pattern, char const * str, char caseSensiti
     ** is case sensitive causing 'a' LIKE 'A' to be false */
     static const sqlite3CompareInfo likeInfoAlt = { '%', '_',   0, 0 };
     return patternCompare( (unsigned char *)pattern, (unsigned char *) str,
-			   caseSensitive ? &likeInfoNorm : &likeInfoAlt,
+			   caseSensitive ? &likeInfoAlt : &likeInfoNorm,
 			   '%' );
 }
 
