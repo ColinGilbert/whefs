@@ -307,7 +307,7 @@ int whglob_matches( char const * pattern, char const * str )
     return patternCompare( (unsigned char *)pattern, (unsigned char *) str, &cinfo, '\\' );
 }
 
-int whglob_matches_like( char const * str, char const * pattern, char caseSensitive )
+int whglob_matches_like( char const *pattern, char const * str, char caseSensitive )
 {
     /* The correct SQL-92 behavior is for the LIKE operator to ignore
     ** case.  Thus  'a' LIKE 'A' would be true. */
