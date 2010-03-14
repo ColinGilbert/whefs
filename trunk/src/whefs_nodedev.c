@@ -678,7 +678,7 @@ static int whio_dev_inode_trunc( whio_dev * dev, whio_off_t len )
 {
     /* Man, this was a bitch to do! */
     WHIO_DEV_DECL(whio_rc.ArgError);
-    if( len < 0 ) return whio_rc.AccessError;
+    if( len < 0 ) return whio_rc.ArgError;
     if( ! meta->rw ) return whio_rc.AccessError;
     const whio_size_t off = (whio_size_t)len;
     if( off > len ) return whio_rc.RangeError; /* overflow */
@@ -686,7 +686,6 @@ static int whio_dev_inode_trunc( whio_dev * dev, whio_off_t len )
 
     if( 0 == len )
     { /* special (simpler) case for 0 byte truncate */
-	if( ! meta->inode->first_block ) return whefs_rc.OK;
 	// (WTF?) FIXME: update ino->blocks.list[0]
         if( meta->inode->first_block ) 
         {
