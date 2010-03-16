@@ -3,6 +3,11 @@
 
 =whefs News (most recent items at the top)=
 
+*16 March 2010:*
+  * Over in the [http://fossil.wanderinghorse.net/repos/whio/|libwhio source tree], we've finally got all of the components which we need in order to start refactoring whefs. It won't be so much a refactoring as a rewrite. _All_ of the core features of whefs have been refactored into lower-level components, which now simply need to be plugged in together to re-implement whefs. i expect that 75-80% of the whefs code will literally disappear through the refactoring. Because of the drastic level of change, i've decided to leave whefs as it is and call the rewrite whefs2. whefs2 will have all the main features of whefs, none of the speed bottlenecks (e.g. finding the next free inode/block is now O(1)), plus the new components allow a few other features which whefs doesn't have. e.g. it will be able to grow on demand and the new inode-to-name mapping parts perform better while using a constant amount of memory (independent of the number of inodes in the EFS). The new code will likely have a slightly larger memory footprint, but i expect to see it cap out at well under 10kb of RAM (my current estimate is 5-6kb).
+  * All that having been said... it will still probably be some months before i get around to the refactoring. (i'm having far too much fun hacking on the lower-level bits!)
+
+
 *12 March 2010:*
   * Woohoo! Early this morning i got a new [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_udb whio_dev-based "micro database"] (UDB) API working. It is a storage-based hashtable with amortized O(1) insert/search/remove, uses arbitrary whio_dev storage, has near-constant memory requirements, and will make a _perfect_ replacement for the current inode-name management bits. :-D
 
