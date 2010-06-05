@@ -108,7 +108,7 @@ int test_ramfs()
     MARKER("starting ramvfs test\n");
     char const * fname = ":memory:";
     whefs_fs * fs = 0;
-    size_t rc = whefs_mkfs( fname, &ThisApp.fsopts, &fs );
+    whio_size_t rc = whefs_mkfs( fname, &ThisApp.fsopts, &fs );
     assert((rc == whefs_rc.OK) && "mkfs failed :(" );
     MARKER("mkfs() worked.\n");
     whefs_fs_dump_info( fs, stdout );
@@ -134,7 +134,7 @@ int test_ramfs()
     memset( buf, 0, bufSize );
     FD->api->seek( FD, 125, SEEK_SET );
     rc = FD->api->read( FD, buf, 40 );
-    MARKER("FD read rc=%u\n", rc );
+    MARKER("FD read rc=%"WHIO_SIZE_T_PFMT"\n", rc );
     if( rc )
     {
 	MARKER("Read bytes: [%s]\n", buf );
@@ -338,15 +338,6 @@ int test_truncate()
 
 
 
-int bogo()
-{
-    MARKER("whefs_encoded_sizeof_id_type=%d\n",whefs_sizeof_encoded_id_type);
-    uint64_t i6 = UINT64_C(0x3F01020304);
-    MARKER("%016llx\n",(i6 << 8) );
-    MARKER("%016llx\n",(i6 >>32) );
-    MARKER("%016llx\n",(i6 >>32) << 40 );
-    return -1;
-}
 
 #include "../src/whefs_encode.h"
 #include <assert.h>
@@ -357,13 +348,13 @@ int test_encodings()
     memset( buf, 0, bufSize );
 
     uint16_t ui = 27;
-    size_t sz = whio_encode_uint16( buf, ui );
-    MARKER("sz=%u\n",sz);
+    whio_size_t sz = whio_encode_uint16( buf, ui );
+    MARKER("sz=%"WHIO_SIZE_T_PFMT"\n",sz);
     MARKER("Buffer bytes=");
-    size_t i = 0;
+    whio_size_t i = 0;
     for( i = 0; i < 5; ++i )
     {
-	printf("#%u=[0x%02x]\t", i, buf[i] );
+	printf("#%"WHIO_SIZE_T_PFMT"=[0x%02x]\t", i, buf[i] );
     } puts("");
     uint16_t uid = (uint16_t)-1;
     int rc = whio_decode_uint16( buf, & uid );
@@ -371,7 +362,7 @@ int test_encodings()
     MARKER("Buffer bytes=");
     for( i = 0; i < 5; ++i )
     {
-	printf("#%u=[0x%02x]\t", i, buf[i] );
+	printf("#%"WHIO_SIZE_T_PFMT"=[0x%02x]\t", i, buf[i] );
     } puts("");
     assert( uid == ui );
     return 0;
@@ -498,7 +489,7 @@ int test_hash()
 #undef HASH
 #undef DUMPLIST
 
-    MARKER("whefs_hashid_list_sizeof() = %u\n",whefs_hashid_list_sizeof(li));
+    MARKER("whefs_hashid_list_sizeof() = %"WHIO_SIZE_T_PFMT"\n",(whio_size_t)whefs_hashid_list_sizeof(li));
 
     whefs_hashid_list_free( li );
 
@@ -550,9 +541,9 @@ int test_caching()
 #if 1
     char pname[xpos+2] = {'f','i','l','e',0/*index xpos*/,0};
     MARKER("looping %d times of over %d pseudofiles...\n",loops,count);
-    size_t objCount = 0;
+    whio_size_t objCount = 0;
     whefs_file * files[count] = {0};
-    size_t writeCount = 0;
+    whio_size_t writeCount = 0;
     whio_size_t szck = 0U;
     int L;
     for( L = 1; L <= loops; ++L )
@@ -588,7 +579,7 @@ int test_caching()
         printf("] ");
         fflush(stdout);
     }
-    printf("\n%u whefs_file objects were opened and closed, doing a total of %u writes of %u bytes each.\n",objCount,writeCount,bufSize);
+    printf("\n%"WHIO_SIZE_T_PFMT" whefs_file objects were opened and closed, doing a total of %"WHIO_SIZE_T_PFMT" writes of %"WHIO_SIZE_T_PFMT" bytes each.\n",objCount,writeCount,bufSize);
     //whefs_inode_hash_cache_chomp_lv(fs);
 #endif
     do_foreach(fs);

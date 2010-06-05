@@ -71,7 +71,7 @@ int test_iodev()
 	dev = whio_dev_for_filename( fname, "r" );
 	assert( dev && "whio_dev open failed!");
 	char * rstr = 0;
-	size_t rslen = 0;
+	whio_size_t rslen = 0;
 	whio_dev_decode_cstring( dev, &rstr, &rslen );
 	assert( rstr && "Read of string failed!" );
 	MARKER("Read string of %u bytes: [%s]\n", rslen, rstr );
@@ -220,7 +220,7 @@ int test_stuff()
 #define BS_GET(BIT) ((BS_BYTEFOR(BIT) & (0x01 << (BIT%8))) ? 0x01 : 0x00)
 #define BS_TOGGLE(BIT) (BS_GET(BIT) ? BS_UNSET(BIT) : BS_SET(BIT))
     BS_CLEAR;
-    size_t i = 0;
+    int i = 0;
     for( ; i < Size; ++i )
     {
 	printf("0x01 << %d = 0x%02x = %u\n", i, (0x01 << i), (0x01 << i) );
@@ -495,116 +495,6 @@ int test_mmap()
 
 #endif // TRY_MMAP
 
-int test_tar()
-{
-    // http://en.wikipedia.org/wiki/Tarball
-    char const * fname = "iodev.tar";
-
-    enum {
-    TarHeaderOffsetName = 0,
-    TarHeaderSizeName = 100,
-    TarHeaderOffsetMode = TarHeaderOffsetName + TarHeaderSizeName,
-    TarHeaderSizeMode = 8,
-    TarHeaderOffsetOUID = TarHeaderOffsetMode + TarHeaderSizeMode,
-    TarHeaderSizeOUID = 8,
-    TarHeaderOffsetGUID = TarHeaderOffsetOUID + TarHeaderSizeOUID,
-    TarHeaderSizeGUID = 8,
-    TarHeaderOffsetSize = TarHeaderOffsetGUID + TarHeaderSizeGUID,
-    TarHeaderSizeSize = 12,
-    TarHeaderOffsetMtime = TarHeaderOffsetGUID + TarHeaderSizeGUID,
-    TarHeaderSizeMtime = 12,
-    TarHeaderOffsetChecksum = TarHeaderOffsetMtime + TarHeaderSizeMtime,
-    TarHeaderSizeChecksum = 8,
-    TarHeaderOffsetLinkType = TarHeaderOffsetChecksum + TarHeaderSizeChecksum,
-    TarHeaderSizeLinkType = 1,
-    TarHeaderOffsetLinkName = TarHeaderOffsetLinkType + TarHeaderSizeLinkType,
-    TarHeaderSizeLinkName = 100,
-
-    TarHeaderOffsetData = TarHeaderOffsetLinkName + TarHeaderSizeLinkName,
-    TarHeaderSize = 512
-    };
-
-    enum {
-    TestDataSize = 1024 * 2
-    };
-    const size_t dsize = TestDataSize;
-
-    unsigned char buf[TarHeaderSize+1];
-    memset( buf, 0, TarHeaderSize+1 );
-
-    // Name:
-    size_t slen = strlen(fname);
-    memcpy( buf+TarHeaderOffsetName, fname, slen );
-
-    // Mode:
-    snprintf( (char *)(buf+TarHeaderOffsetMode), TarHeaderSizeMode+1, "%08o", 0644 );
-    buf[TarHeaderOffsetMode + TarHeaderSizeMode-1] = ' ';
-
-    // Size:
-    snprintf( (char *)(buf+TarHeaderOffsetSize), TarHeaderSizeSize+1, "%011o", dsize );
-    buf[TarHeaderOffsetSize + TarHeaderSizeSize-1] = ' ';
-    slen = strlen((char *)(buf+TarHeaderOffsetSize));
-    printf("size %"WHIO_SIZE_T_PFMT" octal=[%s] slen=[%u]\n",dsize, buf+TarHeaderOffsetSize,slen );
-
-    snprintf( (char *)(buf+TarHeaderOffsetMtime), TarHeaderSizeMtime+1, "%011o", (60*60)*24*3+1 /*3rd Jan 1972*/ );
-    buf[TarHeaderOffsetMtime + TarHeaderSizeMtime-1] = ' ';
-
-    // Link. Link name left blank.
-    buf[TarHeaderOffsetLinkType] = '0';
-
-    // User/Group:
-#if 0
-    char const * empty = "  nobody"; // exactly 8 bytes
-    memcpy( buf+TarHeaderOffsetOUID, empty, TarHeaderSizeOUID );
-    memcpy( buf+TarHeaderOffsetGUID, empty, TarHeaderSizeGUID );
-#else
-    char const * empty = "00000000"; // exactly 8 bytes
-    memcpy( buf+TarHeaderOffsetOUID, empty, TarHeaderSizeOUID );
-    memcpy( buf+TarHeaderOffsetGUID, empty, TarHeaderSizeGUID );
-#endif
-    // Checksum:
-    memset( buf+TarHeaderOffsetChecksum, ' ', TarHeaderSizeChecksum );
-
-    uint32_t csum = 0U;
-    unsigned char * x = buf;
-    unsigned int i = 0;
-    for( ; i < TarHeaderSize; ++i, ++x )
-    {
-        csum += *x;
-    }
-    snprintf( (char *)(buf+TarHeaderOffsetChecksum), TarHeaderSizeChecksum, "%06o0", csum );
-    buf[TarHeaderOffsetChecksum + TarHeaderSizeChecksum -1] = ' ';
-#if 1
-    //memset( buf + TarHeaderOffsetData, '*', TarHeaderSize - TarHeaderOffsetData );
-    x = buf;
-
-    for( i = 0 ; i < TarHeaderSize; ++i, ++x )
-    {
-        if( !*x ) *x = '*';
-    }
-    puts((char *)buf);
-#else
-    fwrite( buf, TarHeaderSize, 1, stderr );
-#endif
-
-#if 0
-    unsigned char data[TestDataSize];
-    memset( data, '*', TestDataSize );
-    fwrite( buf, TarHeaderSize, 1, stderr );
-    fwrite( data, TestDataSize, 1, stderr );
-#endif
-
-
-#if 0
-    whio_dev * dev = whio_dev_for_filename( fname, "w+");
-    dev->api->truncate( dev, TarHeaderSize );
-    dev->api->seek( dev, 0L, SEEK_SET );
-    dev->api->write( dev, fname, slen ); 
-    dev->api->seek( dev, 0L, SEEK_SET );
-    dev->api->finalize(dev);
-#endif
-    return 0;
-}
 #define TEST_WHIO_ENCODE 0
 
 #if TEST_WHIO_ENCODE
