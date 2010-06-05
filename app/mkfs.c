@@ -53,13 +53,13 @@ static int mkfs_do_mkfs()
     if( whefs_rc.OK != rc ) return rc;
 
     whio_dev * dev = 0;
-    const size_t fsSize = whefs_fs_calculate_size( &ThisApp.fsopt );
+    const whio_size_t fsSize = whefs_fs_calculate_size( &ThisApp.fsopt );
     bool inMem = (0 == strcmp( ":memory:", WHEFSApp.fsName ));
     if( inMem  )
     {
-	MARKER("Allocating %u bytes of memory for the filesystem...\n", fsSize );
+	MARKER("Allocating %"WHIO_SIZE_T_PFMT" bytes of memory for the filesystem...\n", fsSize );
 	dev = whio_dev_for_membuf( fsSize, 0.0 );
-	MARKER("Allocated %u bytes of memory for the filesystem.\n", fsSize );
+	MARKER("Allocated %"WHIO_SIZE_T_PFMT" bytes of memory for the filesystem.\n", fsSize );
     }
     else
     {
@@ -69,7 +69,7 @@ static int mkfs_do_mkfs()
     {
 	if( inMem )
 	{
-	    WHEFS_DBG_ERR("Could not create an in-memory buffer of %u bytes!", fsSize );
+	    WHEFS_DBG_ERR("Could not create an in-memory buffer of %"WHIO_SIZE_T_PFMT" bytes!", fsSize );
 	    return whefs_rc.AllocError;
 	}
 	else
@@ -94,7 +94,7 @@ static void mkfs_dump_info()
     FILE * out = stdout;
     whefs_fs_options const * opt = &ThisApp.fsopt;
     uint64_t const dataSize = (opt->block_count * opt->block_size);
-    size_t const contSize = whefs_fs_calculate_size(opt);
+    whio_size_t const contSize = whefs_fs_calculate_size(opt);
     if( ! contSize )
     {
 	WHEFS_DBG_ERR("Something seriously wrong happened: calculated container size is 0!");
@@ -106,7 +106,7 @@ static void mkfs_dump_info()
 	     "\tBlock count: %"WHEFS_ID_TYPE_PFMT"\n"
 	     "\tinode count: %"WHEFS_ID_TYPE_PFMT"\n"
 	     "\tFree data bytes: %"PRIu64"\n"
-	     "\tMax filename length: %u\n"
+	     "\tMax filename length: %"WHIO_SIZE_T_PFMT"\n"
 	     "\tRequired container size (bytes): %u\n",
 	     WHEFSApp.fsName,
 	     opt->block_size,

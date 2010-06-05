@@ -241,7 +241,7 @@ static int ArgSpec_convert( ArgSpec * src, char const * val )
 	return rc;
     }
 #endif
-    size_t sz = 0;
+    whio_size_t sz = 0;
     whefs_id_type id = 0;
     int d = 0;
     uint16_t iu16 = 0;
@@ -266,7 +266,7 @@ static int ArgSpec_convert( ArgSpec * src, char const * val )
 		     src->name );
 	      return whefs_rc.ArgError;
 	  }
-	  if( 1 != sscanf( val, "%u", &sz ) )
+	  if( 1 != sscanf( val, "%"WHIO_SIZE_T_PFMT, &sz ) )
 	  {
 	      APPERR("Could not parse value '%s' of option '%s' as a numeric value!\n",
 		     val, src->name );
@@ -298,7 +298,7 @@ static int ArgSpec_convert( ArgSpec * src, char const * val )
 		     src->name );
 	      return whefs_rc.ArgError;
 	  }
-	  if( 1 != sscanf( val, "%u", &iu32 ) )
+	  if( 1 != sscanf( val, "%"PRIu32, &iu32 ) )
 	  {
 	      APPERR("Could not parse value '%s' of option '%s' as a numeric value!\n",
 		     val, src->name );

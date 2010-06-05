@@ -162,15 +162,15 @@ static int ls_dump_blocks()
 {
     ThisApp.didSomething = true;
     whefs_fs * fs = WHEFSApp.fs;
-    const size_t nc = whefs_fs_options_get(fs)->inode_count;
-    size_t id = 1;
+    const whio_size_t nc = whefs_fs_options_get(fs)->inode_count;
+    whio_size_t id = 1;
     int rc = 0;
-    int64_t totalSize = 0;
-    size_t used = 0;
+    whio_size_t totalSize = 0;
+    whio_size_t used = 0;
     puts("List of used blocks per file:\n");
     whefs_block bl;
     whefs_inode ino;
-    size_t bcount = 0;
+    whio_size_t bcount = 0;
     whefs_string name = whefs_string_empty;
     for( ; id <= nc; ++id )
     {
@@ -192,7 +192,7 @@ static int ls_dump_blocks()
 	rc = whefs_block_read( fs, ino.first_block, &bl );
 	if( whefs_rc.OK != rc )
 	{
-	    APPERR("Error #%d while reading block #%u of inode #%u[%s]!\n",
+	    APPERR("Error #%d while reading block #%"WHIO_SIZE_T_PFMT" of inode #%"WHIO_SIZE_T_PFMT"[%s]!\n",
                    rc, ino.first_block, ino.id, name.string );
 	    whefs_string_clear( &name, false );
 	    return rc;
@@ -201,7 +201,7 @@ static int ls_dump_blocks()
 	++bcount;
 	//printf("inode #%u[%s] blocks: %u", ino.id, name.string, bl.id );
 	printf("#%04"WHEFS_ID_TYPE_PFMT"[%s]:\t(%"WHEFS_ID_TYPE_PFMT"%s", ino.id, name.string, bl.id,bl.next_block ? "," : "" );
-	size_t lbcount = 1;
+	whio_size_t lbcount = 1;
 	for( ; 0 != bl.next_block; ++lbcount )
 	{
 	    const whefs_block blcheck = bl;
@@ -223,7 +223,7 @@ static int ls_dump_blocks()
 	totalSize += ino.data_size;
 	if( WHEFSApp.verbose )
 	{
-	    printf(") = %u block(s), %u of %u bytes used\n",
+	    printf(") = %"WHIO_SIZE_T_PFMT" block(s), %"WHIO_SIZE_T_PFMT" of %"WHIO_SIZE_T_PFMT" bytes used\n",
 		   lbcount,
 		   ino.data_size,
 		   (lbcount* whefs_fs_options_get(fs)->block_size) );
@@ -231,7 +231,7 @@ static int ls_dump_blocks()
 	else puts(")");
     }
     whefs_string_clear( &name, false );
-    printf("\nTotals: %llu byte(s) in %u blocks\n", totalSize, bcount );
+    printf("\nTotals: %"WHIO_SIZE_T_PFMT" byte(s) in %"WHIO_SIZE_T_PFMT" blocks\n", totalSize, bcount );
     return rc;
 }
 
@@ -247,7 +247,7 @@ static int ls_dump_blocks_table()
      */
     whefs_fs * fs = WHEFSApp.fs;
     const whefs_id_type bc = whefs_fs_options_get(fs)->block_count;
-    size_t id = 1;
+    whio_size_t id = 1;
     int rc = 0;
     puts("List of used blocks:");
     //puts("Block ID:\tFlags:\tNext block:\tUsed bytes:");
@@ -259,7 +259,7 @@ static int ls_dump_blocks_table()
 	rc = whefs_block_read( fs, id, &bl );
 	if( whefs_rc.OK != rc )
 	{
-	    APPERR("Error #%d while reading block #%u!\n", rc, id);
+	    APPERR("Error #%d while reading block #%"WHIO_SIZE_T_PFMT"!\n", rc, id);
 	    return rc;
 	}
 	if( ! bl.flags ) continue;
@@ -279,7 +279,7 @@ static int ls_dump_options_code()
 	   "%"PRIu32" /*block_size*/, "
 	   "%"WHEFS_ID_TYPE_PFMT" /*block_count*/, "
 	   "%"WHEFS_ID_TYPE_PFMT" /*inode_count*/, "
-	   "%u /*filename_length*/ "
+	   "%"WHIO_SIZE_T_PFMT" /*filename_length*/ "
 	   "};",
 	   o->block_size,
 	   o->block_count ,
@@ -293,7 +293,7 @@ static int ls_dump_options_code()
 static int ls_dump_mkfs_command()
 {
     whefs_fs_options const * o = whefs_fs_opt( WHEFSApp.fs );
-    printf("whefs-mkfs -b%"PRIu32" -c%"WHEFS_ID_TYPE_PFMT" -i%"WHEFS_ID_TYPE_PFMT" -s%u\n",
+    printf("whefs-mkfs -b%"PRIu32" -c%"WHEFS_ID_TYPE_PFMT" -i%"WHEFS_ID_TYPE_PFMT" -s%"WHIO_SIZE_T_PFMT"\n",
 	   o->block_size,
 	   o->block_count ,
 	   o->inode_count ,

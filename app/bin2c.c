@@ -5,6 +5,8 @@
 
    Usage: app VariableName < input > output.c
 */
+#include <stdint.h> /* uintXX_t */
+#include <inttypes.h> /* PRIuXX macros */
 #include <stdio.h>
 
 static char const * appName = 0;
@@ -33,7 +35,7 @@ int main( int argc, char const ** argv )
     size_t flip = 0;
 
     printf( "unsigned char %s[] = {\n\t", varname);
-    size_t size = 0;
+    uint32_t size = 0;
     while( 0 != (rd = fread( buf, 1, bufSize, stdin ) ) )
     {
 	size += rd;
@@ -50,7 +52,7 @@ int main( int argc, char const ** argv )
 	}
     }
     printf("\n\t}; /* end %s */\n", varname );
-    printf( "enum { %s_length = %uUL }; ", varname, size);
+    printf( "enum { %s_length = %"PRIu32"%s }; ", varname, size,"UL");
     //printf("enum { %s_length = sizeof(%s) };\n", varname, varname );
     return 0;
 }

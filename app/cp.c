@@ -49,14 +49,14 @@ static int cp_import( char const *fname )
 
     }
     int rc = whefs_import_dev( WHEFSApp.fs, inf, fname, true );
-    size_t sz = whio_dev_size( inf );
+    whio_size_t sz = whio_dev_size( inf );
     inf->api->finalize(inf);
     if( rc != whefs_rc.OK )
     {
 	APPERR("Import of file [%s] failed!\n", fname );
 	return rc;
     }
-    VERBOSE("Copied %u bytes from [%s] into EFS\n", sz, fname);
+    VERBOSE("Copied %"WHIO_SIZE_T_PFMT" bytes from [%s] into EFS\n", sz, fname);
 #undef CLEANUP
     return 0;
 }
@@ -80,20 +80,20 @@ static int cp_export( char const *fname )
     }
     dest->api->truncate( dest, 0U );
 
-    const size_t destSize = whio_dev_size( fdev ); /* it makes me sick to think of how many disk accesses that needs. */
+    const whio_size_t destSize = whio_dev_size( fdev ); /* it makes me sick to think of how many disk accesses that needs. */
     unsigned char buf[WHEFS_CP_BUFFER_SIZE];
-    size_t wrc = 0;
-    size_t total = 0;
+    whio_size_t wrc = 0;
+    whio_size_t total = 0;
     while( true )
     {
-	size_t rdrc = fdev->api->read( fdev, buf, WHEFS_CP_BUFFER_SIZE );
+	whio_size_t rdrc = fdev->api->read( fdev, buf, WHEFS_CP_BUFFER_SIZE );
 	//WHEFS_DBG("Read %u of %u bytes.", rdrc, WHEFS_CP_BUFFER_SIZE );
 	if( ! rdrc ) break;
 	wrc = dest->api->write( dest, buf, rdrc );
 	//WHEFS_DBG("Wrote %u of %u bytes.", wrc, rdrc );
 	if( wrc != rdrc )
 	{
-	    APPERR("Write failed! Read %u-byte block but could only write %u bytes to '%s'!\n", rdrc, wrc, fname );
+	    APPERR("Write failed! Read %"WHIO_SIZE_T_PFMT"-byte block but could only write %"WHIO_SIZE_T_PFMT" bytes to '%s'!\n", rdrc, wrc, fname );
 	    CLEANUP;
 	    return ErrIO;
 	}
@@ -102,12 +102,12 @@ static int cp_export( char const *fname )
     }
     if( total != destSize )
     {
-	APPERR("Could only write %u of %u bytes!\n", total,
+	APPERR("Could only write %"WHIO_SIZE_T_PFMT" of %"WHIO_SIZE_T_PFMT" bytes!\n", total,
 		      destSize );
 	    CLEANUP;
 	    return ErrIO;
     }
-    VERBOSE("Copied %u bytes from EFS into [%s].\n",total, fname);
+    VERBOSE("Copied %"WHIO_SIZE_T_PFMT" bytes from EFS into [%s].\n",total, fname);
     CLEANUP;
 #undef CLEANUP
     return 0;
