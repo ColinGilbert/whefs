@@ -1,5 +1,5 @@
 #summary Recent whefs news items.
-#labels Category-UserDocs,Phase-Support
+#labels Category-UserDocs,Phase-Support,Featured
 
 =whefs News (most recent items at the top)=
 
