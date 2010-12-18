@@ -4,7 +4,7 @@
 =whefs News (most recent items at the top)=
 
 *18 Dec 2010:*
- * Just published the [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_epfs_namer whio_epfs_namer] interface in the [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_epfs whio_epfs] API, along with a useful implementation. With that in place, EPFS can now do almost everything whefs can (but is more performant all-around), and whefs2 is one step closer to becoming something other than a vaporware.
+ * Officially added the [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_epfs_namer whio_epfs_namer] interface to the  [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_epfs whio_epfs] API, along with a useful implementation which uses [[http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_ht a hashtable] stored as a pseudofile in the EFS. With that in place, EPFS can now do almost everything whefs can (but is more performant all-around), and whefs2 is one step closer to becoming something other than a vaporware.
 
 *13 Oct 2010:*
  * After a half-year development pause, over in the [http://fossil.wanderinghorse.net/repos/whio/ libwhio source tree] we've added a "namer" interface into the `whio_epfs` API, which allows software like whefs to flexibly add its own inode-to-name mappings to the `whio_epfs` core filesystem. For example, we can use this in conjunction with [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki?name=whio_udb whio_udb] to provide a hashtable back-end which stores the inode/name mappings. The plan is to implement whefs2 as a thin wrapper around the (`whio_epfs`+`whio_udb`) combination.
