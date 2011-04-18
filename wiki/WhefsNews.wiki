@@ -3,6 +3,10 @@
 
 =whefs News (most recent items at the top)=
 
+*18 Apr 2011:*
+  * Fixed issue #26, which could cause an "inode ghost" to come back and haunt us.
+  * Learned from user Dan Schmitt than whefs compiles as-is on Android "ndk" and "AOPS" kernels :-D.
+
 *18 Dec 2010:*
  * Officially added the [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_epfs_namer whio_epfs_namer] interface to the  [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_epfs whio_epfs] API, along with a useful implementation which uses [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_ht a hashtable] stored as a pseudofile in the EFS. With that in place, EPFS can now do almost everything whefs can (but is more performant all-around), and whefs2 is one step closer to becoming something other than a vaporware.
 
