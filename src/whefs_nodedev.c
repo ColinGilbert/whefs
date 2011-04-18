@@ -845,8 +845,8 @@ static bool whio_dev_inode_close( whio_dev * dev )
 	if( meta )
 	{
             whefs_fs_closer_dev_remove( meta->fs, dev );
-	    dev->impl.data = 0;
             if( meta->rw ) dev->api->flush(dev);
+	    dev->impl.data = 0;
 	    if(0) WHEFS_DBG_FYI("Closing i/o %s device for inode #%u. "
 				"inode->data_size=%u posabs=%u",
 				meta->rw ? "read/write" : "read-only",
