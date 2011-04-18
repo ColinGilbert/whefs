@@ -7,7 +7,7 @@ whio_epfs (hereafter called EPFS) is a component of the whio i/o library. libwhi
 
 As of March 2010, EPFS is functional and feature-complete, and all of the components we need in order to rewrite whefs are in place. They simply have to be glued together now. whefs2, as it will be called, will be written on top of EPFS and other components which were written as part of the overall restructuring (e.g.. the whio_dev-based hashtable).
 
-But... bringing whefs2 to life will be a large undertaking (a complete rewrite, but not half as much work as has gone into EPFS), and i do not expect to get around to it until possibly 2011.
+But... bringing whefs2 to life will be a large undertaking (a complete rewrite, but not half as much work as has gone into EPFS), and i do not expect to get around to it until possibly late 2011.
 
 EPFS is described in more detail in the whio source repo:
 
@@ -15,4 +15,4 @@ EPFS is described in more detail in the whio source repo:
 
 And the new storage-based hashtable is described here:
 
-  * [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_udb]
+  * [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_ht]
