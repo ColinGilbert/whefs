@@ -599,8 +599,10 @@ int whefs_inode_unlink( whefs_fs * fs, whefs_inode * ino )
 	whefs_block_read( fs, ino->first_block, &bl );
  	rc = whefs_block_wipe( fs, &bl, true, true, true );
     }
+    if( rc != 0 ) return rc;
     *ino = whefs_inode_empty;
     ino->id = nid;
+    rc = whefs_inode_name_set( fs, ino->id, "" );
     return ( whefs_rc.OK != rc )
 	? rc
 	: whefs_inode_flush( fs, ino );
