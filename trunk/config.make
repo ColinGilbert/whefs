@@ -37,7 +37,7 @@ endif
 # is used for mmap() flushing by default (theoretically *much* faster
 # but also more dangerous). If ENABLE_MMAP is 0 then ENABLE_MMAP_ASYNC
 # is ignored.
-ENABLE_MMAP ?= 1
+ENABLE_MMAP ?= 0
 ENABLE_MMAP_ASYNC ?= 0
 
 
