@@ -58,4 +58,4 @@ $ ./whio-ht-tool x.ht ls
 [3296]=[<([14])>]=[<([3234])>]
 }}}
 
-That rubbish is the internal listing of the hashtable, which maps names to inodes and inodes to names. "I/O device layering" makes this type of copying into and out of an EFS so easy. EFS pseudofiles are full-fledged whio_dev i/o devices, and they live on top of a parent whio_dev device (which need not be a file, but can be yet another "subdevice".)
+That rubbish is the internal listing of the hashtable, which maps names to inodes and inodes to names. "I/O device layering" makes this type of copying into and out of an EFS so easy. EFS pseudofiles are full-fledged whio_dev i/o devices, and they live on top of a parent whio_dev device (which need not be a file, but can be yet another "subdevice").
