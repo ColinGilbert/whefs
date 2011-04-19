@@ -16,3 +16,46 @@ EPFS is described in more detail in the whio source repo:
 And the new storage-based hashtable is described here:
 
   * [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_ht]
+
+=A Very Brief Demonstration=
+
+It looks a little bit like this:
+
+{{{
+$ ./whio-epfs-mkfs my.epfs --namer=ht --block-size=8192 \
+    --inode-count=128 --label='hi, world'
+./whio-epfs-mkfs [my.epfs]: EFS container created (12288 bytes).
+$ ./whio-epfs-cp my.epfs *.[ch]
+$ ./whio-epfs-ls my.epfs 
+whio_efps container file [my.epfs]:
+Label:	[hi, world]
+Inode #	   Size	  Mod. Time (Local)	Name
+     1     5276   2011-04-19 22:05:12	<([whio_epfs_namer_ht.whio_ht])>
+     2    32755   2010-12-20 07:35:56	EPFSApp.c
+     3    13014   2010-12-26 17:49:58	cp.c
+...
+    26     6783   2011-04-19 20:38:08	whio_epfs_namer_array.c
+    27    24956   2011-04-19 22:43:33	whio_epfs_namer_ht.c
+    28    21915   2010-12-20 07:35:56	whio_epfs_namer_vlbm.c
+
+Totals: 28 of 128 inodes take up 396439 bytes.
+
+$ ls -la my.epfs 
+-rw-r--r-- 1 stephan stephan 529140 Apr 19 23:05 my.epfs
+}}}
+
+That weird-looking name for inode #1 is the pseudofile used by this particular "namer' implementation. The "namer" interface is responsible for mapping inodes to names (and optionally also names to inodes). The "ht" namer impl uses an on-storage (whio_dev-based) hashtable and maps both inode-to-name and name-to-inode. This namer impl uses the first available inode for its storage and then gives it a funny name so that clients don't try to use it. Since the hashtable supports any whio_dev storage, we can dump it to a file and look at the hashtable like this:
+
+{{{
+$ ./whio-epfs-cp my.epfs -x 1=x.ht # <-- extract inode #1 to 'x.ht'
+$ ./whio-ht-tool x.ht ls
+[1970]=[http.c]=[<([4])>]
+[3748]=[whio_epfs_block.c]=[<([18])>]
+...
+[1906]=[<([3])>]=[<([1848])>]
+[3361]=[whargv.c]=[<([15])>]
+[3489]=[whargv.h]=[<([16])>]
+[3296]=[<([14])>]=[<([3234])>]
+}}}
+
+That rubbish is the internal listing of the hashtable, which maps names to inodes and inodes to names. "I/O device layering" makes this type of copying into and out of an EFS so easy. EFS pseudofiles are full-fledged whio_dev i/o devices, and they live on top of a parent whio_dev device (which need not be a file, but can be yet another "subdevice".)
