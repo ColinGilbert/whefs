@@ -11,6 +11,9 @@ It works by creating a "filesystem" inside a so-called container file (or in mem
 
 <b>License</b>: The code is released in the Public Domain except in jurisdictions which do not recognize Public Domain property, in which case it is released under the MIT license (which is about as close as Public Domain as a license can get). The MIT license is compatible for use with GPL'd and commercial software.
 
+*Achtung:* there are no plans to make major changes/additions to whefs, aside from fixing significant bugs as they are reported. The "next generation" of whefs, [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_epfs whio_epfs], is being developed. It currently (20110419) has all the features, plus some, of whefs, and gets rid of some of whefs' more notable limitations. Future coding efforts are going into that code base instead of this one (and they have been since early 2010). That said, at some point i hope to host whefs2 on this site, basically a thin wrapper around [http://fossil.wanderinghorse.net/repos/whio/index.cgi/wiki/whio_epfs whio_epfs]. See [WhioEPFS] for more details.
+
+
 =Features=
 
    *  Provides features to create and open embedded/virtual filesystems, which is basically a filesystem which lives inside of a single file (or in memory), and to access "pseudofiles" within those filesystems.
@@ -35,7 +38,6 @@ It works by creating a "filesystem" inside a so-called container file (or in mem
    *  Doesn't abstract enough away to support standard filesystems (e.g. VFAT) inside the container file. It uses its own custom filesystem implementation (my very first attempt at such) which may be suitable for small use cases but will certainly not scale well (performance-wise) into the thousands of files range.
    *  A signal, crash, propagated C++ exception, or similar interruption while the FS is writing or holding unflushed file information can leave the pseudofile contents in an inconsistent state.
    *  Until the software stabilizes, the file format may change from version to version. It is however always possible to export the data from an old EFS (using an older version of whefs) and re-import it using a newer version.
-
 
 =Requirements and Platforms=
 
