@@ -334,6 +334,7 @@ static int whefs_fs_mmap_connect( whefs_fs * fs )
     {
         WHEFS_DBG_WARN("whio_dev_for_memmap_%s() failed for %"WHIO_SIZE_T_PFMT" bytes of fs->fileno (#%d)!",
                        (whefs_fs_is_rw(fs) ? "rw" : "ro"), dsz,fs->fileno);
+        munmap( m, dsz );
         return whefs_rc.IOError;
     }
     md->api = &whio_dev_api_mmap;
