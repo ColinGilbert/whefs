@@ -3,6 +3,10 @@
 
 =whefs News (most recent items at the top)=
 
+*15 Aug 2011:*
+  * Whefs is now officially superseded/obsoleted by [http://whiki.wanderinghorse.net/wikis/whio/?page=whio_epfs whio_epfs], which can do everything whefs can do (plus some), does most of it faster, and includes a C++ wrapper which can simplify usage significantly. whefs _is still maintained_, and bug fixes which can fit within the current architecture will be made where feasible (and reported by users), but no significant additions/changes are planned.
+  * We now have a !JavaScript binding for EPFS: [http://code.google.com/p/v8-juice/wiki/V8Convert_Whio]
+
 *18 Apr 2011:*
   * Fixed issue #26, which could cause an "inode ghost" to come back and haunt us.
   * Learned from user Dan Schmitt than whefs compiles as-is on Android "ndk" and "AOPS" kernels :-D.
