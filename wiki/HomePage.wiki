@@ -49,7 +49,9 @@ See [RequirementsAndPlatforms].
 
 Let's call it "Very Beta." It "seems to work", but the nature of the problem means there is lots of room for errors and bugs. Do not make the mistake of using it for data which you can't afford to lose.
 
-That said,the basics are in place and are believed to work fairly well. There are no known data loss/corruption cases except potentially crashes or C signals during write operations. There is plenty of cleaning up, tweaking, and refactoring to do, however.
+That said,the basics are in place and are believed to work fairly well. There are no known data loss/corruption cases except potentially crashes or C signals during write operations.
+
+*As of August 2011*, whefs is now officially superseded/obsoleted by [http://whiki.wanderinghorse.net/wikis/whio/?page=whio_epfs whio_epfs], which can do everything whefs can do (plus some), does it more efficiently (in terms of memory and speed), and includes a C++ wrapper which can simplify usage significantly. whefs _is still maintained_, and bug fixes which can fit within the current architecture will be made where feasible (and reported by users), but no significant additions/changes are planned. For a brief introduction to EPFS, see the !JavaScript bindings: [http://code.google.com/p/v8-juice/wiki/V8Convert_Whio]
 
 =Significant TODOs=
 
