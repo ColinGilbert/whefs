@@ -114,6 +114,19 @@ bins: $(subfs.BIN)
 endif
 
 
+issue-26.BIN.OBJECTS := issue-26.o
+issue-26.BIN.LDFLAGS := $(WHEFS_BINS_LDFLAGS)
+$(call ShakeNMake.CALL.RULES.BINS,issue-26)
+$(issue-26.BIN): $(WHEFS_BINS_DEPS)
+bins: $(issue-26.BIN)
+
+issue-27.BIN.OBJECTS := issue-27.o
+issue-27.BIN.LDFLAGS := $(WHEFS_BINS_LDFLAGS)
+$(call ShakeNMake.CALL.RULES.BINS,issue-27)
+$(issue-27.BIN): $(WHEFS_BINS_DEPS)
+bins: $(issue-27.BIN)
+
+
 ########################################################################
 # The staticfs demo creates a VFS, imports some files, converts the VFS
 # to C code, builds an application with that VFS built in as a static
@@ -159,4 +172,6 @@ all: $(test.BIN) $(bin2c.BIN) \
 	$(whefs-rm.BIN) \
 	$(subfs.BIN) \
 	$(whio-test.BIN) \
-	$(plus.BIN)
+	$(plus.BIN) \
+	$(issue-26.BIN) \
+	$(issue-27.BIN)
