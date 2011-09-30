@@ -14,7 +14,7 @@ all: src app
 .PHONY:
 AMAL_GEN := $(TOP_SRCDIR)/createAmalgamation.sh
 AMAL_CFLAGS := -std=c99 -c -pedantic -Wall -Wimplicit-function-declaration
-amal amalgamation: 
+amal amalgamation whefs_amalgamation.c: 
 	bash $(AMAL_GEN)
 	@which gcc &>/dev/null || exit 0; \
 		echo "Compiling amalgamation..."; \
