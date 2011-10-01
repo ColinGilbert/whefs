@@ -12,8 +12,9 @@ const whefs_fs_closer_list whefs_fs_closer_list_empty = whefs_fs_closer_list_emp
 */
 static void whefs_fs_closer_list_unlink( whefs_fs_closer_list * x )
 {
-    if( x->prev ) { x->prev->next = x->next; x->prev = 0; }
-    if( x->next ) { x->next->prev = x->prev; x->next = 0; }
+    if( x->prev ) { x->prev->next = x->next; }
+    if( x->next ) { x->next->prev = x->prev; }
+    x->prev = x->next = NULL;
 }
 
 
