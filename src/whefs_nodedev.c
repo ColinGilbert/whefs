@@ -662,10 +662,12 @@ static int whio_dev_inode_flush( whio_dev * dev )
     int rc = meta->rw
 	? whefs_inode_flush( meta->fs, meta->inode )
 	: whefs_rc.OK;
+#if 0 /* having this decreases performance by 50% or so in my simple tests. */
     if( meta->rw )
     {
         whefs_fs_flush( meta->fs );
     }
+#endif
     if(0) WHEFS_DBG_FYI("Flushed (rc=%d) i/o %s device for inode #%"WHEFS_ID_TYPE_PFMT". "
 			"inode->data_size=%"WHIO_SIZE_T_PFMT" posabs=%"WHIO_SIZE_T_PFMT,
 			rc, meta->rw ? "read/write" : "read-only", meta->inode->id,
