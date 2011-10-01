@@ -5,6 +5,9 @@ This is the informal change list for whefs releases. Newest items are at the top
 
 ----
 
+*1 Oct 2011:*
+  * Fixed issue #27, broken re-linking of pseudofile handles when closing handles in certain orders. This caused memory corruption, which showed up as a crash on some platforms but was silently unnoticed on mine (until that use case was put through valgrind).
+
 *18 Apr 2011:*
   * Fixed issue #26, which could cause "the ghost of an unlinked inode" to come back and haunt us. Thanks to Dan Schmitt for the bug report and assistance.
 
