@@ -3,6 +3,9 @@
 
 =whefs News (most recent items at the top)=
 
+*1 Oct 2011:*
+  * Fixed a long-standing file handle list mis-linking bug which was unlikely to show up until 3 handles were opened and then closed in a particular order. All users "should" upgrade, as the previous code effectively had a memory corruption case. It would never appear if only one pseudofile was opened and was highly unlikely to appear if only 2 were opened, but was bound to happen once 3 or more handles were opened. See issue #27 for more details.
+
 *15 Aug 2011:*
   * Whefs is now officially superseded/obsoleted by [http://whiki.wanderinghorse.net/wikis/whio/?page=whio_epfs whio_epfs], which can do everything whefs can do (plus some), does most of it faster, and includes a C++ wrapper which can simplify usage significantly. whefs _is still maintained_, and bug fixes which can fit within the current architecture will be made where feasible (and reported by users), but no significant additions/changes are planned.
   * We now have a !JavaScript binding for EPFS: [http://code.google.com/p/v8-juice/wiki/V8Convert_Whio]
