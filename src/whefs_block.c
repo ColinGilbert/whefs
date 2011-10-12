@@ -236,25 +236,26 @@ int whefs_block_read( whefs_fs * fs, whefs_id_type bid, whefs_block * bl )
 
 int whefs_block_wipe_data( whefs_fs * fs, whefs_block const * bl, whio_size_t startPos )
 {
-    whio_size_t fpos = 0;
     const size_t bs = whefs_fs_options_get(fs)->block_size;
-    int rc;
+    whio_size_t seekPos;
+    whio_size_t count;
     if( startPos >= bs ) return whefs_rc.RangeError;
-    rc = whefs_block_id_seek_data( fs, bl->id, &fpos );
-    if( whefs_rc.OK != rc ) return rc;
-    assert( (startPos==0) && "FIXME: startPos param is not properly handled here!" );
-    if( (fpos + bs) < fpos /* overflow! */ ) return whefs_rc.RangeError;
-    const size_t count = bs - startPos;
+    seekPos = startPos + whefs_block_data_pos(fs, bl);
+    if( whefs_fs_seek( fs, (off_t)seekPos, SEEK_SET ) != seekPos )
+    {
+        return whio_rc.IOError;
+    }
+    count = bs - startPos;
     {
 	enum { bufSize = 1024 * 4 };
 	static unsigned char buf[bufSize] = {'*',0};
+	size_t wrc = 0;
+	size_t total = 0;
 	if( '*' == buf[0] )
 	{
 	    memset( buf+1, 0, bufSize-1 );
 	    buf[0] = 0;
 	}
-	size_t wrc = 0;
-	size_t total = 0;
 	while( total < count )
 	{
 	    const size_t x = count - total;
