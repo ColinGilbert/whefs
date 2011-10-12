@@ -126,6 +126,11 @@ $(call ShakeNMake.CALL.RULES.BINS,issue-27)
 $(issue-27.BIN): $(WHEFS_BINS_DEPS)
 bins: $(issue-27.BIN)
 
+issue-28.BIN.OBJECTS := issue-28.o
+issue-28.BIN.LDFLAGS := $(WHEFS_BINS_LDFLAGS)
+$(call ShakeNMake.CALL.RULES.BINS,issue-28)
+$(issue-28.BIN): $(WHEFS_BINS_DEPS)
+bins: $(issue-28.BIN)
 
 ########################################################################
 # The staticfs demo creates a VFS, imports some files, converts the VFS
@@ -174,4 +179,5 @@ all: $(test.BIN) $(bin2c.BIN) \
 	$(whio-test.BIN) \
 	$(plus.BIN) \
 	$(issue-26.BIN) \
-	$(issue-27.BIN)
+	$(issue-27.BIN) \
+	$(issue-28.BIN)
