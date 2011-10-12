@@ -1,6 +1,8 @@
 #summary Current TODOs
 #labels Phase-Implementation,Category-Internals
 
+Despite the (out-dated) lists below, as of mid-2011 there are no current TODOs because most of them have been implemented in whefs' successor, [http://whiki.wanderinghorse.net/wikis/whio/?page=whio_epfs whio_epfs]. Bugfixes will be made (if reported!), insofar as they can be made within the current architecture, but no new features are planned.
+
 = whefs TODO =
 
 This is my personal list of "immediate" TODOs (in no particular order):
