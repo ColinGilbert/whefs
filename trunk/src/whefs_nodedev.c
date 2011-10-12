@@ -236,7 +236,8 @@ static int whefs_block_for_pos( whefs_fs * restrict fs, whefs_inode * restrict i
     }
     const whio_size_t bs = whefs_fs_options_get(fs)->block_size;
     const whefs_id_type bc = /* how many blocks will we need? */
-        1 + (pos / bs);
+        1+(pos/bs)
+        ;
     if(0) WHEFS_DBG("pos=%"WHIO_SIZE_T_PFMT" bs=%"WHIO_SIZE_T_PFMT" bc=%"WHEFS_ID_TYPE_PFMT,pos,bs,bc);
     /** ^^^ does this leave us with one too many blocks when we truncate() to
         an exact multiple of blocksize? */
@@ -705,7 +706,6 @@ static int whio_dev_inode_trunc( whio_dev * dev, whio_off_t len )
 	whefs_inode_flush(meta->fs, meta->inode );
 	return whio_rc.OK;
     }
-
     int rc = whio_rc.OK;
     //const size_t oldSize = off>meta->inode->data_size;
     const short dir = (off < meta->inode->data_size)
@@ -725,7 +725,7 @@ static int whio_dev_inode_trunc( whio_dev * dev, whio_off_t len )
     }
     /* Update block info... */
     whefs_block bl = whefs_block_empty;
-    rc = whefs_block_for_pos( meta->fs, meta->inode, off, &bl, true );
+    rc = whefs_block_for_pos( meta->fs, meta->inode, off-1, &bl, true );
     if( whefs_rc.OK != rc )
     {
 	WHEFS_DBG_ERR("Could not get block for write position %u of inode #%u. Error code=%d.",
@@ -735,11 +735,7 @@ static int whio_dev_inode_trunc( whio_dev * dev, whio_off_t len )
     //const size_t dest = meta->inode->data_size;
     if( dir < 0 )
     { /* we shrunk */
-#if 0
-        /* DISABLED FOR NOW because whefs_block_wipe_data() is not properly honoring
-           the 3rd parameter, which causes wiping to always start at the beginning
-           of the block. See Issue #28.
-        */
+#if 1
 	/*
 	  We'll be nice and zero the remaining bytes... We do this
 	  partially for consistency with how blocks will get removed

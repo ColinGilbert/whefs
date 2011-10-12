@@ -18,7 +18,12 @@ void test_issue_28()
     whefs_fs *fs=NULL;
     whefs_file* rs1 = NULL;
     char buf[4]={0};
-    int errCode = whefs_mkfs(":memory:", &options, &fs);
+    int errCode;
+
+    options.block_size = 1024;
+    options.inode_count = 3;
+    errCode = whefs_mkfs("28.whefs", &options, &fs);
+    
     assert(0 == errCode);
 
     rs1 = whefs_fopen(fs, "rs1", "r+");
@@ -39,6 +44,15 @@ void test_issue_28()
         /* failing here due to bug in whefs_block_wipe_data()
            not honoring final argument.
         */;
+
+    whefs_ftrunc(rs1, options.block_size);
+    assert(options.block_size == whefs_fsize(rs1));
+    whefs_fseek(rs1, -4, SEEK_END);
+    whefs_fwrite(rs1, 4, 1, "wxyz");
+    whefs_fseek(rs1, -4, SEEK_END);
+    whefs_fread(rs1, 4, 1, buf);
+    assert(0==memcmp(buf,"wxyz",4));
+    assert(options.block_size == whefs_fsize(rs1));
     
     whefs_fclose(rs1);
     whefs_fs_finalize(fs);
