@@ -735,7 +735,11 @@ static int whio_dev_inode_trunc( whio_dev * dev, whio_off_t len )
     //const size_t dest = meta->inode->data_size;
     if( dir < 0 )
     { /* we shrunk */
-#if 1
+#if 0
+        /* DISABLED FOR NOW because whefs_block_wipe_data() is not properly honoring
+           the 3rd parameter, which causes wiping to always start at the beginning
+           of the block. See Issue #28.
+        */
 	/*
 	  We'll be nice and zero the remaining bytes... We do this
 	  partially for consistency with how blocks will get removed
