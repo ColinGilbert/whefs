@@ -238,9 +238,11 @@ int whefs_block_wipe_data( whefs_fs * fs, whefs_block const * bl, whio_size_t st
 {
     whio_size_t fpos = 0;
     const size_t bs = whefs_fs_options_get(fs)->block_size;
+    int rc;
     if( startPos >= bs ) return whefs_rc.RangeError;
-    int rc = whefs_block_id_seek_data( fs, bl->id, &fpos );
+    rc = whefs_block_id_seek_data( fs, bl->id, &fpos );
     if( whefs_rc.OK != rc ) return rc;
+    assert( (startPos==0) && "FIXME: startPos param is not properly handled here!" );
     if( (fpos + bs) < fpos /* overflow! */ ) return whefs_rc.RangeError;
     const size_t count = bs - startPos;
     {
