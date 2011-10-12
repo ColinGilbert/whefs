@@ -3,6 +3,9 @@
 
 =whefs News (most recent items at the top)=
 
+*12 Oct 2011:*
+  * Two more bugfixes (one minor, one significant). See the [ChangeLog] for details.
+
 *1 Oct 2011:*
   * Fixed a long-standing file handle list mis-linking bug which was unlikely to show up until 3 handles were opened and then closed in a particular order. All users "should" upgrade, as the previous code effectively had a memory corruption case. It would never appear if only one pseudofile was opened and was highly unlikely to appear if only 2 were opened, but was bound to happen once 3 or more handles were opened. See issue #27 for more details.
 
