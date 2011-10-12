@@ -5,6 +5,10 @@ This is the informal change list for whefs releases. Newest items are at the top
 
 ----
 
+*12 Oct 2011:*
+  * Fixed issue #28, a misbehaviour the p-file truncation operation which caused it to zero-out data before the truncation point. Thanks once again to mikimotoh for the detailed bug report and test code.
+  * Fixed issue #29, where an inode whose size was exactly at a block boundary had one too many blocks allocated to it (functionally harmless but wasted a block until the file's size changed).
+
 *1 Oct 2011:*
   * Fixed issue #27, broken re-linking of pseudofile handles when closing handles in certain orders. This caused memory corruption, which showed up as a crash on some platforms but was silently unnoticed on mine (until that use case was put through valgrind). Many thanks to "mikimotoh" for the details bug report and test code (that made finding the problem really easy!).
   * Removed an extraneous flush() call which was cutting write-intensive performance by as much as 50%.
