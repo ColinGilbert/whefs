@@ -20,8 +20,9 @@ void test_issue_28()
     char buf[4]={0};
     int errCode;
 
-    options.block_size = 1024;
-    options.inode_count = 3;
+    options.block_size = 512;
+    options.inode_count = 2;
+    options.block_count = 3;
     errCode = whefs_mkfs("28.whefs", &options, &fs);
     
     assert(0 == errCode);
