@@ -1,7 +1,7 @@
 /**
-   Test code for issue #27, contributed by mikimotoh:
+   Test code for issue #28, contributed by mikimotoh:
 
-   http://code.google.com/p/whefs/issues/detail?id=27
+   http://code.google.com/p/whefs/issues/detail?id=28
 */
 #ifdef NDEBUG
 #  undef NDEBUG
@@ -35,7 +35,10 @@ void test_issue_28()
 
     whefs_fseek(rs1, 0, SEEK_SET);
     whefs_fread(rs1, 4, 1, buf);
-    assert(memcmp(buf, "abcd", 4) == 0);//This point fails!!
+    assert(memcmp(buf, "abcd", 4) == 0)
+        /* failing here due to bug in whefs_block_wipe_data()
+           not honoring final argument.
+        */;
     
     whefs_fclose(rs1);
     whefs_fs_finalize(fs);
