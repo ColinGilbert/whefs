@@ -266,7 +266,7 @@ static int ArgSpec_convert( ArgSpec * src, char const * val )
 		     src->name );
 	      return whefs_rc.ArgError;
 	  }
-	  if( 1 != sscanf( val, "%"WHIO_SIZE_T_PFMT, &sz ) )
+	  if( 1 != sscanf( val, "%"WHIO_SIZE_T_SFMT, &sz ) )
 	  {
 	      APPERR("Could not parse value '%s' of option '%s' as a numeric value!\n",
 		     val, src->name );
