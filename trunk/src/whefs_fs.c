@@ -642,7 +642,7 @@ static int whefs_mkfs_write_options( whefs_fs * restrict fs )
 {
     whefs_fs_seek( fs, fs->offsets[WHEFS_OFF_OPTIONS], SEEK_SET );
     assert( fs->dev->api->tell( fs->dev ) == fs->offsets[WHEFS_OFF_OPTIONS] );
-    size_t pos = whio_dev_encode_uint32( fs->dev, fs->options.block_size );
+    size_t pos = whio_dev_encode_size_t( fs->dev, fs->options.block_size );
     size_t sz = whefs_dev_id_encode( fs->dev, fs->options.block_count );
     if( whefs_sizeof_encoded_id_type != sz ) return whefs_rc.IOError;
     sz = whefs_dev_id_encode( fs->dev, fs->options.inode_count );
@@ -658,7 +658,7 @@ static int whefs_mkfs_write_options( whefs_fs * restrict fs )
 */
 static size_t whefs_fs_sizeof_options()
 {
-    const size_t sz = whio_sizeof_encoded_uint32;
+    const size_t sz = whio_sizeof_encoded_size_t;
     return sz /* block_size */
 	+ whefs_sizeof_encoded_id_type /* block_count */
 	+ whefs_sizeof_encoded_id_type /* inode_count */
@@ -1493,8 +1493,7 @@ static int whefs_openfs_stage2( whefs_fs * restrict fs )
     ///fs->offsets[WHEFS_OFF_OPTIONS] = 
     fs->dev->api->seek( fs->dev, opt->magic.length, SEEK_CUR );
     /* FIXME: store the opt->magic.data somewhere! Ownership requires some changes in other code. */
-    // FIXME: add whio_dev_size_t_en/decode()
-    rc = whio_dev_decode_uint32( fs->dev, &opt->block_size );
+    rc = whio_dev_decode_size_t( fs->dev, &opt->block_size );
     CHECK;
     rc = whefs_dev_id_decode( fs->dev, &opt->block_count );
     CHECK;
