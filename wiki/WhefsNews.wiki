@@ -3,6 +3,9 @@
 
 =whefs News (most recent items at the top)=
 
+*2 Nov 2011:*
+  * Issue #30 revealed an encoding/decoding problem for one of the EFS' internal metadata bits. The fix is unfortunately incompatible with prior FS containers created with `WHEFS_ID_TYPE_BITS=16`. It "might" be compatible with those created with `WHEFS_ID_TYPE_BITS=32`, or i "might" have had a cross-wiring of two numbers which would also cause that to be incompatible.
+
 *12 Oct 2011:*
   * Two more bugfixes (one minor, one significant). See the [ChangeLog] for details.
 
