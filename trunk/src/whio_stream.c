@@ -48,7 +48,6 @@ void whio_stream_default_finalize( whio_stream * ARG_UNUSED(self) )
     if(self)
     {
 	self->api->close( self );
-	//C11N_LOGME_DEALLOCT(whio_stream);
 	free(self);
     }
 }
@@ -73,10 +72,12 @@ const whio_stream whio_stream_empty =
 bool whio_stream_getchar( whio_stream * self, char * tgt )
 {
     if( ! self ) return false;
-    char x = 0;
-    if( 1 != self->api->read( self, &x, 1 ) ) return false;
-    if( tgt ) *tgt = x;
-    return true;
+    else {
+        char x = 0;
+        if( 1 != self->api->read( self, &x, 1 ) ) return false;
+        if( tgt ) *tgt = x;
+        return true;
+    }
 }
 
 
@@ -90,11 +91,15 @@ bool whio_stream_getchar( whio_stream * self, char * tgt )
 static long whio_stream_printf_appender( void * arg, char const * data, long n )
 {
     if( ! arg || !data ) return -1;
-    whio_size_t sz = n;
-    if( n < sz ) return -1; /* negative n */
-    whio_stream * str = (whio_stream*)arg;
-    sz = str->api->write( str, data, sz );
-    return (sz == whio_rc.SizeTError) ? 0 : (long) sz; // FIXME: check for overflow!
+    else {
+        whio_size_t sz = n;
+        if( n < sz ) return -1; /* negative n */
+        else {
+            whio_stream * str = (whio_stream*)arg;
+            sz = str->api->write( str, data, sz );
+            return (sz == whio_rc.SizeTError) ? 0 : (long) sz; /* FIXME: check for overflow! */
+        }
+    }
 }
 
 whio_size_t whio_stream_writefv( whio_stream * str, const char *fmt, va_list ap )
@@ -106,27 +111,30 @@ whio_size_t whio_stream_writefv( whio_stream * str, const char *fmt, va_list ap 
 whio_size_t whio_stream_writef( whio_stream * str, const char *fmt, ... )
 {
     va_list vargs;
+    whio_size_t rc;
     va_start( vargs, fmt );
-    whio_size_t rc = whio_stream_writefv( str, fmt, vargs );
+    rc = whio_stream_writefv( str, fmt, vargs );
     va_end(vargs);
     return rc;
 }
 
-int whio_stream_copy( whio_stream * restrict istr, whio_stream * restrict ostr )
+int whio_stream_copy( whio_stream * istr, whio_stream * ostr )
 {
     if( istr == ostr ) return 0;
-    whio_size_t rdrc = 0;
-    whio_size_t wrc = 0;
-    enum { bufSize = 1024 * 4 };
-    unsigned char buf[bufSize];
-    do
-    {
-        rdrc = istr->api->read( istr, buf, bufSize );
-        if( ! rdrc ) return whio_rc.IOError;
-        wrc = ostr->api->write( ostr, buf, rdrc );
-        if( rdrc != wrc ) return whio_rc.IOError;
-    } while( bufSize == rdrc );
-    return whio_rc.OK;
+    else {
+        whio_size_t rdrc = 0;
+        whio_size_t wrc = 0;
+        enum { bufSize = 1024 * 4 };
+        unsigned char buf[bufSize];
+        do
+        {
+            rdrc = istr->api->read( istr, buf, bufSize );
+            if( ! rdrc ) return whio_rc.IOError;
+            wrc = ostr->api->write( ostr, buf, rdrc );
+            if( rdrc != wrc ) return whio_rc.IOError;
+        } while( bufSize == rdrc );
+        return whio_rc.OK;
+    }
 }
 
 

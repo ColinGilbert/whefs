@@ -63,7 +63,7 @@ static whefs_file * whefs_file_alloc()
     return obj;
 }
 
-static void whefs_file_free( whefs_file * restrict obj )
+static void whefs_file_free( whefs_file * obj )
 {
     if(obj) whefs_string_clear( &obj->name, false );
 #if WHEFS_CONFIG_ENABLE_STATIC_MALLOC
@@ -95,7 +95,7 @@ static void whefs_file_free( whefs_file * restrict obj )
    This routine has an embarassing intimate relationship with
    whefs_fopen().
 */
-static int whefs_fopen_ro( whefs_file * restrict f, char const * name )
+static int whefs_fopen_ro( whefs_file * f, char const * name )
 {
     whefs_inode n = whefs_inode_empty;
     int rc = whefs_inode_by_name( f->fs, name, &n );
@@ -120,15 +120,17 @@ static int whefs_fopen_ro( whefs_file * restrict f, char const * name )
 /**
    Like whefs_fopen_ro(), but sets up f in read/write mode.
 */
-static int whefs_fopen_rw( whefs_file * restrict f, char const * name )
+static int whefs_fopen_rw( whefs_file * f, char const * name )
 {
+    whefs_inode n;
+    int rc;
     if( ! f || ! name ) return whefs_rc.ArgError;
     if( ! whefs_fs_is_rw(f->fs) ) return whefs_rc.AccessError;
-    whefs_inode n = whefs_inode_empty;
-    int rc = whefs_inode_by_name( f->fs, name, &n );
+    n = whefs_inode_empty;
+    rc = whefs_inode_by_name( f->fs, name, &n );
     if( whefs_rc.OK != rc ) do
     {
-        //WHEFS_DBG_FYI("whefs_inode_by_name(fs,[%s]) found no inode. Trying to create one...",name);
+        /*WHEFS_DBG_FYI("whefs_inode_by_name(fs,[%s]) found no inode. Trying to create one...",name); */
 	/**
 	   Create new entry...
 	*/
@@ -138,10 +140,10 @@ static int whefs_fopen_rw( whefs_file * restrict f, char const * name )
 	if( rc != whefs_rc.OK ) break;
 	whefs_inode_update_mtime( f->fs, &n );
 	rc = whefs_inode_flush( f->fs, &n );
-	//if( rc != whefs_rc.OK ) break;
+	/*if( rc != whefs_rc.OK ) break; */
 	break;
     } while(1);
-    //WHEFS_DBG("f->flags = 0x%04x", f->flags );
+    /*WHEFS_DBG("f->flags = 0x%04x", f->flags ); */
     if( rc != whefs_rc.OK )
     {
 	WHEFS_DBG_ERR("open-for-write (%s) failed with rc %d\n!",name,rc);
@@ -164,10 +166,12 @@ static int whefs_fopen_rw( whefs_file * restrict f, char const * name )
 
 whefs_file * whefs_fopen( whefs_fs * fs, char const * name, char const * mode )
 {
-    if( ! fs || !name || !*name || !mode || !*mode ) return 0;
     unsigned int flags = 0;
+    int rc;
+    whefs_file * f;
+    if( ! fs || !name || !*name || !mode || !*mode ) return 0;
     if( 0 && (0 != strchr( mode, 'w' )) )
-    { // FIXME: add support for mode 'w' and 'w+'
+    { /* FIXME: add support for mode 'w' and 'w+' */
 	flags = WHEFS_FLAG_ReadWrite;
     }
     else if( 0 != strchr( mode, 'r' ) )
@@ -181,13 +185,13 @@ whefs_file * whefs_fopen( whefs_fs * fs, char const * name, char const * mode )
 	WHEFS_DBG_WARN("EFS is opened read-only, so we cannot open files in read/write mode.");
 	return 0;
     }
-    whefs_file * f = whefs_file_alloc();
+    f = whefs_file_alloc();
     if( ! f ) return 0;
     *f = whefs_file_empty;
     f->fs = fs;
     f->flags = flags;
-    int rc = whefs_rc.IOError;
-    //WHEFS_DBG_FYI("fopen(fs,[%s],[%s]) flags=0x%08x ISRW=%d", name, mode, flags, WHEFS_FILE_ISRW(f) );
+    rc = whefs_rc.IOError;
+    /*WHEFS_DBG_FYI("fopen(fs,[%s],[%s]) flags=0x%08x ISRW=%d", name, mode, flags, WHEFS_FILE_ISRW(f) ); */
     rc = WHEFS_FILE_ISRW(f)
 	? whefs_fopen_rw( f, name )
 	: whefs_fopen_ro( f, name );
@@ -201,45 +205,48 @@ whefs_file * whefs_fopen( whefs_fs * fs, char const * name, char const * mode )
         
         whefs_fs_closer_file_add( fs, f );
     }
-    //WHEFS_DBG("opened whefs_file [%s]. mode=%s, flags=%08x", name, mode, f->flags );
+    /*WHEFS_DBG("opened whefs_file [%s]. mode=%s, flags=%08x", name, mode, f->flags ); */
     return f;
 }
 
 whio_dev * whefs_dev_open( whefs_fs * fs, char const * name, bool writeMode )
 {
     if( ! fs || !name ) return 0;
-    if( writeMode && ! whefs_fs_is_rw(fs) )
+    else if( writeMode && ! whefs_fs_is_rw(fs) )
     {
 	return 0;
     }
-    whefs_inode ino = whefs_inode_empty;
-    if( whefs_rc.OK != whefs_inode_by_name( fs, name, &ino ) )
-    { // Try to create one...
-	if( ! writeMode )
-	{
-	    WHEFS_DBG_WARN("Open for read failed: did not find pseudofile named [%s].",name);
-	    return 0;
-	}
-	if( whefs_rc.OK != whefs_inode_next_free( fs, &ino, true ) )
-	{
-	    WHEFS_DBG_WARN("Opening inode for [%s] failed! EFS is likely full.", name );
-	    return 0;
-	}
-	if( whefs_rc.OK != whefs_inode_name_set( fs, ino.id, name ) )
-	{
-	    WHEFS_DBG_WARN("Setting inode #%"WHEFS_ID_TYPE_PFMT" name to [%s] failed!", ino.id, name );
-	    return 0;
-	}
-	whefs_inode_flush( fs, &ino );
+    else {
+        whefs_inode ino = whefs_inode_empty;
+        whio_dev * dev;
+        if( whefs_rc.OK != whefs_inode_by_name( fs, name, &ino ) )
+        { /* Try to create one... */
+            if( ! writeMode )
+            {
+                WHEFS_DBG_WARN("Open for read failed: did not find pseudofile named [%s].",name);
+                return 0;
+            }
+            if( whefs_rc.OK != whefs_inode_next_free( fs, &ino, true ) )
+            {
+                WHEFS_DBG_WARN("Opening inode for [%s] failed! EFS is likely full.", name );
+                return 0;
+            }
+            if( whefs_rc.OK != whefs_inode_name_set( fs, ino.id, name ) )
+            {
+                WHEFS_DBG_WARN("Setting inode #%"WHEFS_ID_TYPE_PFMT" name to [%s] failed!", ino.id, name );
+                return 0;
+            }
+            whefs_inode_flush( fs, &ino );
+        }
+        dev = whefs_dev_for_inode( fs, ino.id, writeMode );
+        if( ! dev )
+        {
+            WHEFS_FIXME("Creation of i/o device for inode #%"WHEFS_ID_TYPE_PFMT" failed - "
+                        "be sure we delete the inode entry if it didn't exist before this call!",
+                        ino.id );
+        }
+        return dev;
     }
-    whio_dev * dev = whefs_dev_for_inode( fs, ino.id, writeMode );
-    if( ! dev )
-    {
-	WHEFS_FIXME("Creation of i/o device for inode #%"WHEFS_ID_TYPE_PFMT" failed - "
-		    "be sure we delete the inode entry if it didn't exist before this call!",
-		    ino.id );
-    }
-    return dev;
 }
 
 
@@ -263,7 +270,7 @@ static void whefs_stream_closer_kludge_dtor( void * v )
     if(0) whefs_stream_closer_kludge_dtor(0); /* avoid "static func defined but not used" warning. */
     if(v)
     {
-        //WHEFS_DBG("Removing whio_stream from closer list.");
+        /*WHEFS_DBG("Removing whio_stream from closer list."); */
         whefs_stream_closer_kludge * k = (whefs_stream_closer_kludge*)v;
         whefs_fs_closer_stream_remove( k->fs, k->stream );
         free( k );
@@ -273,6 +280,8 @@ static void whefs_stream_closer_kludge_dtor( void * v )
 whio_stream * whefs_stream_open( whefs_fs * fs, char const * name, bool writeMode, bool append )
 {
     whio_dev * d = whefs_dev_open( fs, name, writeMode );
+    whefs_stream_closer_kludge * k;
+    whio_stream * s;
     if( ! d ) return 0;
     if( writeMode )
     {
@@ -285,13 +294,13 @@ whio_stream * whefs_stream_open( whefs_fs * fs, char const * name, bool writeMod
             d->api->truncate( d, 0 );
         }
     }
-    whefs_stream_closer_kludge * k = (whefs_stream_closer_kludge*)malloc(sizeof(whefs_stream_closer_kludge));
+    k = (whefs_stream_closer_kludge*)malloc(sizeof(whefs_stream_closer_kludge));
     if( ! k )
     {
         d->api->finalize(d);
         return 0;
     }
-    whio_stream * s = whio_stream_for_dev( d, true );
+    s = whio_stream_for_dev( d, true );
     if( ! s )
     {
         free(k);
@@ -309,26 +318,26 @@ whio_stream * whefs_stream_open( whefs_fs * fs, char const * name, bool writeMod
 }
 
 
-whio_dev * whefs_fdev( whefs_file * restrict f )
+whio_dev * whefs_fdev( whefs_file * f )
 {
     return f ? f->dev : 0;
 }
 
-whio_size_t whefs_fseek( whefs_file * restrict f, size_t pos, int whence )
+whio_size_t whefs_fseek( whefs_file * f, size_t pos, int whence )
 {
     return (f && f->dev)
 	? f->dev->api->seek( f->dev, pos, whence )
 	: whefs_rc.SizeTError;
 }
 
-int whefs_frewind( whefs_file * restrict f )
+int whefs_frewind( whefs_file * f )
 {
     return (f)
 	? whio_dev_rewind( f->dev )
 	: whefs_rc.ArgError;
 }
 
-int whefs_ftrunc( whefs_file * restrict f, size_t pos )
+int whefs_ftrunc( whefs_file * f, size_t pos )
 {
     return (f && f->dev)
 	? f->dev->api->truncate( f->dev, pos )
@@ -336,12 +345,12 @@ int whefs_ftrunc( whefs_file * restrict f, size_t pos )
 }
 
 
-whefs_fs * whefs_file_fs( whefs_file * restrict f )
+whefs_fs * whefs_file_fs( whefs_file * f )
 {
     return f ? f->fs : 0;
 }
 
-int whefs_fclose( whefs_file * restrict f )
+int whefs_fclose( whefs_file * f )
 {
     int rc = f ? whefs_rc.OK : whefs_rc.ArgError;
     if( whefs_rc.OK == rc )
@@ -354,7 +363,7 @@ int whefs_fclose( whefs_file * restrict f )
     return rc;
 }
 
-int whefs_fflush( whefs_file * restrict f )
+int whefs_fflush( whefs_file * f )
 {
     if( ! f ) return whefs_rc.ArgError;
     else
@@ -367,7 +376,7 @@ int whefs_fflush( whefs_file * restrict f )
     }
 }
 
-int whefs_dev_close( whio_dev * restrict dev )
+int whefs_dev_close( whio_dev * dev )
 {
     int rc = dev ? whefs_rc.OK : whefs_rc.ArgError;
     if( whefs_rc.OK == rc )
@@ -377,10 +386,10 @@ int whefs_dev_close( whio_dev * restrict dev )
     return rc;
 }
 
-size_t whefs_fread( whefs_file * restrict f, size_t size, size_t count, void * dest )
+size_t whefs_fread( whefs_file * f, size_t size, size_t count, void * dest )
 {
-    if( ! f || !count || (count && !dest) || !size || !f->dev ) return 0;
     size_t x = 0;
+    if( ! f || !count || (count && !dest) || !size || !f->dev ) return 0;
     for( ; x < count; ++x )
     {
 	size_t rsz = f->dev->api->read( f->dev, WHIO_VOID_PTR_ADD(dest,(x*size)), size );
@@ -389,25 +398,25 @@ size_t whefs_fread( whefs_file * restrict f, size_t size, size_t count, void * d
     return x;
 }
 
-size_t whefs_fwrite( whefs_file * restrict f, size_t sz, size_t count, void const * src )
+size_t whefs_fwrite( whefs_file * f, size_t sz, size_t count, void const * src )
 {
-    if( ! f || !count || (count && !src) || !sz || !f->dev ) return 0;
     size_t x = 0;
+    if( ! f || !count || (count && !src) || !sz || !f->dev ) return 0;
     for( ; x < count; ++x )
     {
 	size_t wsz = f->dev->api->write( f->dev, WHIO_VOID_CPTR_ADD(src,(x*sz)), sz );
 	if( sz != wsz ) break;
     }
-    //if( x ) f->dev->api->flush(f->dev);
+    /*if( x ) f->dev->api->flush(f->dev); */
     return x;
 }
 
-size_t whefs_fwritev( whefs_file * restrict f, char const * fmt, va_list vargs )
+size_t whefs_fwritev( whefs_file * f, char const * fmt, va_list vargs )
 {
     return f ? whio_dev_writefv( f->dev, fmt, vargs ) : 0;
 }
 
-size_t whefs_fwritef( whefs_file * restrict f, char const * fmt, ... )
+size_t whefs_fwritef( whefs_file * f, char const * fmt, ... )
 {
     size_t rc;
     va_list vargs;
@@ -417,14 +426,14 @@ size_t whefs_fwritef( whefs_file * restrict f, char const * fmt, ... )
     return rc;
 }
 
-size_t whefs_file_write( whefs_file * restrict f, void const * src, size_t n  )
+size_t whefs_file_write( whefs_file * f, void const * src, size_t n  )
 {
     return (f && f->dev)
 	? f->dev->api->write( f->dev, src, n )
 	: 0;
 }
 
-size_t whefs_file_read( whefs_file * restrict f, void * dest, size_t n  )
+size_t whefs_file_read( whefs_file * f, void * dest, size_t n  )
 {
     return (f && f->dev)
 	? f->dev->api->read( f->dev, dest, n )
@@ -433,7 +442,7 @@ size_t whefs_file_read( whefs_file * restrict f, void * dest, size_t n  )
 
 #if 0
 not sure about this one;
-int whefs_unlink_file( whefs_file * restrict )
+int whefs_unlink_file( whefs_file * )
 {
     if( ! f ) return whefs_rc.ArgError;
     f->dev->api->finalize(f->dev);
@@ -450,13 +459,15 @@ int whefs_unlink_file( whefs_file * restrict )
 int whefs_unlink_filename( whefs_fs * fs, char const * fname )
 {
     if( ! fs || !fname ) return whefs_rc.ArgError;
-    whefs_inode ino = whefs_inode_empty;
-    int rc = whefs_inode_by_name( fs, (char const *) /* FIXME: signedness*/ fname, &ino );
-    if( whefs_rc.OK == rc )
-    {
-	rc = whefs_inode_unlink( fs, &ino );
+    else {
+        whefs_inode ino = whefs_inode_empty;
+        int rc = whefs_inode_by_name( fs, (char const *) /* FIXME: signedness*/ fname, &ino );
+        if( whefs_rc.OK == rc )
+        {
+            rc = whefs_inode_unlink( fs, &ino );
+        }
+        return rc;
     }
-    return rc;
 }
 
 /**
@@ -474,15 +485,16 @@ static const whefs_file_stats whefs_file_stats_empty =
 
 int whefs_fstat( whefs_file const * f, whefs_file_stats * st )
 {
+    whefs_inode ino = whefs_inode_empty;
+    int rc;
+    whefs_id_type bid = ino.first_block;
+    whefs_block bl = whefs_block_empty;
     if( ! f || !st ) return whefs_rc.ArgError;
     *st = whefs_file_stats_empty;
     st->inode = f->inode;
-    whefs_inode ino = whefs_inode_empty;
-    int rc = whefs_inode_id_read( f->fs, f->inode, &ino );
+    rc = whefs_inode_id_read( f->fs, f->inode, &ino );
     if( whefs_rc.OK != rc ) return rc;
     st->bytes = ino.data_size;
-    whefs_id_type bid = ino.first_block;
-    whefs_block bl = whefs_block_empty;
     bl.id = bid;
     while( bl.id )
     {
@@ -494,12 +506,13 @@ int whefs_fstat( whefs_file const * f, whefs_file_stats * st )
     return rc;
 }
 
-int whefs_file_name_set( whefs_file * restrict f, char const * newName )
+int whefs_file_name_set( whefs_file * f, char const * newName )
 {
+    whefs_inode * ino = 0;
+    int rc;
     if( ! f || (! newName || !*newName) ) return whefs_rc.ArgError;
     if( ! WHEFS_FILE_ISRW(f) ) return whefs_rc.AccessError;
-    whefs_inode * ino = 0;
-    int rc = whefs_inode_search_opened( f->fs, f->inode, &ino );
+    rc = whefs_inode_search_opened( f->fs, f->inode, &ino );
     if( whefs_rc.OK != rc )
     {
 	WHEFS_DBG_ERR("This should never ever happen: f appears to be a valid whefs_file, but we could find no associated opened inode!");
@@ -507,11 +520,11 @@ int whefs_file_name_set( whefs_file * restrict f, char const * newName )
     }
     rc = whefs_inode_name_set( f->fs, ino->id, newName );
     if( whefs_rc.OK != rc ) return rc;
-    //whefs_inode_flush( f->fs, ino );
+    /*whefs_inode_flush( f->fs, ino ); */
     return whefs_rc.OK;
 }
 
-char const * whefs_file_name_get( whefs_file * restrict f )
+char const * whefs_file_name_get( whefs_file * f )
 {
 #if 0
     if( ! f ) return 0;
@@ -536,12 +549,13 @@ char const * whefs_file_name_get( whefs_file * restrict f )
 #endif
 }
 
-whio_size_t whefs_fsize( whefs_file const * restrict f )
+whio_size_t whefs_fsize( whefs_file const * f )
 {
 #if 1
-    if( ! f ) return whefs_rc.SizeTError;
     whefs_inode * ino = 0;
-    int rc = whefs_inode_search_opened( f->fs, f->inode, &ino );
+    int rc;
+    if( ! f ) return whefs_rc.SizeTError;
+    rc = whefs_inode_search_opened( f->fs, f->inode, &ino );
     return (whefs_rc.OK == rc)
 	? ino->data_size
 	: whefs_rc.SizeTError;

@@ -9,10 +9,6 @@
 */
 
 #include "whio_config.h"
-//#include <stdio.h>
-//#include <unistd.h> /* off_t on Linux? */
-//#include <sys/types.h> /* off_t on Linux? */
-
 #include <stdint.h> /* uint32_t */
 #include <stdarg.h> /* va_list */
 

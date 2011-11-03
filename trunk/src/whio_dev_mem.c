@@ -144,10 +144,11 @@ static void whio_dev_membuf_meta_free( whio_dev_membuf_meta * obj )
 
 static whio_size_t whio_dev_membuf_read( whio_dev * dev, void * dest, whio_size_t n )
 {
-    WHIO_MEMBUF_DECL(0); //whio_rc.SizeTError);
-    if( ! dest ) return 0; //whio_rc.SizeTError;
+    whio_size_t rlen;
+    WHIO_MEMBUF_DECL(0);
+    if( ! dest ) return 0;
     if( mb->pos >= mb->size ) return 0;
-    whio_size_t rlen = n;
+    rlen = n;
     if( ((mb->pos + n) >= mb->size )
 	|| ((mb->pos + n) < mb->pos)
 	)
@@ -164,15 +165,16 @@ static whio_size_t whio_dev_membuf_read( whio_dev * dev, void * dest, whio_size_
 
 static whio_size_t whio_dev_membuf_write( whio_dev * dev, void const * src, whio_size_t n )
 {
+    whio_size_t newEnd, wlen;
     WHIO_MEMBUF_DECL(0);
     if( ! n || !src ) return 0;
-    whio_size_t newEnd = mb->pos + n;
+    newEnd = mb->pos + n;
     if( newEnd < mb->pos ) return 0; /* overflow! fixme: write as much as we can */
-    whio_size_t wlen = n;
+    wlen = n;
 
     if( newEnd >= mb->size )
     {
-	//WHIO_DEBUG("write of %u bytes to pos %u would go out of bounds (%u). Expanding==%d\n",n, mb->pos, mb->size,mb->expandable);
+	/*WHIO_DEBUG("write of %u bytes to pos %u would go out of bounds (%u). Expanding==%d\n",n, mb->pos, mb->size,mb->expandable); */
 	if( mb->expandable )
 	{
 	    dev->api->truncate( dev, newEnd );
@@ -192,14 +194,14 @@ static whio_size_t whio_dev_membuf_write( whio_dev * dev, void const * src, whio
 	  We likely got seek()ed out of bounds. Behave like FILE does
 	  on my Linux box and resize now...
 	*/
-	//WHIO_DEBUG("pos(%u) > size(%u). Expanding to %u = %s\n", mb->pos, mb->size, newEnd, mb->expandable ? "yes" : "no");
+	/*WHIO_DEBUG("pos(%u) > size(%u). Expanding to %u = %s\n", mb->pos, mb->size, newEnd, mb->expandable ? "yes" : "no"); */
 	if( ! mb->expandable ) return 0;
-	//WHIO_DEBUG("Seems we've been truncated from %u to %u\n",mb->size, mb->pos);
+	/*WHIO_DEBUG("Seems we've been truncated from %u to %u\n",mb->size, mb->pos); */
 	mb->size = newEnd;
     }
 
     if( (newEnd >= mb->size ) /* will overflow current EOF. */
-	//|| (newEnd < mb->pos ) /* overflow in mb->pos+n. */
+	/*|| (newEnd < mb->pos )*/ /* overflow in mb->pos+n. */
 	)
     {
 	/* write as much as we can, to EOF. */
@@ -243,8 +245,9 @@ static whio_size_t whio_dev_membuf_tell( whio_dev * dev )
 
 static whio_size_t whio_dev_membuf_seek( whio_dev * dev, whio_off_t pos, int whence )
 {
+    whio_size_t too;
     WHIO_MEMBUF_DECL(whio_rc.SizeTError);
-    whio_size_t too = mb->pos;
+    too = mb->pos;
     switch( whence )
     {
       case SEEK_SET:
@@ -276,9 +279,10 @@ static int whio_dev_membuf_flush( whio_dev * dev )
 
 static int whio_dev_membuf_trunc( whio_dev * dev, whio_off_t _len )
 {
+    whio_size_t ulen;
     WHIO_MEMBUF_DECL(whio_rc.ArgError);
     if( _len < 0 ) return whio_rc.RangeError;
-    whio_size_t ulen = (whio_size_t)_len;
+    ulen = (whio_size_t)_len;
     if( 0 == ulen )
     {
 #if 1 /* arguable. Hmmm. */
@@ -300,16 +304,17 @@ static int whio_dev_membuf_trunc( whio_dev * dev, whio_off_t _len )
     if( !mb->alloced || (ulen > mb->alloced) )
     { /* try to grow */
 	whio_size_t alen = ulen;
+        void * b;
 	if( mb->expandable )
 	{ /* see how much to expand by. */
 	    alen = (whio_size_t)(mb->alloced * (mb->expfactor+0.01));
 	    /* ^^^ that +0.01 kludge is to work around (100*1.8)==179 and (100*1.9)==189 */
 	    if( alen < ulen ) alen = ulen;
 	}
-	void * b = realloc( mb->buffer, alen );
+	b = realloc( mb->buffer, alen );
 	if( ! b ) return whio_rc.AllocError;
 	mb->buffer = b;
-	//WHIO_DEBUG("Grew buffer from %u to %u bytes\n", mb->alloced, alen);
+	/*WHIO_DEBUG("Grew buffer from %u to %u bytes\n", mb->alloced, alen); */
 	if( mb->alloced < alen )
 	{   /* clean up new memory to avoid RAM artifacts. */
 	    memset( WHIO_VOID_PTR_ADD(b,mb->alloced), 0, alen - mb->alloced );
@@ -326,8 +331,8 @@ static int whio_dev_membuf_trunc( whio_dev * dev, whio_off_t _len )
 	   we could no longer write to the buffer (as we can't expand
 	   it).
 	*/
-	//const whio_size_t oldAlloc = mb->alloced;
-	//WHIO_DEBUG("oldAlloc=%u mb->alloced=%u ulen=%u\n",oldAlloc,mb->alloced,ulen);
+	/*const whio_size_t oldAlloc = mb->alloced; */
+	/*WHIO_DEBUG("oldAlloc=%u mb->alloced=%u ulen=%u\n",oldAlloc,mb->alloced,ulen); */
 	whio_size_t alen = ulen;
 	if( alen < (mb->alloced/mb->expfactor) )
 	{
@@ -336,7 +341,7 @@ static int whio_dev_membuf_trunc( whio_dev * dev, whio_off_t _len )
 	    {
 		mb->buffer = b;
 		mb->alloced = alen;
-		//WHIO_DEBUG("Shrunk buffer from %u to %u bytes\n", oldAlloc, mb->alloced);
+		/*WHIO_DEBUG("Shrunk buffer from %u to %u bytes\n", oldAlloc, mb->alloced); */
 	    }
 	    /* ignore realloc failure if we're shrinking - just keep the old block. */
 	}
@@ -354,9 +359,11 @@ short whio_dev_membuf_iomode( whio_dev * dev )
 static int whio_dev_membuf_ioctl( whio_dev * dev, int arg, va_list vargs )
 {
     int rc = whio_rc.UnsupportedError;
+    whio_size_t * x;
+    unsigned char const ** cp;
     WHIO_MEMBUF_DECL(rc);
-    whio_size_t * x = 0;
-    unsigned char const ** cp = 0;
+    x = NULL;
+    cp = NULL;
     switch( arg )
     {
       case whio_dev_ioctl_BUFFER_uchar_ptr:
@@ -434,15 +441,16 @@ static bool whio_dev_membuf_close( whio_dev * dev )
 {
     if( dev )
     {
+        whio_dev_membuf_meta * f;
 	if( dev->client.dtor ) dev->client.dtor( dev->client.data );
 	dev->client = whio_client_data_empty;
-	whio_dev_membuf_meta * f = (whio_dev_membuf_meta*)dev->impl.data;
+	f = (whio_dev_membuf_meta*)dev->impl.data;
 	if( f )
 	{
 	    dev->impl.data = 0;
 	    free(f->buffer);
-	    //*f = whio_dev_membuf_meta_empty;
-	    //free(f);
+	    /**f = whio_dev_membuf_meta_empty; */
+	    /*free(f); */
 	    whio_dev_membuf_meta_free( f );
 	    return true;
 	}
@@ -465,26 +473,28 @@ whio_dev * whio_dev_for_membuf( whio_size_t size, float expFactor )
 {
     whio_dev * dev = whio_dev_alloc();
     if( ! dev ) return 0;
-    *dev = whio_dev_membuf_empty;
-    whio_dev_membuf_meta * mb = whio_dev_membuf_meta_alloc();
-    if( !mb )
-    {
-	whio_dev_free(dev);
-	return 0;
+    else {
+        whio_dev_membuf_meta * mb;
+        *dev = whio_dev_membuf_empty;
+        mb = whio_dev_membuf_meta_alloc();
+        if( !mb )
+        {
+            whio_dev_free(dev);
+            return 0;
+        }
+        *mb = whio_dev_membuf_meta_empty;
+        dev->impl.data = mb;
+        /*mb->alloc_policy = expandable ? whio_dev_membuf_alloc_policy_133 : 0; */
+        mb->expandable = (expFactor >= 1.0);
+        mb->expfactor = expFactor;
+        if( whio_rc.OK != dev->api->truncate( dev, size ) )
+        {
+            dev->api->finalize( dev );
+            dev = 0;
+        }
+        /*WHIO_DEBUG( "membuf @%p, buffer @%p: size=%u\n", (void const *)dev, (void const *)mb->buffer, mb->size ); */
+        return dev;
     }
-    *mb = whio_dev_membuf_meta_empty;
-    dev->impl.data = mb;
-    //mb->alloc_policy = expandable ? whio_dev_membuf_alloc_policy_133 : 0;
-    mb->expandable = (expFactor >= 1.0);
-    mb->expfactor = expFactor;
-    int rc = dev->api->truncate( dev, size );
-    if( whio_rc.OK != rc )
-    {
-	dev->api->finalize( dev );
-	dev = 0;
-    }
-    //WHIO_DEBUG( "membuf @%p, buffer @%p: size=%u\n", (void const *)dev, (void const *)mb->buffer, mb->size );
-    return dev;
 }
 
 
@@ -606,22 +616,24 @@ static void whio_dev_memmap_free( whio_dev_memmap * obj )
 
 static whio_size_t whio_dev_memmap_read( whio_dev * dev, void * dest, whio_size_t n )
 {
-    WHIO_MEMMAP_DECL(0); //whio_rc.SizeTError);
-    if( ! dest || !mb->ro ) return 0; //whio_rc.SizeTError;
-    if( mb->pos >= mb->size ) return 0;
-    whio_size_t rlen = n;
-    if( ((mb->pos + n) >= mb->size )
-	|| ((mb->pos + n) < mb->pos)
-	)
-    {
-	rlen = mb->size - mb->pos;
+    WHIO_MEMMAP_DECL(0);
+    if( ! dest || !mb->ro ) return 0;
+    else if( mb->pos >= mb->size ) return 0;
+    else {
+        whio_size_t rlen = n;
+        if( ((mb->pos + n) >= mb->size )
+            || ((mb->pos + n) < mb->pos)
+            )
+        {
+            rlen = mb->size - mb->pos;
+        }
+        if( rlen )
+        {
+            memcpy( dest, WHIO_VOID_CPTR_ADD(mb->ro,mb->pos), rlen );
+            mb->pos += rlen;
+        }
+        return rlen;
     }
-    if( rlen )
-    {
-	memcpy( dest, WHIO_VOID_CPTR_ADD(mb->ro,mb->pos), rlen );
-	mb->pos += rlen;
-    }
-    return rlen;
 }
 
 static whio_size_t whio_dev_memmap_write( whio_dev * dev, void const * src, whio_size_t n )
@@ -630,24 +642,26 @@ static whio_size_t whio_dev_memmap_write( whio_dev * dev, void const * src, whio
     if( ! n || !src || !mb->rw ) return 0;
     if( mb->pos >= mb->size )
     {
-	//WHIO_DEBUG("write would go out of bounds.\n");
+	/*WHIO_DEBUG("write would go out of bounds.\n"); */
 	return 0;
     }
-    const whio_size_t newEnd = mb->pos + n;
-    whio_size_t wlen = n;
-    if( (newEnd >= mb->size ) /* would overflow EOF. */
-	|| (newEnd < mb->pos ) /* overflow in mb->pos+n. */
-	)
-    {
-	/* write as much as we can, to EOF. */
-	wlen = mb->size - mb->pos;
+    else {
+        const whio_size_t newEnd = mb->pos + n;
+        whio_size_t wlen = n;
+        if( (newEnd >= mb->size ) /* would overflow EOF. */
+            || (newEnd < mb->pos ) /* overflow in mb->pos+n. */
+            )
+        {
+            /* write as much as we can, to EOF. */
+            wlen = mb->size - mb->pos;
+        }
+        if( wlen )
+        {
+            memcpy( WHIO_VOID_PTR_ADD(mb->rw,mb->pos), src, wlen );
+            mb->pos += wlen;
+        }
+        return wlen;
     }
-    if( wlen )
-    {
-	memcpy( WHIO_VOID_PTR_ADD(mb->rw,mb->pos), src, wlen );
-	mb->pos += wlen;
-    }
-    return wlen;
 }
 
 static int whio_dev_memmap_error( whio_dev * dev )
@@ -686,8 +700,9 @@ static whio_size_t whio_dev_memmap_tell( whio_dev * dev )
 
 static whio_size_t whio_dev_memmap_seek( whio_dev * dev, whio_off_t pos, int whence )
 {
+    whio_size_t too;
     WHIO_MEMMAP_DECL(whio_rc.SizeTError);
-    whio_size_t too = mb->pos;
+    too = mb->pos;
     switch( whence )
     {
       case SEEK_SET:
@@ -720,13 +735,15 @@ static int whio_dev_memmap_trunc( whio_dev * dev, whio_off_t _len )
 {
     WHIO_MEMMAP_DECL(whio_rc.ArgError);
     if( _len < 0 ) return whio_rc.RangeError;
-    whio_size_t ulen = (whio_size_t)_len;
-    if( ulen > mb->maxsize )
-    {
-	return whio_rc.RangeError;
+    else {
+        whio_size_t ulen = (whio_size_t)_len;
+        if( ulen > mb->maxsize )
+        {
+            return whio_rc.RangeError;
+        }
+        mb->size = ulen;
+        return whio_rc.OK;
     }
-    mb->size = ulen;
-    return whio_rc.OK;
 }
 
 short whio_dev_memmap_iomode( whio_dev * dev )
@@ -738,8 +755,8 @@ short whio_dev_memmap_iomode( whio_dev * dev )
 static int whio_dev_memmap_ioctl( whio_dev * dev, int arg, va_list vargs )
 {
     int rc = whio_rc.UnsupportedError;
+    whio_size_t * x = NULL;
     WHIO_MEMMAP_DECL(rc);
-    whio_size_t * x = 0;
     switch( arg )
     {
       case whio_dev_ioctl_GENERAL_size:
@@ -776,9 +793,10 @@ static bool whio_dev_memmap_close( whio_dev * dev )
 {
     if( dev )
     {
+        whio_dev_memmap * f;
 	if( dev->client.dtor ) dev->client.dtor( dev->client.data );
 	dev->client = whio_client_data_empty;
-	whio_dev_memmap * f = (whio_dev_memmap*)dev->impl.data;
+	f = (whio_dev_memmap*)dev->impl.data;
 	if( f )
 	{
 	    dev->impl.data = 0;
@@ -851,27 +869,31 @@ static const whio_dev whio_dev_memmap_dev_empty =
 */
 static whio_dev * whio_dev_for_memmap( void * rw, void const * ro, whio_size_t size )
 {
-    if( (!rw && !ro) || ! size ) return 0;
+    whio_dev * dev;
+    if( (!rw && !ro) || ! size ) return NULL;
     if( rw && ro )
     {
 	if( ro != rw ) return 0;
     }
-    whio_dev * dev = whio_dev_alloc();
-    if( ! dev ) return 0;
-    *dev = whio_dev_memmap_dev_empty;
-    whio_dev_memmap * mb = whio_dev_memmap_alloc();
-    if( !mb )
-    {
-	whio_dev_free(dev);
-	return 0;
+    dev = whio_dev_alloc();
+    if( ! dev ) return NULL;
+    else {
+        whio_dev_memmap * mb;
+        *dev = whio_dev_memmap_dev_empty;
+        mb = whio_dev_memmap_alloc();
+        if( !mb )
+        {
+            whio_dev_free(dev);
+            return 0;
+        }
+        *mb = whio_dev_memmap_empty;
+        dev->impl.data = mb;
+        mb->size = mb->maxsize = size;
+        mb->rw = rw;
+        mb->ro = ro ? ro : rw;
+        /*WHIO_DEBUG( "memmap @%p, buffer @%p: size=%u\n", (void const *)dev, (void const *)mb->ro, mb->size ); */
+        return dev;
     }
-    *mb = whio_dev_memmap_empty;
-    dev->impl.data = mb;
-    mb->size = mb->maxsize = size;
-    mb->rw = rw;
-    mb->ro = ro ? ro : rw;
-    //WHIO_DEBUG( "memmap @%p, buffer @%p: size=%u\n", (void const *)dev, (void const *)mb->ro, mb->size );
-    return dev;
 }
 
 whio_dev * whio_dev_for_memmap_rw( void * mem, whio_size_t size )

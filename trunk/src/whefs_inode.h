@@ -143,7 +143,7 @@ typedef struct whefs_inode
     */
     whefs_block_list blocks;
     /** Transient string used only by opened nodes. */
-    //whefs_string name;
+    /*whefs_string name; */
 } whefs_inode;
 
 /** Empty inode initialization object. */
@@ -212,30 +212,6 @@ extern const whefs_inode_list whefs_inode_list_empty;
    @see whefs_inode_name_get()
 */
 int whefs_inode_id_read( whefs_fs * fs, whefs_id_type nid, whefs_inode * tgt );
-
-/**
-    Don't use this function - it's probably going away.
-
-   Reads the flags field of the given inode and assigns the flags
-   argument to their value. fs may not be null and nid must be a valid
-   inode id for fs or the routine will fail. flags may be 0, in which
-   case this is simply a very elaborate way to tell if an inode is
-   valid.
-
-   On success flags is modified (if it is not null) and whefs_rc.OK is
-   returned. On failure flags is not modified and non-OK is returned.
-   
-   This routine returns the fs i/o device to its original position
-   when it is done, so calling this behaves "as if" the cursor has not
-   moved. The one exception is if the seek to the correct inode fails,
-   in which case the cursor position is in an undefined state and
-   error recovery must begin (writing at that point may corrupt the
-   vfs).
-
-   If the given inode ID is currently opened, the flags are taken
-   from the opened copy and no i/o is necessary.
-*/
-//int whefs_inode_read_flags( whefs_fs * fs, whefs_id_type nid, uint32_t * flags );
 
 /**
    "Opens" an inode for concurrent (but NOT multi-threaded!) access
@@ -315,7 +291,7 @@ int whefs_inode_flush( whefs_fs * fs, whefs_inode const * n );
    returns some other value and does not update tgt. If it traverses the whole
    list and cannot find a free node it returns whefs_rc.FSFull.
 */
-int whefs_inode_next_free( whefs_fs * restrict fs, whefs_inode * restrict tgt, bool markUsed );
+int whefs_inode_next_free( whefs_fs * fs, whefs_inode * tgt, bool markUsed );
 
 /**
    Searches fs for an inode with the given name. On success, tgt is
@@ -355,19 +331,19 @@ int whefs_inode_by_name( whefs_fs * fs, char const * name, whefs_inode * tgt );
 #define whefs_inode_id_is_valid(FS,NID) whefs_inode_id_is_valid_m(FS,NID)
 #define whefs_inode_is_valid(FS,INO) whefs_inode_is_valid_m(FS,INO)
 #else
-/** @fn bool whefs_inode_id_is_valid( whefs_fs const * restrict fs, whefs_id_type nid )
+/** @fn bool whefs_inode_id_is_valid( whefs_fs const * fs, whefs_id_type nid )
 
    Returns true if nid is a valid inode for the given fs. That is, it
    has a non-zero id in a range legal for the given fs object.
 */
-bool whefs_inode_id_is_valid( whefs_fs const * restrict fs, whefs_id_type nid );
+bool whefs_inode_id_is_valid( whefs_fs const * fs, whefs_id_type nid );
 
-/** @fn bool whefs_inode_is_valid( whefs_fs const * restrict fs, whefs_inode const * n )
+/** @fn bool whefs_inode_is_valid( whefs_fs const * fs, whefs_inode const * n )
 
    Returns true if n is "valid" - has a non-zero id in a range legal
    for the given fs object.
 */
-bool whefs_inode_is_valid( whefs_fs const * restrict fs, whefs_inode const * n );
+bool whefs_inode_is_valid( whefs_fs const * fs, whefs_inode const * n );
 #endif
 
 /**
@@ -406,7 +382,7 @@ whio_dev * whefs_dev_for_inode( whefs_fs * fs, whefs_id_type nodeID, bool writeM
    (!fs or !nid, or nid is out of range), 0 is returned. Does not require
    any i/o.
 */
-whio_size_t whefs_inode_id_pos( whefs_fs const * restrict fs, whefs_id_type nid );
+whio_size_t whefs_inode_id_pos( whefs_fs const * fs, whefs_id_type nid );
 
 /**
    Seeks to the given inode's on-disk position. Returns whefs_rc.OK
@@ -434,8 +410,8 @@ int whefs_inode_id_seek( whefs_fs * fs, whefs_id_type id );
    If node_id is opened then this routine will update the opened
    object's copy of the name.
 */
-//int whefs_inode_name_set( whefs_fs * fs, whefs_inode const * n, char const * name );
 int whefs_inode_name_set( whefs_fs * fs, whefs_id_type node_id, char const * name );
+/*int whefs_inode_name_set( whefs_fs * fs, whefs_inode const * n, char const * name ); */
 
 /**
    Loads the name for the given inode id into the given target string

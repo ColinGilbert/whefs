@@ -7,11 +7,14 @@ const whbits whbits_init_obj = WHBITS_INIT;
 
 int whbits_init( whbits * b, whbits_count_t bitCount, unsigned char initialState )
 {
+    size_t lenB;
+    whbits old;
+    unsigned char * x;
     if( ! bitCount || !b ) return -1;
-    const size_t lenB = (bitCount / 8) + ((bitCount%8) ? 1 : 0);
+    lenB = (bitCount / 8) + ((bitCount%8) ? 1 : 0);
     if( b->sz_alloc >= lenB )
     { /* re-use the memory */
-        //memset( b->bytes+b->sz_bytes, initialState, b->sz_bytes - lenB );
+        /*memset( b->bytes+b->sz_bytes, initialState, b->sz_bytes - lenB ); */
         if( b->sz_bytes == lenB )
         {
             b->sz_bits = bitCount;
@@ -30,8 +33,8 @@ int whbits_init( whbits * b, whbits_count_t bitCount, unsigned char initialState
         b->sz_bits = bitCount;
         return 0;
     }
-    whbits old = *b;
-    unsigned char * x = realloc( b->bytes, lenB );
+    old = *b;
+    x = realloc( b->bytes, lenB );
     if( ! x )
     {
         return -1;

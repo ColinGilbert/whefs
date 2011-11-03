@@ -102,10 +102,11 @@ void whio_dev_free( whio_dev * dev )
 
 int whio_dev_ioctl( whio_dev * dev, int operation, ... )
 {
-    if( ! dev ) return whio_rc.ArgError;
     va_list vargs;
+    int rc;
+    if( ! dev ) return whio_rc.ArgError;
     va_start( vargs, operation );
-    int rc = dev->api->ioctl( dev, operation, vargs );
+    rc = dev->api->ioctl( dev, operation, vargs );
     va_end(vargs);
     return rc;
 }
@@ -118,32 +119,40 @@ whio_size_t whio_dev_write( whio_dev * dev, void const * data, whio_size_t n )
 whio_size_t whio_dev_writeat( whio_dev * dev, whio_size_t pos, void const * data, whio_size_t n )
 {
     if( ! dev || ! data || !n ) return 0;
-    //WHIO_DEBUG("Writing %u bytes at pos %u\n", n, pos );
-    whio_size_t rc = dev->api->seek( dev, pos, SEEK_SET );
-    return (whio_rc.SizeTError == rc)
-	? rc
-	: whio_dev_write( dev, data, n );
+    else {
+        whio_size_t rc = dev->api->seek( dev, pos, SEEK_SET );
+        /*WHIO_DEBUG("Writing %u bytes at pos %u\n", n, pos ); */
+        return (whio_rc.SizeTError == rc)
+            ? rc
+            : whio_dev_write( dev, data, n );
+    }
 }
 
 whio_size_t whio_dev_readat( whio_dev * dev, whio_size_t pos, void * data, whio_size_t n )
 {
     if( ! dev || ! data || !n ) return 0;
-    //WHIO_DEBUG("Writing %u bytes at pos %u\n", n, pos );
-    whio_size_t rc = dev->api->seek( dev, pos, SEEK_SET );
-    return (whio_rc.SizeTError == rc)
-	? rc
-	: whio_dev_read( dev, data, n );
+    else {
+        whio_size_t rc = dev->api->seek( dev, pos, SEEK_SET );
+        /*WHIO_DEBUG("Writing %u bytes at pos %u\n", n, pos ); */
+        return (whio_rc.SizeTError == rc)
+            ? rc
+            : whio_dev_read( dev, data, n );
+    }
 }
 
 
 whio_size_t whio_dev_size( whio_dev * dev )
 {
     if( ! dev ) return whio_rc.SizeTError;
-    whio_size_t pos = dev->api->tell( dev );
-    if( whio_rc.SizeTError == pos ) return pos;
-    whio_size_t rc = dev->api->seek( dev, 0L, SEEK_END );
-    dev->api->seek( dev, pos, SEEK_SET );
-    return rc;
+    else {
+        whio_size_t pos = dev->api->tell( dev );
+        if( whio_rc.SizeTError == pos ) return pos;
+        else {
+            whio_size_t rc = dev->api->seek( dev, 0L, SEEK_END );
+            dev->api->seek( dev, pos, SEEK_SET );
+            return rc;
+        }
+    }
 }
 
 int whio_dev_rewind( whio_dev * dev )
@@ -157,34 +166,40 @@ int whio_dev_rewind( whio_dev * dev )
 int whio_dev_copy( whio_dev * src, whio_dev * dest )
 {
     if( ! src || ! dest ) return whio_rc.ArgError;
-    int rc = whio_rc.OK;
-    enum { bufSize = (1024 * 4) };
-    unsigned char buf[bufSize];  /* Flawfinder: ignore This is intentional and used correctly in the loop below. */
-    whio_size_t rlen = 0;
-    if( whio_rc.SizeTError == src->api->seek( src, 0L, SEEK_SET ) )
-    {
-	return whio_rc.RangeError;
+    else {
+        int rc = whio_rc.OK;
+        enum { bufSize = (1024 * 4) };
+        unsigned char buf[bufSize];  /* Flawfinder: ignore This is intentional and used correctly in the loop below. */
+        whio_size_t rlen = 0;
+        if( whio_rc.SizeTError == src->api->seek( src, 0L, SEEK_SET ) )
+        {
+            return whio_rc.RangeError;
+        }
+        while( (rlen = src->api->read( src, buf /*Flawfinder: ignore  This is safe in conjunction with bufSize*/, bufSize ) ) )
+        {
+            if( rlen != dest->api->write( dest, buf, rlen ) )
+            {
+                rc = whio_rc.IOError;
+                break;
+            }
+        }
+        return rc;
     }
-    while( (rlen = src->api->read( src, buf /*Flawfinder: ignore  This is safe in conjunction with bufSize*/, bufSize ) ) )
-    {
-	if( rlen != dest->api->write( dest, buf, rlen ) )
-	{
-	    rc = whio_rc.IOError;
-	    break;
-	}
-    }
-    return rc;
 }
 
 
 static long whio_dev_printf_appender( void * arg, char const * data, long n )
 {
     if( ! arg || !data || (n<1) ) return -1;
-    size_t sz = n;
-    if( n < sz ) return -1; /* negative n */
-    whio_dev * dev = (whio_dev*)arg;
-    sz = dev->api->write( dev, data, sz );
-    return (sz == whio_rc.SizeTError) ? 0 : (long) sz; // FIXME: check for overflow!
+    else {
+        size_t sz = n;
+        if( n < sz ) return -1; /* negative n */
+        else {
+            whio_dev * dev = (whio_dev*)arg;
+            sz = dev->api->write( dev, data, sz );
+            return (sz == whio_rc.SizeTError) ? 0 : (long) sz; /* FIXME: check for overflow! */
+        }
+    }
 }
 
 size_t whio_dev_writefv( whio_dev * dev, const char *fmt, va_list ap )
@@ -196,8 +211,9 @@ size_t whio_dev_writefv( whio_dev * dev, const char *fmt, va_list ap )
 size_t whio_dev_writef( whio_dev * dev, const char *fmt, ... )
 {
     va_list vargs;
+    size_t rc;
     va_start( vargs, fmt );
-    size_t rc = whio_dev_writefv( dev, fmt, vargs );
+    rc = whio_dev_writefv( dev, fmt, vargs );
     va_end(vargs);
     return rc;
 }
@@ -245,24 +261,27 @@ bool whio_dev_close( whio_dev * dev )
 
 whio_fetch_result * whio_dev_fetch( whio_dev * dev, whio_size_t n )
 {
+    whio_fetch_result * rc;
     if( ! dev ) return 0;
-    whio_fetch_result * rc = (whio_fetch_result*)malloc(sizeof(whio_fetch_result));
+    rc = (whio_fetch_result*)malloc(sizeof(whio_fetch_result));
     if( ! rc ) return 0;
     rc->alloced = 0;
     rc->requested = n;
     rc->read = 0;
     if( ! n ) return rc;
-    const whio_size_t sza = n+1; /* the +1 is necessary so we can ensure nulls for script-side strings. */
-    rc->data = (char *)malloc(sza);
-    if( ! rc->data )
-    {
-	free(rc);
-	return 0;
+    else {
+        const whio_size_t sza = n+1; /* the +1 is necessary so we can ensure nulls for script-side strings. */
+        rc->data = (char *)malloc(sza);
+        if( ! rc->data )
+        {
+            free(rc);
+            return 0;
+        }
+        rc->alloced = sza;
+        memset( rc->data, 0, sza );
+        rc->read = dev->api->read( dev, rc->data, n ); /*Flawfinder: ignore rc->data will always be longer than (see above). */
+        return rc;
     }
-    rc->alloced = sza;
-    memset( rc->data, 0, sza );
-    rc->read = dev->api->read( dev, rc->data, n ); /*Flawfinder: ignore rc->data will always be longer than (see above). */
-    return rc;
 }
 
 int whio_dev_fetch_r( whio_dev * dev, whio_size_t n, whio_fetch_result * tgt )
@@ -379,7 +398,7 @@ bool whio_blockdev_cleanup( whio_blockdev * self )
         {
             self->impl.fence->api->finalize( self->impl.fence );
         }
-        // else fence was pointing back to the parent device.
+        /* else fence was pointing back to the parent device. */
 	self->impl.fence = 0;
     }
     *self = whio_blockdev_empty;
@@ -438,17 +457,19 @@ static whio_size_t whio_block_offset_for_id( whio_blockdev * self, whio_size_t i
 int whio_blockdev_write( whio_blockdev * self, whio_size_t id, void const * src )
 {
     if( ! src ) return whio_rc.ArgError;
-    whio_size_t pos = whio_block_offset_for_id( self, id );
-    if( whio_rc.SizeTError == pos )
-    {
-	WHIO_DEBUG("id #%"WHIO_SIZE_T_PFMT" is not valid for this whio_blockdev. block count=%"WHIO_SIZE_T_PFMT"\n",id,self->blocks.count);
-	return whio_rc.RangeError;
+    else {
+        whio_size_t pos = whio_block_offset_for_id( self, id );
+        if( whio_rc.SizeTError == pos )
+        {
+            WHIO_DEBUG("id #%"WHIO_SIZE_T_PFMT" is not valid for this whio_blockdev. block count=%"WHIO_SIZE_T_PFMT"\n",id,self->blocks.count);
+            return whio_rc.RangeError;
+        }
+        if( ! src ) return false;
+        if( pos != self->impl.fence->api->seek( self->impl.fence, pos, SEEK_SET ) ) return whio_rc.IOError;
+        return (self->blocks.size == self->impl.fence->api->write( self->impl.fence, src, self->blocks.size ))
+            ? whio_rc.OK
+            : whio_rc.IOError;
     }
-    if( ! src ) return false;
-    if( pos != self->impl.fence->api->seek( self->impl.fence, pos, SEEK_SET ) ) return whio_rc.IOError;
-    return (self->blocks.size == self->impl.fence->api->write( self->impl.fence, src, self->blocks.size ))
-	? whio_rc.OK
-	: whio_rc.IOError;
 }
 
 int whio_blockdev_read( whio_blockdev * self, whio_size_t id, void * dest )

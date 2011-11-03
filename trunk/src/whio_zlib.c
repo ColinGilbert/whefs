@@ -12,18 +12,11 @@
 #include <zlib.h>
 #endif /* WHIO_ENABLE_ZLIB */
 
-int whio_stream_gzip( whio_stream * restrict src, whio_stream * restrict dest, int level )
+int whio_stream_gzip( whio_stream * src, whio_stream * dest, int level )
 {
 #if ! WHIO_ENABLE_ZLIB
     return whio_rc.UnsupportedError;
 #else
-    if( !src || !dest || (src == dest) ) return whio_rc.ArgError;
-    if( level != Z_DEFAULT_COMPRESSION )
-    {
-	if( level < Z_NO_COMPRESSION ) level = Z_NO_COMPRESSION;
-	else if (level > Z_BEST_COMPRESSION) level = Z_BEST_COMPRESSION;
-    }
-    /* Code taken 99% from http://zlib.net/zlib_how.html */
     int ret;
     int flush;
     size_t have;
@@ -32,11 +25,19 @@ int whio_stream_gzip( whio_stream * restrict src, whio_stream * restrict dest, i
     unsigned char in[bufSize];
     unsigned char out[bufSize];
 
+    if( !src || !dest || (src == dest) ) return whio_rc.ArgError;
+    if( level != Z_DEFAULT_COMPRESSION )
+    {
+	if( level < Z_NO_COMPRESSION ) level = Z_NO_COMPRESSION;
+	else if (level > Z_BEST_COMPRESSION) level = Z_BEST_COMPRESSION;
+    }
+    /* Code taken 99% from http://zlib.net/zlib_how.html */
+
     /* allocate deflate state */
     strm.zalloc = Z_NULL;
     strm.zfree = Z_NULL;
     strm.opaque = Z_NULL;
-    ret = //deflateInit(&strm, level)
+    ret = /*deflateInit(&strm, level) */
 	deflateInit2( &strm, level, Z_DEFLATED, 16+MAX_WBITS, 8, Z_DEFAULT_STRATEGY )
 	;
     if (ret != Z_OK)
@@ -90,7 +91,7 @@ int whio_stream_gzip( whio_stream * restrict src, whio_stream * restrict dest, i
 	}
         /* done when last data in file processed */
     } while (flush != Z_FINISH);
-    //assert(ret == Z_STREAM_END);        /* stream will be complete */
+    /*assert(ret == Z_STREAM_END);*/        /* stream will be complete */
     /* clean up and return */
     (void)deflateEnd(&strm);
     return (ret == Z_STREAM_END) ? Z_OK : ret;
@@ -99,13 +100,11 @@ int whio_stream_gzip( whio_stream * restrict src, whio_stream * restrict dest, i
 }
 
 
-int whio_stream_gunzip( whio_stream * restrict src, whio_stream * restrict dest )
+int whio_stream_gunzip( whio_stream * src, whio_stream * dest )
 {
 #if ! WHIO_ENABLE_ZLIB
     return whio_rc.UnsupportedError;
 #else
-    if( !src || !dest || (src == dest) ) return whio_rc.ArgError;
-    /* Code taken 99% from http://zlib.net/zlib_how.html */
     int ret;
     size_t have;
     z_stream strm;
@@ -113,12 +112,15 @@ int whio_stream_gunzip( whio_stream * restrict src, whio_stream * restrict dest 
     unsigned char in[bufSize];
     unsigned char out[bufSize];
 
+    if( !src || !dest || (src == dest) ) return whio_rc.ArgError;
+    /* Code taken 99% from http://zlib.net/zlib_how.html */
+
     strm.zalloc = Z_NULL;
     strm.zfree = Z_NULL;
     strm.opaque = Z_NULL;
     strm.avail_in = 0;
     strm.next_in = Z_NULL;
-    ret = //inflateInit( &strm )
+    ret = /*inflateInit( &strm ) */
 	inflateInit2( &strm, 16+MAX_WBITS )
 	;
     if (ret != Z_OK)

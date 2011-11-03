@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 include ../config.make
 
+CFLAGS += -std=c99
 
 WHEFS_BINS_LDFLAGS := -L$(LIBWHEFS.LIBDIR) -lwhefs # $(LIBWHEFS_CLIENT_LDFLAGS) 
 WHEFS_BINS_DEPS := $(LIBWHEFS.A) $(LIBWHEFS.DLL) $(ALL_MAKEFILES)

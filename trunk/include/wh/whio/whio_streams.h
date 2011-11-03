@@ -100,4 +100,4 @@ whio_stream * whio_stream_for_fileno( int fileno, bool writeMode );
 } /* extern "C" */
 #endif
 
-#endif // WANDERINGHORSE_NET_WHIO_STREAMS_H_INCLUDED
+#endif /* WANDERINGHORSE_NET_WHIO_STREAMS_H_INCLUDED */

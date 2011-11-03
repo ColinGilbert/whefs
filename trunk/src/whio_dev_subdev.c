@@ -13,8 +13,8 @@ along with the factory functions for creating the device objects.
 #if !defined(_POSIX_C_SOURCE)
 /* required for for fileno(), ftello(), maybe others */
 #  define _POSIX_C_SOURCE 200112L
-//#  define _POSIX_C_SOURCE 199309L
-//#  define _POSIX_C_SOURCE 199506L
+/*#  define _POSIX_C_SOURCE 199309L */
+/*#  define _POSIX_C_SOURCE 199506L */
 #endif
 
 #include <stdlib.h>
@@ -140,46 +140,56 @@ static whio_size_t whio_dev_subdev_read( whio_dev * dev, void * dest, whio_size_
 {
     WHIO_subdev_DECL(whio_rc.SizeTError);
     if( (sub->pos < sub->lower) || (sub->pos >= sub->upper ) ) return 0;
-    const whio_size_t opos = sub->dev->api->tell( sub->dev );
-    if( whio_rc.SizeTError == opos ) return 0;
-    if( sub->pos != sub->dev->api->seek( sub->dev, sub->pos, SEEK_SET ) ) return 0;
-    whio_size_t rend = sub->pos + n;
-    if( rend > sub->upper )
-    {
-	rend = sub->upper;
+    else {
+        const whio_size_t opos = sub->dev->api->tell( sub->dev );
+        if( whio_rc.SizeTError == opos ) return 0;
+        if( sub->pos != sub->dev->api->seek( sub->dev, sub->pos, SEEK_SET ) ) return 0;
+        else {
+            whio_size_t rlen, rc;
+            whio_size_t rend = sub->pos + n;
+            if( rend > sub->upper )
+            {
+                rend = sub->upper;
+            }
+            rlen = rend - sub->pos;
+            rc = 0;
+            if( rlen )
+            {
+                rc = sub->dev->api->read( sub->dev, dest, rlen );
+            }
+            sub->pos += rc;
+            sub->dev->api->seek( sub->dev, opos, SEEK_SET );
+            return rc;
+        }
     }
-    whio_size_t rlen = rend - sub->pos;
-    whio_size_t rc = 0;
-    if( rlen )
-    {
-	rc = sub->dev->api->read( sub->dev, dest, rlen );
-    }
-    sub->pos += rc;
-    sub->dev->api->seek( sub->dev, opos, SEEK_SET );
-    return rc;
 }
 
 static whio_size_t whio_dev_subdev_write( whio_dev * dev, void const * src, whio_size_t n )
 {
     WHIO_subdev_DECL(0);
     if( (sub->pos < sub->lower) || (sub->pos >= sub->upper ) ) return 0;
-    const whio_size_t opos = sub->dev->api->tell( sub->dev );
-    if( whio_rc.SizeTError == opos ) return 0;
-    if( sub->pos != sub->dev->api->seek( sub->dev, sub->pos, SEEK_SET ) ) return 0;
-    whio_size_t rend = sub->pos + n;
-    if( rend > sub->upper )
-    {
-	rend = sub->upper;
+    else {
+        const whio_size_t opos = sub->dev->api->tell( sub->dev );
+        if( whio_rc.SizeTError == opos ) return 0;
+        if( sub->pos != sub->dev->api->seek( sub->dev, sub->pos, SEEK_SET ) ) return 0;
+        else {
+            whio_size_t wlen, rc;
+            whio_size_t rend = sub->pos + n;
+            if( rend > sub->upper )
+            {
+                rend = sub->upper;
+            }
+            wlen = rend - sub->pos;
+            rc = 0;
+            if( wlen )
+            {
+                rc = sub->dev->api->write( sub->dev, src, wlen );
+            }
+            sub->pos += rc;
+            sub->dev->api->seek( sub->dev, opos, SEEK_SET );
+            return rc;
+        }
     }
-    whio_size_t wlen = rend - sub->pos;
-    whio_size_t rc = 0;
-    if( wlen )
-    {
-	rc = sub->dev->api->write( sub->dev, src, wlen );
-    }
-    sub->pos += rc;
-    sub->dev->api->seek( sub->dev, opos, SEEK_SET );
-    return rc;
 }
 
 static int whio_dev_subdev_error( whio_dev * dev )
@@ -209,10 +219,11 @@ static whio_size_t whio_dev_subdev_tell( whio_dev * dev )
 
 static whio_size_t whio_dev_subdev_seek( whio_dev * dev, whio_off_t pos, int whence )
 {
+    whio_size_t too, ppos, top, upos;
     WHIO_subdev_DECL(whio_rc.SizeTError);
-    whio_size_t too = sub->pos;
-    whio_size_t ppos = sub->dev->api->tell( sub->dev );
-    whio_size_t top = sub->upper;
+    too = sub->pos;
+    ppos = sub->dev->api->tell( sub->dev );
+    top = sub->upper;
 #define OVERFLOW return whio_rc.SizeTError
 #define UNDERFLOW return whio_rc.SizeTError
     switch( whence )
@@ -249,7 +260,7 @@ static whio_size_t whio_dev_subdev_seek( whio_dev * dev, whio_off_t pos, int whe
     };
 #undef OVERFLOW
 #undef UNDERFLOW
-    const whio_size_t upos = sub->dev->api->seek( sub->dev, (sub->pos = too), SEEK_SET );
+    upos = sub->dev->api->seek( sub->dev, (sub->pos = too), SEEK_SET );
     return (upos == sub->pos)
 	? (sub->pos - sub->lower)
 	: whio_rc.SizeTError;
@@ -270,15 +281,15 @@ short whio_dev_subdev_iomode( whio_dev * dev )
 static int whio_dev_subdev_trunc( whio_dev * dev, whio_off_t len )
 {
     return whio_rc.UnsupportedError;
-    //WHIO_subdev_DECL(whio_rc.ArgError);
-    //return sub->dev->api->truncate( sub->dev, len );
+    /*WHIO_subdev_DECL(whio_rc.ArgError); */
+    /*return sub->dev->api->truncate( sub->dev, len ); */
 }
 
 static int whio_dev_subdev_ioctl( whio_dev * dev, int arg, va_list vargs )
 {
-    WHIO_subdev_DECL(whio_rc.ArgError);
     int rc = whio_rc.UnsupportedError;
-    whio_size_t * sz = 0;
+    whio_size_t * sz = NULL;
+    WHIO_subdev_DECL(whio_rc.ArgError);
     switch( arg )
     {
       case whio_dev_ioctl_SUBDEV_parent_dev:
@@ -351,31 +362,37 @@ static const whio_dev whio_dev_subdev_empty =
 whio_dev * whio_dev_subdev_create( whio_dev * parent, whio_size_t lowerBound, whio_size_t upperBound )
 {
     if( ! parent || (upperBound && (upperBound <= lowerBound)) ) return 0;
-    whio_dev * dev = whio_dev_alloc();
-    if( ! dev ) return 0;
-    whio_dev_subdev_meta * meta = whio_dev_subdev_meta_alloc();
-    if( ! meta )
-    {
-	whio_dev_free(dev);
-	return 0;
+    else {
+        whio_dev * dev = whio_dev_alloc();
+        if( ! dev ) return 0;
+        else {
+            whio_dev_subdev_meta * meta = whio_dev_subdev_meta_alloc();
+            if( ! meta )
+            {
+                whio_dev_free(dev);
+                return 0;
+            }
+            *dev = whio_dev_subdev_empty;
+            *meta = whio_dev_subdev_meta_empty;
+            dev->impl.data = meta;
+            meta->dev = parent;
+            meta->lower = lowerBound;
+            meta->pos = lowerBound;
+            meta->upper = upperBound;
+            return dev;
+        }
     }
-    *dev = whio_dev_subdev_empty;
-    *meta = whio_dev_subdev_meta_empty;
-    dev->impl.data = meta;
-    meta->dev = parent;
-    meta->lower = lowerBound;
-    meta->pos = lowerBound;
-    meta->upper = upperBound;
-    return dev;
 }
 
 int whio_dev_subdev_rebound( whio_dev * dev, whio_size_t lowerBound, whio_size_t upperBound )
 {
     if( !dev || (upperBound && (upperBound <= lowerBound)) ) return whio_rc.ArgError;
-    if( (void const *)&whio_dev_subdev_meta_empty != dev->impl.typeID ) return whio_rc.TypeError;
-    whio_dev_subdev_meta * sub = (whio_dev_subdev_meta*)dev->impl.data;
-    if( ! sub || !sub->dev ) return whio_rc.InternalError;
-    sub->lower = sub->pos = lowerBound;
-    sub->upper = upperBound;
-    return whio_rc.OK;
+    else if( (void const *)&whio_dev_subdev_meta_empty != dev->impl.typeID ) return whio_rc.TypeError;
+    else {
+        whio_dev_subdev_meta * sub = (whio_dev_subdev_meta*)dev->impl.data;
+        if( ! sub || !sub->dev ) return whio_rc.InternalError;
+        sub->lower = sub->pos = lowerBound;
+        sub->upper = upperBound;
+        return whio_rc.OK;
+    }
 }

@@ -20,8 +20,10 @@ See below for several WHPRINTF_OMIT_xxx macros which can be set to
 remove certain features/extensions.
 ************************************************************************/
 
+#if 0
 #if !defined(_ISOC99_SOURCE)
 #define _ISOC99_SOURCE 1 /* needed for snprintf() */
+#endif
 #endif
 
 #include <stdio.h> /* FILE */
@@ -29,8 +31,10 @@ remove certain features/extensions.
 #include <stdlib.h> /* free/malloc() */
 #include <ctype.h>
 #include <stdint.h>
-#include <wh/whprintf.h>
+#include "wh/whprintf.h"
+
 typedef long double LONGDOUBLE_TYPE;
+
 
 /*
    If WHPRINTF_OMIT_FLOATING_POINT is defined to a true value, then
@@ -53,7 +57,7 @@ typedef long double LONGDOUBLE_TYPE;
    the %q and %Q specifiers are disabled.
 */
 #ifndef WHPRINTF_OMIT_SQL
-#  define WHPRINTF_OMIT_SQL 0
+#  define WHPRINTF_OMIT_SQL 1 /* requires c99 */
 #endif
 
 /*
@@ -81,7 +85,11 @@ explicitly running in c99 mode.
 #  if defined(__TINYC__)
 #    define WHPRINTF_HAVE_VARARRAY 0
 #  else
-#    define WHPRINTF_HAVE_VARARRAY 1
+#    if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+#        define WHPRINTF_HAVE_VARARRAY 1 /*use 1 in C99 mode */
+#    else
+#        define WHPRINTF_HAVE_VARARRAY 0
+#    endif
 #  endif
 #endif
 
@@ -261,7 +269,11 @@ static const et_info fmtinfo[] = {
   {'N'/*78*/, 0, 0, 0, 0, 0 },
   {'O'/*79*/, 0, 0, 0, 0, 0 },
   {'P'/*80*/, 0, 0, 0, 0, 0 },
+#if WHPRINTF_OMIT_SQL
+  {'Q'/*81*/, 0, 0, 0, 0, 0 },
+#else
   {'Q'/*81*/, 0, FLAG_STRING, etSQLESCAPE2, 0, 0 },
+#endif
   {'R'/*82*/, 0, 0, 0, 0, 0 },
   {'S'/*83*/, 0, 0, 0, 0, 0 },
   {'T'/*84*/,  0, FLAG_STRING, etURLDECODE, 0, 0 },
@@ -293,13 +305,21 @@ static const et_info fmtinfo[] = {
   {'n'/*110*/, 0, 0, etSIZE, 0, 0 },
   {'o'/*111*/, 8, 0, etRADIX,      0,  2 },
   {'p'/*112*/, 16, 0, etPOINTER, 0, 1 },
+#if WHPRINTF_OMIT_SQL
+  {'q'/*113*/, 0, 0, 0, 0, 0 },
+#else
   {'q'/*113*/, 0, FLAG_STRING, etSQLESCAPE,  0, 0 },
+#endif
   {'r'/*114*/, 10, (FLAG_EXTENDED|FLAG_SIGNED), etORDINAL,    0,  0},
   {'s'/*115*/, 0, FLAG_STRING, etSTRING,     0,  0 },
   {'t'/*116*/,  0, FLAG_STRING, etURLENCODE, 0, 0 },
   {'u'/*117*/, 10, 0, etRADIX,      0,  0 },
   {'v'/*118*/, 0, 0, 0, 0, 0 },
+#if WHPRINTF_OMIT_SQL
+  {'w'/*119*/, 0, 0, 0, 0, 0 },
+#else
   {'w'/*119*/, 0, FLAG_STRING, etSQLESCAPE3, 0, 0 },
+#endif
   {'x'/*120*/, 16, 0, etRADIX,      16, 1  },
   {'y'/*121*/, 0, 0, 0, 0, 0 },
   {'z'/*122*/, 0, FLAG_STRING, etDYNSTRING,  0,  0},
@@ -522,9 +542,11 @@ static long spech_urlencode( whprintf_appender pf,
             continue;
         }
         else {
-            slen = snprintf( xbuf, xbufsz, "%%%c%c",
-                             hex[((ch>>4)&0xf)],
-                             hex[(ch&0xf)]);
+            xbuf[0] = '%';
+            xbuf[1] = hex[((ch>>4)&0xf)];
+            xbuf[2] = hex[(ch&0xf)];
+            xbuf[3] = 0;
+            slen = 3;
             ret += pf( pfArg, xbuf, slen );
         }
     }
@@ -561,12 +583,12 @@ static long spech_urldecode( whprintf_appender pf,
                              void * varg )
 {
     char const * str = (char const *) varg;
-    if( ! str ) return 0;
     long ret = 0;
     char ch = 0;
     char ch2 = 0;
     char xbuf[4];
     int decoded;
+    if( ! str ) return 0;
     ch = *str;
     while( ch )
     {
@@ -579,7 +601,6 @@ static long spech_urldecode( whprintf_appender pf,
             {
                 decoded = (hexchar_to_int( ch ) * 16)
                     + hexchar_to_int( ch2 );
-                //printf("DECODED: %s, %d, %c\n", xbuf, decoded, (char) decoded );
                 xbuf[0] = (char)decoded;
                 xbuf[1] = 0;
                 ret += pf( pfArg, xbuf, 1 );
@@ -635,7 +656,8 @@ static long spech_sqlstring_main( int xtype,
         int needQuote;
         char q = ((xtype==etSQLESCAPE3)?'"':'\'');   /* Quote character */
         char const * escarg = (char const *) varg;
-	char * bufpt = 0;
+	char * bufpt = NULL;
+        long ret;
         isnull = escarg==0;
         if( isnull ) escarg = (xtype==etSQLESCAPE2 ? "NULL" : "(NULL)");
         for(i=n=0; (ch=escarg[i])!=0; i++){
@@ -643,7 +665,7 @@ static long spech_sqlstring_main( int xtype,
         }
         needQuote = !isnull && xtype==etSQLESCAPE2;
         n += i + 1 + needQuote*2;
-	// FIXME: use a static buffer here instead of malloc()! Shame on you!
+	/* FIXME: use a static buffer here instead of malloc()! Shame on you! */
 	bufpt = (char *)malloc( n );
 	if( ! bufpt ) return -1;
         j = 0;
@@ -654,7 +676,7 @@ static long spech_sqlstring_main( int xtype,
         }
         if( needQuote ) bufpt[j++] = q;
         bufpt[j] = 0;
-	long ret = pf( pfArg, bufpt, j );
+	ret = pf( pfArg, bufpt, j );
 	free( bufpt );
 	return ret;
 }
@@ -892,7 +914,7 @@ if(1){				       \
     infop = ((c>=(fmtinfo[0].fmttype)) && (c<fmtinfo[etNINFO-1].fmttype))
 	? &FMTINFO(c)
 	: 0;
-    //fprintf(stderr,"char '%c'/%d @ %d,  type=%c/%d\n",c,c,FMTNDX(c),infop->fmttype,infop->type);
+    /*fprintf(stderr,"char '%c'/%d @ %d,  type=%c/%d\n",c,c,FMTNDX(c),infop->fmttype,infop->type);*/
     if( infop ) xtype = infop->type;
 #undef FMTINFO
 #undef FMTNDX
@@ -1182,9 +1204,9 @@ if(1){				       \
         break;
       case etSTRING:
       case etDYNSTRING: {
-	  bufpt = va_arg(ap,char*);
 	  whprintf_spec_handler spf = (xtype==etSTRING)
               ? spech_string : spech_dynstring;
+	  bufpt = va_arg(ap,char*);
 	  pfrc = spf( pfAppend, pfAppendArg, bufpt );
 	  WHPRINTF_CHECKERR(0);
 	  length = 0;
@@ -1277,8 +1299,9 @@ long whprintf(whprintf_appender pfAppend,          /* Accumulate results here */
 	    ... )
 {
 	va_list vargs;
+        long ret;
 	va_start( vargs, fmt );
-	long ret = whprintfv( pfAppend, pfAppendArg, fmt, vargs );
+	ret = whprintfv( pfAppend, pfAppendArg, fmt, vargs );
 	va_end(vargs);
 	return ret;
 }
@@ -1288,16 +1311,20 @@ long whprintf_FILE_appender( void * a, char const * s, long n )
 {
 	FILE * fp = (FILE *)a;
 	if( ! fp ) return -1;
-	long ret = fwrite( s, sizeof(char), n, fp );
-	return (ret >= 0) ? ret : -2;
+        else
+        {
+            long ret = fwrite( s, sizeof(char), n, fp );
+            return (ret >= 0) ? ret : -2;
+        }
 }
 
 
 long whprintf_file( FILE * fp, char const * fmt, ... )
 {
 	va_list vargs;
+        int ret;
 	va_start( vargs, fmt );
-	int ret = whprintfv( whprintf_FILE_appender, fp, fmt, vargs );
+	ret = whprintfv( whprintf_FILE_appender, fp, fmt, vargs );
 	va_end(vargs);
 	return ret;
 }
@@ -1327,45 +1354,56 @@ static long whprintfv_appender_stringbuf( void * arg, char const * data, long n 
 {
     whprintfv_stringbuf * sb = (whprintfv_stringbuf*)arg;
     if( ! sb || (n<0) ) return -1;
-    if( ! n ) return 0;
-    size_t npos = sb->pos + n;
-    if( npos >= sb->alloced )
+    else if( ! n ) return 0;
+    else
     {
-	const size_t asz = (npos * 1.5) + 1;
-	if( asz < npos ) return -1; /* overflow */
-	char * buf = realloc( sb->buffer, asz );
-	if( ! buf ) return -1;
-	memset( buf + sb->pos, 0, (npos + 1 - sb->pos) ); // the +1 adds our \0 for us
-	sb->buffer = buf;
-	sb->alloced = asz;
+        long rc;
+        size_t npos = sb->pos + n;
+        if( npos >= sb->alloced )
+        {
+            const size_t asz = (npos * 1.5) + 1;
+            if( asz < npos ) return -1; /* overflow */
+            else
+            {
+                char * buf = (char *)realloc( sb->buffer, asz );
+                if( ! buf ) return -1;
+                memset( buf + sb->pos, 0, (npos + 1 - sb->pos) ); /* the +1 adds our NUL for us*/
+                sb->buffer = buf;
+                sb->alloced = asz;
+            }
+        }
+        rc = 0;
+        for( ; rc < n; ++rc, ++sb->pos )
+        {
+            sb->buffer[sb->pos] = data[rc];
+        }
+        return rc;
     }
-    long rc = 0;
-    for( ; rc < n; ++rc, ++sb->pos )
-    {
-	sb->buffer[sb->pos] = data[rc];
-    }
-    return rc;
 }
 
 
 char * whprintfv_str( char const * fmt, va_list vargs )
 {
     if( ! fmt ) return 0;
-    whprintfv_stringbuf sb = whprintfv_stringbuf_init;
-    long rc = whprintfv( whprintfv_appender_stringbuf, &sb, fmt, vargs );
-    if( rc <= 0 )
+    else
     {
-	free( sb.buffer );
-	sb.buffer = 0;
+        whprintfv_stringbuf sb = whprintfv_stringbuf_init;
+        long rc = whprintfv( whprintfv_appender_stringbuf, &sb, fmt, vargs );
+        if( rc <= 0 )
+        {
+            free( sb.buffer );
+            sb.buffer = 0;
+        }
+        return sb.buffer;
     }
-    return sb.buffer;
 }
 
 char * whprintf_str( char const * fmt, ... )
 {
     va_list vargs;
+    char * ret;
     va_start( vargs, fmt );
-    char * ret = whprintfv_str( fmt, vargs );
+    ret = whprintfv_str( fmt, vargs );
     va_end( vargs );
     return ret;
 }

@@ -24,10 +24,10 @@ uint64_t whefs_bytes_hash( void const * data, uint32_t len )
 
        http://eternallyconfuzzled.com/tuts/algorithms/jsw_tut_hashing.aspx
     */
-    if( ! data || !len ) return 0;
     unsigned const char *p = data;
     uint64_t h = 0;
     uint32_t i;
+    if( ! data || !len ) return 0;
     for ( i = 0; i < len; i++ )
     {
 	h += p[i];
@@ -53,8 +53,8 @@ size_t whefs_dev_id_encode( whio_dev * dev, whefs_id_type v )
 #elif WHEFS_ID_TYPE_BITS == 16
     return whio_dev_encode_uint16( dev, v );
 #elif WHEFS_ID_TYPE_BITS == 8
-    if( ! dev ) return whefs_rc.ArgError;
     unsigned char buf[2];
+    if( ! dev ) return whefs_rc.ArgError;
     buf[0] = whefs_id_type_tag_char;
     buf[1] = v;
     return dev->api->write( dev, buf, 2 );
@@ -90,9 +90,10 @@ int whefs_dev_id_decode( whio_dev * dev, whefs_id_type * v )
 #elif WHEFS_ID_TYPE_BITS == 16
     return whio_dev_decode_uint16( dev, v );
 #elif WHEFS_ID_TYPE_BITS == 8
-    if( ! v || ! dev ) return whefs_rc.ArgError;
     unsigned char buf[2] = {0,0};
-    size_t sz = dev->api->read( dev, buf, 2 );
+    whio_size_t sz;
+    if( ! v || ! dev ) return whefs_rc.ArgError;
+    sz = dev->api->read( dev, buf, 2 );
     if( 2 != sz)
     {
 	return whefs_rc.IOError;

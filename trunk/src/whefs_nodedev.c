@@ -37,20 +37,23 @@ static int whefs_inode_block_list_reserve( whefs_fs * fs,
 	return whefs_rc.OK;
     }
     else if( ino->blocks.alloced >= count ) return whefs_rc.OK;
-    //WHEFS_DBG("(Re)sizing inode block cache to %u items for inode #%u[%s].", count, ino->id, ino->name );
-    whefs_block * li = (whefs_block *)realloc( ino->blocks.list, count * sizeof(whefs_block) );
-    if( ! li )
-    {
-	return whefs_rc.AllocError;
+    else {
+        /*WHEFS_DBG("(Re)sizing inode block cache to %u items for inode #%u[%s].", count, ino->id, ino->name ); */
+        whefs_id_type i;
+        whefs_block * li = (whefs_block *)realloc( ino->blocks.list, count * sizeof(whefs_block) );
+        if( ! li )
+        {
+            return whefs_rc.AllocError;
+        }
+        ino->blocks.alloced = count;
+        ino->blocks.list = li;
+        i = ino->blocks.count;
+        for( ; i < count; ++i )
+        {
+            li[i] = whefs_block_empty;
+        }
+        return whefs_rc.OK;
     }
-    ino->blocks.alloced = count;
-    ino->blocks.list = li;
-    whefs_id_type i = ino->blocks.count;
-    for( ; i < count; ++i )
-    {
-	li[i] = whefs_block_empty;
-    }
-    return whefs_rc.OK;
 }
 
 /**
@@ -75,7 +78,7 @@ static int whefs_inode_block_list_append( whefs_fs * fs,
     }
     ino->blocks.list[ino->blocks.count] = *bl;
     if( 0 < ino->blocks.count )
-    { // append block to the list
+    { /* append block to the list */
 	whefs_block * prev = &ino->blocks.list[ino->blocks.count-1];
 	if( ! prev->next_block )
 	{
@@ -91,7 +94,7 @@ static int whefs_inode_block_list_append( whefs_fs * fs,
 	}
     }
     else
-    { // set bl as the first block...
+    { /* set bl as the first block... */
 	if( ino->first_block )
 	{
 	    if( ino->first_block != bl->id )
@@ -109,7 +112,7 @@ static int whefs_inode_block_list_append( whefs_fs * fs,
 	}
     }
     ++ino->blocks.count;
-    //WHEFS_DBG("Appended block #%"WHEFS_ID_TYPE_PFMT" to chain (of %"WHEFS_ID_TYPE_PFMT" item(s)) for inode #%"WHEFS_ID_TYPE_PFMT"[%s].", bl->id, ino->blocks.count, ino->id, ino->name );
+    /*WHEFS_DBG("Appended block #%"WHEFS_ID_TYPE_PFMT" to chain (of %"WHEFS_ID_TYPE_PFMT" item(s)) for inode #%"WHEFS_ID_TYPE_PFMT"[%s].", bl->id, ino->blocks.count, ino->id, ino->name ); */
     return whefs_rc.OK;
 }
 
@@ -134,6 +137,8 @@ static int whefs_inode_block_list_append( whefs_fs * fs,
 static int whefs_inode_block_list_load( whefs_fs * fs,
 					whefs_inode * ino )
 {
+    whefs_block bl = whefs_block_empty;
+    int rc;
     if( ! whefs_inode_is_valid(fs,ino) ) return whefs_rc.ArgError;
     if( ! ino->first_block ) return whefs_rc.OK;
     if( ino->blocks.count )
@@ -142,8 +147,7 @@ static int whefs_inode_block_list_load( whefs_fs * fs,
 		       ino->id);
 	return whefs_rc.OK;
     }
-    whefs_block bl = whefs_block_empty;
-    int rc = whefs_block_read( fs, ino->first_block, &bl );
+    rc = whefs_block_read( fs, ino->first_block, &bl );
     if( whefs_rc.OK != rc ) return rc;
 #if 0
     if( ! ino->blocks.list )
@@ -161,7 +165,7 @@ static int whefs_inode_block_list_load( whefs_fs * fs,
         rc = whefs_inode_block_list_append( fs, ino, &bl );
 	if( whefs_rc.OK != rc ) return rc;
     }
-    //WHEFS_DBG("Loaded block chain of %u block(s) for inode #%u[%s].", ino->blocks.count, ino->id, ino->name );
+    /*WHEFS_DBG("Loaded block chain of %u block(s) for inode #%u[%s].", ino->blocks.count, ino->id, ino->name ); */
     return whefs_rc.OK;
 }
 
@@ -226,16 +230,21 @@ static int whefs_inode_block_list_load( whefs_fs * fs,
    it does).
 
 */
-static int whefs_block_for_pos( whefs_fs * restrict fs, whefs_inode * restrict ino, whio_size_t pos, whefs_block * restrict tgt, bool expand )
+static int whefs_block_for_pos( whefs_fs * fs, whefs_inode * ino, whio_size_t pos, whefs_block * tgt, bool expand )
 {
-    //if(  !tgt || !whefs_inode_is_valid( fs, ino ) ) return whefs_rc.ArgError;
+    whefs_id_type bc;
+    whio_size_t bs;
+    int rc = whefs_rc.OK;
+    whefs_block bl = whefs_block_empty;
+    whefs_block * blP = 0;
+    /*if(  !tgt || !whefs_inode_is_valid( fs, ino ) ) return whefs_rc.ArgError; */
     if( (ino->data_size <= pos) && !expand )
     {
-	//WHEFS_DBG("return whefs_rc.RangeError");
+	/*WHEFS_DBG("return whefs_rc.RangeError"); */
 	return whefs_rc.RangeError;
     }
-    const whio_size_t bs = whefs_fs_options_get(fs)->block_size;
-    const whefs_id_type bc = /* how many blocks will we need? */
+    bs = whefs_fs_options_get(fs)->block_size;
+    bc = /* how many blocks will we need? */
         1+(pos/bs)
         ;
     if(0) WHEFS_DBG("pos=%"WHIO_SIZE_T_PFMT" bs=%"WHIO_SIZE_T_PFMT" bc=%"WHEFS_ID_TYPE_PFMT,pos,bs,bc);
@@ -250,7 +259,6 @@ static int whefs_block_for_pos( whefs_fs * restrict fs, whefs_inode * restrict i
                        whefs_fs_options_get(fs)->block_count, pos, ino->id );
         return whefs_rc.RangeError;
     }
-    int rc = whefs_rc.OK;
     if( ! ino->blocks.list )
     {
 	rc = whefs_inode_block_list_load( fs, ino );
@@ -260,26 +268,25 @@ static int whefs_block_for_pos( whefs_fs * restrict fs, whefs_inode * restrict i
     { /* can't grow list for this request. */
 	return whefs_rc.RangeError;
     }
-    // TODO: check number of available inodes here, and don't try to expand if we can't reach the end
-    whefs_block bl = whefs_block_empty;
-    //WHEFS_DBG("About to search inode #%u for %u block(s) (size=%u) to find position %u", ino->id, bc, bs, pos );
+    /* TODO: check number of available inodes here, and don't try to expand if we can't reach the end */
+    /*WHEFS_DBG("About to search inode #%u for %u block(s) (size=%u) to find position %u", ino->id, bc, bs, pos ); */
     rc = whefs_rc.OK;
-    whefs_block * blP = 0;
     if( bc <= ino->blocks.count)
     {
 	blP = &ino->blocks.list[bc-1]; /* jump right to it */;
     }
     else
     { /* expand the list */
+        whefs_id_type i;
 	if( ! expand )
 	{
 	    if(0) WHEFS_DBG("Cannot expand to %"WHEFS_ID_TYPE_PFMT" blocks for position %"WHIO_SIZE_T_PFMT" because [expand] parameter is false.",
 			    bc, pos );
 	    return whefs_rc.RangeError;
 	}
-	//bl = ino->blocks.list[ino->blocks.count-1];
-	whefs_id_type i = ino->blocks.count;
-	blP = 0;
+	/*bl = ino->blocks.list[ino->blocks.count-1]; */
+	i = ino->blocks.count;
+	blP = NULL;
 	for( ; i < bc; ++i )
 	{
 	    rc = whefs_block_next_free( fs, &bl, true );
@@ -297,7 +304,7 @@ static int whefs_block_for_pos( whefs_fs * restrict fs, whefs_inode * restrict i
     {
 	*tgt = *blP;
     }
-    //WHEFS_DBG("Using block id #%u for pos %u of inode #%u", blP->id, pos, ino->id );
+    /*WHEFS_DBG("Using block id #%u for pos %u of inode #%u", blP->id, pos, ino->id ); */
     return rc;
 }
 
@@ -416,6 +423,8 @@ static whio_size_t whio_dev_inode_read_impl( whio_dev * dev,
 					whio_size_t n,
 					bool * keepGoing )
 {
+    int rc = 0;
+    whefs_block block = whefs_block_empty;
 #if 0
     if( ! dev || !meta || !dest || !n || ! keepGoing )
     {
@@ -426,16 +435,14 @@ static whio_size_t whio_dev_inode_read_impl( whio_dev * dev,
     *keepGoing = false;
     if( ! n ) return 0U;
     else if( meta->posabs >= meta->inode->data_size ) return 0;
-    int rc = 0;
-    //whio_size_t eofpos = meta->inode->data_size;
-    whefs_block block = whefs_block_empty;
+    /*whio_size_t eofpos = meta->inode->data_size; */
     rc = whefs_block_for_pos( meta->fs, meta->inode, meta->posabs, &block, false );
     if( whefs_rc.OK != rc )
     {
 #if 0
         if( !(meta->posabs % meta->fs->options.block_size) )
         {
-            // FIXME: ensure that meta->inode->blocks[end] is really the end block that should line up here.
+            /* FIXME: ensure that meta->inode->blocks[end] is really the end block that should line up here. */
             /**
                This is an unusual special case. Directly at the EOF boundary we want to return
                a non-error code. We're at EOF. whefs_block_for_pos() isn't quite smart enough
@@ -462,56 +469,60 @@ static whio_size_t whio_dev_inode_read_impl( whio_dev * dev,
     if(0) WHEFS_DBG("inode #%"WHEFS_ID_TYPE_PFMT" will be using block #%"WHEFS_ID_TYPE_PFMT" for a read at pos %"WHIO_SIZE_T_PFMT, meta->inode->id, block.id, meta->posabs );
 
     if( meta->posabs >= meta->inode->data_size ) return 0;
-    const whio_size_t rdpos = (meta->posabs % meta->bs);
-    const whio_size_t left = meta->bs - rdpos;
-    const whio_size_t bdpos = whefs_block_data_pos( meta->fs, &block );
-    whio_size_t rdlen = ( n > left ) ? left : n;
-    if( (rdlen + meta->posabs) >= meta->inode->data_size )
-    {
-	rdlen = meta->inode->data_size - meta->posabs;
-    }
-    //WHEFS_DBG("rdpos=%u left=%u bdpos=%u rdlen=%u", rdpos, left, bdpos, rdlen );
-    whio_dev * fd = meta->fs->dev;
-    fd->api->seek( fd, bdpos + rdpos, SEEK_SET );
-    const whio_size_t sz = fd->api->read( fd, dest, rdlen );
-    if( ! sz ) return 0;
-    const whio_size_t szCheck = meta->posabs + sz;
-    if( szCheck > meta->posabs )
-    {
-	meta->posabs = szCheck;
-    }
-    else
-    {
-	WHEFS_DBG_ERR("Numeric overflow in read! (pos=%"WHIO_SIZE_T_PFMT" + readLength=%"WHIO_SIZE_T_PFMT") = overflow", meta->posabs, sz );
-        return 0;
-    }
-    //whefs_block_flush( meta->fs, &block );
-    if(0) WHEFS_DBG("Read %"WHIO_SIZE_T_PFMT" of %"WHEFS_ID_TYPE_PFMT" (n=%"WHIO_SIZE_T_PFMT") bytes "
-		    "from inode #%"WHEFS_ID_TYPE_PFMT"'s block #%"WHEFS_ID_TYPE_PFMT". "
-		    "fs pos=%"WHIO_SIZE_T_PFMT", block offset=%"WHIO_SIZE_T_PFMT" file pos=%"WHIO_SIZE_T_PFMT", file eof=%"WHIO_SIZE_T_PFMT,
-		    sz, rdlen, n,
-		    meta->inode->id, block.id,
-		    bdpos, rdpos, meta->posabs, meta->inode->data_size );
-    if( sz < rdlen )
-    { /* short write! */
-	return sz;
-    }
-    else if( rdlen < n )
-    { /* Wrap to next block and continue... */
-	*keepGoing = true;
-	return sz;
-    }
-    else
-    { /* got the exact right amount */
-	return sz;
+    else {
+        const whio_size_t rdpos = (meta->posabs % meta->bs);
+        const whio_size_t left = meta->bs - rdpos;
+        const whio_size_t bdpos = whefs_block_data_pos( meta->fs, &block );
+        whio_size_t rdlen = ( n > left ) ? left : n;
+        whio_dev * fd;
+        whio_size_t sz, szCheck;
+        if( (rdlen + meta->posabs) >= meta->inode->data_size )
+        {
+            rdlen = meta->inode->data_size - meta->posabs;
+        }
+        /*WHEFS_DBG("rdpos=%u left=%u bdpos=%u rdlen=%u", rdpos, left, bdpos, rdlen ); */
+        fd = meta->fs->dev;
+        fd->api->seek( fd, bdpos + rdpos, SEEK_SET );
+        sz = fd->api->read( fd, dest, rdlen );
+        if( ! sz ) return 0;
+        szCheck = meta->posabs + sz;
+        if( szCheck > meta->posabs )
+        {
+            meta->posabs = szCheck;
+        }
+        else
+        {
+            WHEFS_DBG_ERR("Numeric overflow in read! (pos=%"WHIO_SIZE_T_PFMT" + readLength=%"WHIO_SIZE_T_PFMT") = overflow", meta->posabs, sz );
+            return 0;
+        }
+        /*whefs_block_flush( meta->fs, &block ); */
+        if(0) WHEFS_DBG("Read %"WHIO_SIZE_T_PFMT" of %"WHEFS_ID_TYPE_PFMT" (n=%"WHIO_SIZE_T_PFMT") bytes "
+                        "from inode #%"WHEFS_ID_TYPE_PFMT"'s block #%"WHEFS_ID_TYPE_PFMT". "
+                        "fs pos=%"WHIO_SIZE_T_PFMT", block offset=%"WHIO_SIZE_T_PFMT" file pos=%"WHIO_SIZE_T_PFMT", file eof=%"WHIO_SIZE_T_PFMT,
+                        sz, rdlen, n,
+                        meta->inode->id, block.id,
+                        bdpos, rdpos, meta->posabs, meta->inode->data_size );
+        if( sz < rdlen )
+        { /* short write! */
+            return sz;
+        }
+        else if( rdlen < n )
+        { /* Wrap to next block and continue... */
+            *keepGoing = true;
+            return sz;
+        }
+        else
+        { /* got the exact right amount */
+            return sz;
+        }
     }
 }
 
 static whio_size_t whio_dev_inode_read( whio_dev * dev, void * dest, whio_size_t n )
 {
-    WHIO_DEV_DECL(0);
     bool keepGoing = true;
     whio_size_t total = 0;
+    WHIO_DEV_DECL(0);
     while( keepGoing )
     {
 	const whio_size_t sz = whio_dev_inode_read_impl( dev, meta, WHIO_VOID_PTR_ADD(dest,total), n - total, &keepGoing );
@@ -530,60 +541,63 @@ static whio_size_t whio_dev_inode_write_impl( whio_dev * dev,
 					 void const * src, whio_size_t n,
 					 bool * keepGoing )
 {
+    whefs_block block = whefs_block_empty;
+    int rc = 0;
     if( ! dev || !meta || !src || !n || !keepGoing )
     {
 	if( keepGoing ) *keepGoing = false;
 	return 0;
     }
     *keepGoing = false;
-    int rc = 0;
-    //whio_size_t eofpos = meta->inode->data_size;
-    whefs_block block = whefs_block_empty;
+    /*whio_size_t eofpos = meta->inode->data_size; */
     rc = whefs_block_for_pos( meta->fs, meta->inode, meta->posabs, &block, true );
     if( whefs_rc.OK != rc )
     {
 	WHEFS_DBG("Error #%d getting block for meta->posabs==%u", rc, meta->posabs );
 	return 0;
     }
-    const whio_size_t wpos = (meta->posabs % meta->bs);
-    const whio_size_t left = meta->bs - wpos;
-    const whio_size_t bdpos = whefs_block_data_pos( meta->fs, &block );
-    const whio_size_t wlen = ( n > left ) ? left : n;
-    //WHEFS_DBG("wpos=%u left=%u bdpos=%u wlen=%u", wpos, left, bdpos, wlen );
-    whio_dev * fd = meta->fs->dev;
-    fd->api->seek( fd, bdpos + wpos, SEEK_SET );
-    whio_size_t sz = fd->api->write( fd, src, wlen );
-    if( ! sz ) return 0;
-    whefs_inode_update_mtime( meta->fs, meta->inode );
-    whio_size_t szCheck = meta->posabs + sz;
-    if( szCheck > meta->posabs )
-    {
-	meta->posabs = szCheck;
-    }
-    if( meta->inode->data_size < meta->posabs )
-    {
-	meta->inode->data_size = meta->posabs;
-	//whefs_inode_flush( meta->fs, &meta->inode ); // we should do this, really.
-    }
-    //whefs_block_flush( meta->fs, &block );
-    if(0) WHEFS_DBG("Wrote %u of %u (n=%u) bytes "
-		    "to inode #%u's block #%u. "
-		    "fs pos=%u, block offset=%u file pos=%u, file eof=%u",
-		    sz, wlen, n,
-		    meta->inode->id, block.id,
-		    bdpos, wpos, meta->posabs, meta->inode->data_size );
-    if( sz < wlen )
-    { /* short write! */
-	return sz;
-    }
-    else if( wlen < n )
-    { /* Wrap to next block and continue... */
-	*keepGoing = true;
-	return sz;
-    }
-    else
-    {
-	return sz;
+    else {
+        const whio_size_t wpos = (meta->posabs % meta->bs);
+        const whio_size_t left = meta->bs - wpos;
+        const whio_size_t bdpos = whefs_block_data_pos( meta->fs, &block );
+        const whio_size_t wlen = ( n > left ) ? left : n;
+        /*WHEFS_DBG("wpos=%u left=%u bdpos=%u wlen=%u", wpos, left, bdpos, wlen ); */
+        whio_dev * fd = meta->fs->dev;
+        whio_size_t sz, szCheck;
+        fd->api->seek( fd, bdpos + wpos, SEEK_SET );
+        sz = fd->api->write( fd, src, wlen );
+        if( ! sz ) return 0;
+        whefs_inode_update_mtime( meta->fs, meta->inode );
+        szCheck = meta->posabs + sz;
+        if( szCheck > meta->posabs )
+        {
+            meta->posabs = szCheck;
+        }
+        if( meta->inode->data_size < meta->posabs )
+        {
+            meta->inode->data_size = meta->posabs;
+            /*whefs_inode_flush( meta->fs, &meta->inode ); // we should do this, really. */
+        }
+        /*whefs_block_flush( meta->fs, &block ); */
+        if(0) WHEFS_DBG("Wrote %u of %u (n=%u) bytes "
+                        "to inode #%u's block #%u. "
+                        "fs pos=%u, block offset=%u file pos=%u, file eof=%u",
+                        sz, wlen, n,
+                        meta->inode->id, block.id,
+                        bdpos, wpos, meta->posabs, meta->inode->data_size );
+        if( sz < wlen )
+        { /* short write! */
+            return sz;
+        }
+        else if( wlen < n )
+        { /* Wrap to next block and continue... */
+            *keepGoing = true;
+            return sz;
+        }
+        else
+        {
+            return sz;
+        }
     }
 }
 
@@ -591,14 +605,16 @@ static whio_size_t whio_dev_inode_write( whio_dev * dev, void const * src, whio_
 {
     WHIO_DEV_DECL(0);
     if( ! meta->rw ) return 0;
-    bool keepGoing = true;
-    whio_size_t total = 0;
-    while( keepGoing )
-    {
-	const whio_size_t sz = whio_dev_inode_write_impl( dev, meta, WHIO_VOID_CPTR_ADD(src,total), n - total, &keepGoing );
-	total += sz;
+    else {
+        bool keepGoing = true;
+        whio_size_t total = 0;
+        while( keepGoing )
+        {
+            const whio_size_t sz = whio_dev_inode_write_impl( dev, meta, WHIO_VOID_CPTR_ADD(src,total), n - total, &keepGoing );
+            total += sz;
+        }
+        return total;
     }
-    return total;
 }
 
 static int whio_dev_inode_error( whio_dev * dev )
@@ -629,8 +645,9 @@ static whio_size_t whio_dev_inode_tell( whio_dev * dev )
 
 static whio_size_t whio_dev_inode_seek( whio_dev * dev, whio_off_t pos, int whence )
 {
+    whio_size_t too;
     WHIO_DEV_DECL(whio_rc.SizeTError);
-    whio_size_t too = meta->posabs;
+    too = meta->posabs;
     switch( whence )
     {
       case SEEK_SET:
@@ -639,11 +656,15 @@ static whio_size_t whio_dev_inode_seek( whio_dev * dev, whio_off_t pos, int when
 	  break;
       case SEEK_END:
 	  too = meta->inode->data_size + pos;
-	  //if( too < meta->inode->data_size )  /* overflow! */ return whio_rc.SizeTError;
+#if 0
+	  if( too < meta->inode->data_size )  /* overflow! */ return whio_rc.SizeTError;
+#endif
 	  break;
       case SEEK_CUR:
 	  too += pos;
+#if 0
 	  if( too < meta->posabs )  /* overflow! */ return whio_rc.SizeTError;
+#endif
 	  break;
       default:
 	  return whio_rc.SizeTError;
@@ -654,13 +675,14 @@ static whio_size_t whio_dev_inode_seek( whio_dev * dev, whio_off_t pos, int when
 
 static int whio_dev_inode_flush( whio_dev * dev )
 {
+    int rc;
     WHIO_DEV_DECL(whio_rc.ArgError);
     if(0) WHEFS_DBG_FYI("Flushing i/o %s device for inode #%"WHIO_SIZE_T_PFMT". "
 			"inode->data_size=%"WHIO_SIZE_T_PFMT" posabs=%"WHIO_SIZE_T_PFMT,
 			meta->rw ? "read/write" : "read-only", meta->inode->id,
 			meta->inode->data_size, meta->posabs
 			);
-    int rc = meta->rw
+    rc = meta->rw
 	? whefs_inode_flush( meta->fs, meta->inode )
 	: whefs_rc.OK;
 #if 0 /* having this decreases performance by 50% or so in my simple tests. */
@@ -680,20 +702,21 @@ static int whio_dev_inode_flush( whio_dev * dev )
 static int whio_dev_inode_trunc( whio_dev * dev, whio_off_t len )
 {
     /* Man, this was a bitch to do! */
+    whio_size_t off;
+    int rc = whio_rc.OK;
     WHIO_DEV_DECL(whio_rc.ArgError);
     if( len < 0 ) return whio_rc.ArgError;
     if( ! meta->rw ) return whio_rc.AccessError;
-    const whio_size_t off = (whio_size_t)len;
+    off = (whio_size_t)len;
     if( off > len ) return whio_rc.RangeError; /* overflow */
     if( off == meta->inode->data_size ) return whefs_rc.OK;
-
     if( 0 == len )
     { /* special (simpler) case for 0 byte truncate */
-	// (WTF?) FIXME: update ino->blocks.list[0]
+	/* (WTF?) FIXME: update ino->blocks.list[0] */
         if( meta->inode->first_block ) 
         {
             whefs_block block = whefs_block_empty;
-            int rc = whefs_block_read( meta->fs, meta->inode->first_block, &block ); // ensure we pick up whole block chain
+            rc = whefs_block_read( meta->fs, meta->inode->first_block, &block ); /* ensure we pick up whole block chain */
             if( whefs_rc.OK != rc )
             {
                 rc = whefs_block_wipe( meta->fs, &block, true, true, true );
@@ -706,114 +729,119 @@ static int whio_dev_inode_trunc( whio_dev * dev, whio_off_t len )
 	whefs_inode_flush(meta->fs, meta->inode );
 	return whio_rc.OK;
     }
-    int rc = whio_rc.OK;
-    //const size_t oldSize = off>meta->inode->data_size;
-    const short dir = (off < meta->inode->data_size)
-	? -1
-	: ((off>meta->inode->data_size) ? 1 : 0);
-    assert( (0 != off) && "This shouldn't be able to happen!" );
+    else {
+        /*const size_t oldSize = off>meta->inode->data_size; */
+        whefs_block bl = whefs_block_empty;
+        const short dir = (off < meta->inode->data_size)
+            ? -1
+            : ((off>meta->inode->data_size) ? 1 : 0);
+        assert( (0 != off) && "This shouldn't be able to happen!" );
 
-    /* Update inode metadata... */
-    //WHEFS_DBG("truncating from %u to %u bytes",meta->inode->data_size, off);
-    meta->inode->data_size = off;
-    rc = whefs_inode_flush( meta->fs, meta->inode );
-    if( whefs_rc.OK != rc )
-    {
-	WHEFS_DBG_ERR("Flush failed for inode #%u. Error code=%d.",
-		      meta->inode->id, rc );
-	return rc;
-    }
-    /* Update block info... */
-    whefs_block bl = whefs_block_empty;
-    rc = whefs_block_for_pos( meta->fs, meta->inode, off-1, &bl, true );
-    if( whefs_rc.OK != rc )
-    {
-	WHEFS_DBG_ERR("Could not get block for write position %u of inode #%u. Error code=%d.",
-		      off, meta->inode->id, rc );
-	return rc;
-    }
-    //const size_t dest = meta->inode->data_size;
-    if( dir < 0 )
-    { /* we shrunk */
+        /* Update inode metadata... */
+        /*WHEFS_DBG("truncating from %u to %u bytes",meta->inode->data_size, off); */
+        meta->inode->data_size = off;
+        rc = whefs_inode_flush( meta->fs, meta->inode );
+        if( whefs_rc.OK != rc )
+        {
+            WHEFS_DBG_ERR("Flush failed for inode #%u. Error code=%d.",
+                          meta->inode->id, rc );
+            return rc;
+        }
+        /* Update block info... */
+        rc = whefs_block_for_pos( meta->fs, meta->inode, off-1, &bl, true );
+        if( whefs_rc.OK != rc )
+        {
+            WHEFS_DBG_ERR("Could not get block for write position %u of inode #%u. Error code=%d.",
+                          off, meta->inode->id, rc );
+            return rc;
+        }
+        /*const size_t dest = meta->inode->data_size; */
+        if( dir < 0 )
+        { /* we shrunk */
 #if 1
-	/*
-	  We'll be nice and zero the remaining bytes... We do this
-	  partially for consistency with how blocks will get removed
-	  (they get wiped as well).  Theoretically we don't need this
-	  because they get wiped when created and when unlinked, but a
-	  failed unlink could leave data lying around, so we clean it
-	  here. Maybe we should consider a 'dirty' flag for blocks,
-	  wiping only dirty blocks, but that could get messy (no pun
-	  intended).
-	*/
-	const uint32_t bs = whefs_fs_options_get( meta->fs )->block_size;
-	rc = whefs_block_wipe_data( meta->fs, &bl, ( off % bs ) );
-	if( whefs_rc.OK != rc ) return rc;
+            /*
+              We'll be nice and zero the remaining bytes... We do this
+              partially for consistency with how blocks will get removed
+              (they get wiped as well).  Theoretically we don't need this
+              because they get wiped when created and when unlinked, but a
+              failed unlink could leave data lying around, so we clean it
+              here. Maybe we should consider a 'dirty' flag for blocks,
+              wiping only dirty blocks, but that could get messy (no pun
+              intended).
+            */
+            const uint32_t bs = whefs_fs_options_get( meta->fs )->block_size;
+            whefs_block * blP;
+            whefs_block * nblP;
+            uint32_t x;
+            rc = whefs_block_wipe_data( meta->fs, &bl, ( off % bs ) );
+            if( whefs_rc.OK != rc ) return rc;
 #endif
-	if( ! bl.next_block )
-	{ /* Lucky for us! No more work to do! */
-	    meta->inode->blocks.count = 1;
-	    return whefs_rc.OK;
-	}
+            if( ! bl.next_block )
+            { /* Lucky for us! No more work to do! */
+                meta->inode->blocks.count = 1;
+                return whefs_rc.OK;
+            }
 
-	whefs_block * blP = &meta->inode->blocks.list[0];
-	whefs_block * nblP = blP + 1;
-	uint32_t x = 1;
-	for( ; (x < meta->inode->blocks.count)
-		 && (nblP->id != bl.next_block)
-		 ; ++nblP, ++x )
-	{
-	    /* Skip to bl.next_block */
-	}
-	if( (x == meta->inode->blocks.count) || (nblP->id != bl.next_block) )
-	{
-	    WHEFS_DBG_ERR("nblP->id=%u, bl.next_block=%u", nblP->id, bl.next_block );
-	    WHEFS_DBG_ERR("Internal block cache for inode #%u is not as "
-			  "long as we expect it to be or is missing entries!",
-			  meta->inode->id );
-	    return whefs_rc.InternalError;
-	}
-	blP = nblP - 1;
-	meta->inode->blocks.count = x;
-	whefs_block_wipe( meta->fs, nblP, true, true, true );
-	blP->next_block = 0;
-	return whefs_block_flush( meta->fs, blP );
+            blP = &meta->inode->blocks.list[0];
+            nblP = blP + 1;
+            x = 1;
+            for( ; (x < meta->inode->blocks.count)
+                     && (nblP->id != bl.next_block)
+                     ; ++nblP, ++x )
+            {
+                /* Skip to bl.next_block */
+            }
+            if( (x == meta->inode->blocks.count) || (nblP->id != bl.next_block) )
+            {
+                WHEFS_DBG_ERR("nblP->id=%u, bl.next_block=%u", nblP->id, bl.next_block );
+                WHEFS_DBG_ERR("Internal block cache for inode #%u is not as "
+                              "long as we expect it to be or is missing entries!",
+                              meta->inode->id );
+                return whefs_rc.InternalError;
+            }
+            blP = nblP - 1;
+            meta->inode->blocks.count = x;
+            whefs_block_wipe( meta->fs, nblP, true, true, true );
+            blP->next_block = 0;
+            return whefs_block_flush( meta->fs, blP );
+        }
+        else if( dir > 0 )
+        { /* we grew - fill the new bytes with zeroes */
+            /*
+              Actually... since we zero these when shrinking and during mkfs(),
+              we probably don't need to do this.
+            */
+            enum { bufSize = 1024 * 4 };
+            unsigned char buf[bufSize];
+            const whio_size_t PosAbs = meta->posabs;
+            const whio_size_t orig = meta->inode->data_size;
+            const whio_size_t dest = off;
+            whio_size_t wlen, iorc, wsz;
+            memset( buf, 0, bufSize );
+            dev->api->seek( dev, orig, SEEK_SET );
+            wlen = dest - orig;
+            iorc = 0;
+            wsz = 0;
+            do
+            {
+                wsz = (wlen < bufSize) ? wlen : bufSize;
+                iorc = dev->api->write( dev, buf, wsz );
+                wlen -= iorc;
+            }
+            while( iorc && (iorc == wsz) );
+            iorc = dev->api->seek( dev, PosAbs, SEEK_SET );
+            return (iorc == PosAbs)
+                ? whefs_rc.OK
+                : whefs_rc.IOError;
+        }
+        else
+        {
+            /* cannot happen due to special-case handling of truncate(0), above. */
+            assert( 0 && "This is impossible!" );
+        }
+        WHEFS_DBG("You should never have gotten to this line!");
+        return whefs_rc.InternalError;
     }
-    else if( dir > 0 )
-    { /* we grew - fill the new bytes with zeroes */
-	/*
-	  Actually... since we zero these when shrinking and during mkfs(),
-	   we probably don't need to do this.
-	*/
-	enum { bufSize = 1024 * 4 };
-	unsigned char buf[bufSize];
-	memset( buf, 0, bufSize );
-	const whio_size_t PosAbs = meta->posabs;
-	const whio_size_t orig = meta->inode->data_size;
-	const whio_size_t dest = off;
-	dev->api->seek( dev, orig, SEEK_SET );
-	whio_size_t wlen = dest - orig;
-	whio_size_t iorc = 0;
-        whio_size_t wsz = 0;
-	do
-	{
-            wsz = (wlen < bufSize) ? wlen : bufSize;
-	    iorc = dev->api->write( dev, buf, wsz );
-	    wlen -= iorc;
-	}
-	while( iorc && (iorc == wsz) );
-	iorc = dev->api->seek( dev, PosAbs, SEEK_SET );
-	return (iorc == PosAbs)
-	    ? whefs_rc.OK
-	    : whefs_rc.IOError;
-    }
-    else
-    {
-	/* cannot happen due to special-case handling of truncate(0), above. */
-	assert( 0 && "This is impossible!" );
-    }
-    WHEFS_DBG("You should never have gotten to this line!");
-    return whefs_rc.InternalError;
 }
 
 short whio_dev_inode_iomode( whio_dev * dev )
@@ -841,9 +869,10 @@ static bool whio_dev_inode_close( whio_dev * dev )
 {
     if( dev && ((void const *)&whio_dev_inode_meta_empty == dev->impl.typeID))
     {
+        whio_dev_inode_meta * meta;
 	if( dev->client.dtor ) dev->client.dtor( dev->client.data );
 	dev->client = whio_client_data_empty;
-	whio_dev_inode_meta * meta = (whio_dev_inode_meta*)dev->impl.data;
+	meta = (whio_dev_inode_meta*)dev->impl.data;
 	if( meta )
 	{
             whefs_fs_closer_dev_remove( meta->fs, dev );
@@ -915,21 +944,26 @@ static const whio_dev whio_dev_inode_empty =
 
 whio_dev * whefs_dev_for_inode( whefs_fs * fs, whefs_id_type nid, bool writeMode )
 {
-    //WHEFS_DBG("trying to open dev for inode #%u", nid );
+    /*WHEFS_DBG("trying to open dev for inode #%u", nid ); */
+    whio_dev * dev;
+    whefs_inode * ino;
+    void const * writeKey;
+    int rc;
+    whio_dev_inode_meta * meta;
     if( ! whefs_inode_id_is_valid( fs, nid ) ) return 0;
-    whio_dev * dev = whio_dev_alloc();
+    dev = whio_dev_alloc();
     if( ! dev ) return 0;
-    whefs_inode * ino = 0;
-    void const * writeKey = (writeMode ? dev : 0);
-    int rc = whefs_inode_open( fs, nid, &ino, writeKey );
+    ino = NULL;
+    writeKey = (writeMode ? dev : 0);
+    rc = whefs_inode_open( fs, nid, &ino, writeKey );
     if( rc != whefs_rc.OK )
     {
 	WHEFS_DBG_ERR("whefs_inode_open(fs,[inode #%"WHEFS_ID_TYPE_PFMT"],inode,%d) failed with rc %d!", nid, writeMode, rc );
 	whio_dev_free( dev );
 	return 0;
     }
-    //WHEFS_DBG("Opened inode #%u[%s]", ino->id, ino->name );
-    whio_dev_inode_meta * meta = whio_dev_inode_meta_alloc();
+    /*WHEFS_DBG("Opened inode #%u[%s]", ino->id, ino->name ); */
+    meta = whio_dev_inode_meta_alloc();
     if( ! meta )
     {
 	whefs_inode_close( fs, ino, writeKey );

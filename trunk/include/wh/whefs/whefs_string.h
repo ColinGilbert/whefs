@@ -156,4 +156,4 @@ whefs_string * whefs_string_alloc();
 } /* extern "C" */
 #endif
 
-#endif // WANDERINGHORSE_NET_WHEFS_STRING_H_INCLUDED
+#endif /* WANDERINGHORSE_NET_WHEFS_STRING_H_INCLUDED */
