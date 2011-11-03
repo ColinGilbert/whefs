@@ -1,6 +1,6 @@
 #!/bin/bash
 ########################################################################
-# A quick hack to generate a source dist file for QBoard.
+# A quick hack to generate a source dist file for whefs
 
 VERSION=$(date +%Y%m%d)
 
