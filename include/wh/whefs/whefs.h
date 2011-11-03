@@ -7,9 +7,12 @@
 #include <wh/whio/whio_dev.h>
 #include <wh/whio/whio_stream.h>
 
-//Doxygen won't allow us to have both @page and @mainpage, which is problematic
-//when we re-use headers in different projects which also use doxygen.
-//@page page_whefs_main whefs: Embedded/Virtual Filesystem
+/*
+  Doxygen won't allow us to have both @page and @mainpage, which is problematic
+  when we re-use headers in different projects which also use doxygen.
+
+  @page page_whefs_main whefs: Embedded/Virtual Filesystem
+*/
 /** 
     @mainpage whefs: Embedded/Virtual Filesystem
 
@@ -346,9 +349,10 @@ struct whefs_fs_options
     whefs_magic magic;
     /**
        The size of each data block in the vfs.
+
+       maintenance reminder: this cannot be bigger than whio_size_t.
     */
     whio_size_t block_size;
-    //^^^ maintenance reminder: this cannot be bigger than whio_size_t.
 
     /**
        The number of blocks in the VFS. The implementation
@@ -518,7 +522,7 @@ typedef struct whefs_file whefs_file;
    @see whefs_fdev()
    @see whefs_dev_open()
 */
-whefs_file * whefs_fopen( whefs_fs * restrict fs, char const * name, char const * mode );
+whefs_file * whefs_fopen( whefs_fs * fs, char const * name, char const * mode );
 
 /**
    Similar to whefs_fopen(), but returns a whio_dev instead of a
@@ -560,7 +564,7 @@ whefs_file * whefs_fopen( whefs_fs * restrict fs, char const * name, char const 
    @see whefs_fopen()
    @see whefs_dev_close()
 */
-whio_dev * whefs_dev_open( whefs_fs * restrict fs, char const * name, bool writeMode );
+whio_dev * whefs_dev_open( whefs_fs * fs, char const * name, bool writeMode );
 
 /**
    Similar to whefs_dev_open(), but returns a whio_stream object
@@ -599,7 +603,7 @@ whio_stream * whefs_stream_open( whefs_fs * fs, char const * name, bool writeMod
    @see whefs_dev_open()
    @see whefs_fopen().
 */
-whio_dev * whefs_fdev( whefs_file * restrict f );
+whio_dev * whefs_fdev( whefs_file * f );
 
 
 /**
@@ -613,13 +617,13 @@ whio_dev * whefs_fdev( whefs_file * restrict f );
    EOF. This behaviour is technically device-dependent, but all
    current device implementations work that way.
 */
-whio_size_t whefs_fseek( whefs_file * restrict f, size_t pos, int whence );
+whio_size_t whefs_fseek( whefs_file * f, size_t pos, int whence );
 
 /**
    "Rewinds" the file pointer back to its starting position.
    Returns whefs_rc.OK on success, else some other value.
 */
-int whefs_frewind( whefs_file * restrict f );
+int whefs_frewind( whefs_file * f );
 
 /**
    Returns the current size of the given file, or whefs_rc.SizeTError
@@ -629,7 +633,7 @@ int whefs_frewind( whefs_file * restrict f );
    whio_dev_size(whefs_fdev(f)), but this implementation is different
    in that it respects the constness of f.
 */
-whio_size_t whefs_fsize( whefs_file const * restrict f );
+whio_size_t whefs_fsize( whefs_file const * f );
 
 /**
    Truncates the given pseudofile to the given length.
@@ -644,13 +648,13 @@ whio_size_t whefs_fsize( whefs_file const * restrict f );
    If the file shrinks then all data after the new EOF, but which
    previously belonged to the file, are also zeroed out.
 */
-int whefs_ftrunc( whefs_file * restrict f, size_t newLen );
+int whefs_ftrunc( whefs_file * f, size_t newLen );
 
 /**
    Closes f, freeing its resources. After calling this, f is an invalid object.
    Returns whefs_rc.OK on success, or whefs_rc.ArgError if (!f).
  */
-int whefs_fclose( whefs_file * restrict f );
+int whefs_fclose( whefs_file * f );
 
 /**
    Similar to whefs_fclose() but closes a device opened with whefs_dev_open().
@@ -681,7 +685,7 @@ int whefs_fclose( whefs_file * restrict f );
 
    @see whefs_dev_open()
 */
-int whefs_dev_close( whio_dev * restrict dev );
+int whefs_dev_close( whio_dev * dev );
 
 /**
    Unlinks (deletes) the given file and its associated inode. It there
@@ -706,7 +710,7 @@ int whefs_dev_close( whio_dev * restrict dev );
    won't ever happen. (Unless we store it in a journal of some time,
    but that's a whole other can of worms.)
 */
-int whefs_unlink_filename( whefs_fs * restrict fs, char const * fname );
+int whefs_unlink_filename( whefs_fs * fs, char const * fname );
 
 /**
    Equivalent the fwrite() C function, but works on whefs_file handles.
@@ -724,20 +728,20 @@ int whefs_unlink_filename( whefs_fs * restrict fs, char const * fname );
    @see whefs_file_write()
    @see whefs_file_read()
 */
-size_t whefs_fwrite( whefs_file * restrict f, size_t bsize, size_t n, void const * src );
+size_t whefs_fwrite( whefs_file * f, size_t bsize, size_t n, void const * src );
 
 /**
    Writes a printf-style formatted string to f. Returs the number of
    bytes written. It is, in general case, impossible to know if all
    data was written correctly.
 */
-size_t whefs_fwritev( whefs_file * restrict f, char const * fmt, va_list vargs );
+size_t whefs_fwritev( whefs_file * f, char const * fmt, va_list vargs );
 
 /**
    Equivalent to whefs_fwritev() except that it takes elipsis arguments
    instead of a va_list.
  */
-size_t whefs_fwritef( whefs_file * restrict f, char const * fmt, ... );
+size_t whefs_fwritef( whefs_file * f, char const * fmt, ... );
 
 /**
    Reads n objects, each of bsize bytes, from f and writes them to dest.
@@ -748,7 +752,7 @@ size_t whefs_fwritef( whefs_file * restrict f, char const * fmt, ... );
    @see whefs_file_write()
    @see whefs_file_read()
 */
-size_t whefs_fread( whefs_file * restrict f, size_t bsize, size_t n, void * dest );
+size_t whefs_fread( whefs_file * f, size_t bsize, size_t n, void * dest );
 
 /**
    Similar to whefs_fwrite(), but takes arguments in the same
@@ -759,7 +763,7 @@ size_t whefs_fread( whefs_file * restrict f, size_t bsize, size_t n, void * dest
    @see whefs_fwrite()
    @see whefs_file_read()
 */
-size_t whefs_file_write( whefs_file * restrict f, void const * src, size_t n  );
+size_t whefs_file_write( whefs_file * f, void const * src, size_t n  );
 
 /**
    Similar to whefs_fread(), but takes arguments in the same convention
@@ -770,12 +774,12 @@ size_t whefs_file_write( whefs_file * restrict f, void const * src, size_t n  );
    @see whefs_file_write()
    @see whefs_fread()
 */
-size_t whefs_file_read( whefs_file * restrict f, void * dest, size_t n  );
+size_t whefs_file_read( whefs_file * f, void * dest, size_t n  );
 
 /**
    Returns the vfs associated with the given file, or 0 if !f.
 */
-whefs_fs * whefs_file_fs( whefs_file * restrict f );
+whefs_fs * whefs_file_fs( whefs_file * f );
 
 /**
    Flushes the underlying i/o device. Flushing a whefs_file will also
@@ -789,7 +793,7 @@ whefs_fs * whefs_file_fs( whefs_file * restrict f );
    use across multiple open handles) then this function will also
    write that cache out to disk.
 */
-int whefs_fs_flush( whefs_fs * restrict fs );
+int whefs_fs_flush( whefs_fs * fs );
 
 /**
    Flushes the file's data to disk, if necessary. A read-only
@@ -810,7 +814,7 @@ int whefs_fs_flush( whefs_fs * restrict fs );
    the scenes often enough to not need to use it from client code.
 
 */
-int whefs_fflush( whefs_file * restrict f );
+int whefs_fflush( whefs_file * f );
 
 /**
    Creates a new vfs using the given filename and options. The resulting
@@ -918,7 +922,7 @@ int whefs_openfs( char const * filename, whefs_fs ** tgt, bool writeMode );
    objects or otherwise), in particular if more than one have write
    access, the filesystem will in all likelyhood be quickly corrupted.
 */
-int whefs_openfs_dev( whio_dev * restrict dev, whefs_fs ** tgt, bool takeDev );
+int whefs_openfs_dev( whio_dev * dev, whefs_fs ** tgt, bool takeDev );
 
 /**
    Cleans up all resources associated with fs. After calling this,
@@ -930,23 +934,23 @@ int whefs_openfs_dev( whio_dev * restrict dev, whefs_fs ** tgt, bool takeDev );
    the client must NOT close them again after calling this - doing so
    will lead to stepping on null pointers or otherwise invalid objects.
 */
-void whefs_fs_finalize( whefs_fs * restrict fs );
+void whefs_fs_finalize( whefs_fs * fs );
 
 /**
    Returns the options associated with fs, or 0 if !fs.
 */
-whefs_fs_options const * whefs_fs_options_get( whefs_fs const * restrict fs );
+whefs_fs_options const * whefs_fs_options_get( whefs_fs const * fs );
 
 /**
    A shorter name for whefs_fs_options_get().
 */
-whefs_fs_options const * whefs_fs_opt( whefs_fs const * restrict fs );
+whefs_fs_options const * whefs_fs_opt( whefs_fs const * fs );
 
 /**
    A debug-only function for showing some information about a
    vfs. It's only for my debugging use, not client-side use.
 */
-void whefs_fs_dump_info( whefs_fs const * restrict fs, FILE * out );
+void whefs_fs_dump_info( whefs_fs const * fs, FILE * out );
 
 /**
    Calculates the size of a vfs container based on the given
@@ -984,7 +988,7 @@ whio_size_t whefs_fs_calculate_size( whefs_fs_options const * opt );
    Ownership of outstr is not changed, and this routine does not close
    the stream.
 */
-int whefs_fs_dump_to_FILE( whefs_fs * restrict fs, FILE * outstr );
+int whefs_fs_dump_to_FILE( whefs_fs * fs, FILE * outstr );
 
 /**
    Equivalent to whefs_fs_dump_to_FILE() except that it takes a file name
@@ -992,7 +996,7 @@ int whefs_fs_dump_to_FILE( whefs_fs * restrict fs, FILE * outstr );
    routine, it may return whefs_rc.AccessError if it cannot open the
    file for writing.
 */
-int whefs_fs_dump_to_filename( whefs_fs * restrict fs, char const * filename );
+int whefs_fs_dump_to_filename( whefs_fs * fs, char const * filename );
 
 
 /**
@@ -1055,7 +1059,7 @@ int whefs_fstat( whefs_file const * f, whefs_file_stats * st );
 
    - Some other error = something weird happened.
 */
-int whefs_file_name_set( whefs_file * restrict f, char const * newName );
+int whefs_file_name_set( whefs_file * f, char const * newName );
 
 /**
    Returns the given file's current name, or 0 if !f or on some weird
@@ -1074,7 +1078,7 @@ int whefs_file_name_set( whefs_file * restrict f, char const * newName );
    internal reasons (namely whefs_file::name, which needs
    to go away).
 */
-char const * whefs_file_name_get( whefs_file * restrict f );
+char const * whefs_file_name_get( whefs_file * f );
 
 /**
    Returns a static string with the URL of the whefs home page.
@@ -1158,12 +1162,12 @@ const uint32_t * whefs_get_core_magic();
    Other errors may be returned if something goes wrong during the
    i/o.
 */
-int whefs_fs_append_blocks( whefs_fs * restrict fs, whefs_id_type count );
+int whefs_fs_append_blocks( whefs_fs * fs, whefs_id_type count );
 
 /**
    Returns true if fs was opened in read/write mode, else false.
 */
-bool whefs_fs_is_rw( whefs_fs const * restrict fs );
+bool whefs_fs_is_rw( whefs_fs const * fs );
 
 /**
    Removes the least-visited items from the inode names cache,

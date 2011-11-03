@@ -222,8 +222,6 @@ static int patternCompare(
           return 0;
         }
       }else if( c==matchSet ){
-	  //assert( esc==0 );         /* This is GLOB, not LIKE */
-	  //assert( matchSet<0x80 );  /* '[' is a single-byte character */
 	  if( (esc==0) || (matchSet<0x80) ) return 0;
         while( *zString && patternCompare(&zPattern[-1],zString,pInfo,esc)==0 ){
           SQLITE_SKIP_UTF8(zString);
@@ -253,7 +251,6 @@ static int patternCompare(
       }
     }else if( c==matchSet ){
       int prior_c = 0;
-      //assert( esc==0 );    /* This only occurs for GLOB, not LIKE */
       if( esc == 0 ) return 0;
       seen = 0;
       invert = 0;

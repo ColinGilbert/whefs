@@ -13,8 +13,8 @@ along with the factory functions for creating the device objects.
 #if !defined(_POSIX_C_SOURCE)
 /* required for for fileno(), ftello(), maybe others */
 #  define _POSIX_C_SOURCE 200112L
-//#  define _POSIX_C_SOURCE 199309L
-//#  define _POSIX_C_SOURCE 199506L
+/*#  define _POSIX_C_SOURCE 199309L */
+/*#  define _POSIX_C_SOURCE 199506L */
 #endif
 
 #include <unistd.h> /* ftruncate() */
@@ -25,9 +25,9 @@ along with the factory functions for creating the device objects.
 /* i don't actually know which versions need this, but 4.0.2 does. */
     extern int ftruncate(int , off_t);
     extern int fsync(int fd);
-//#  warning "Kludging ftruncate() and fsync() declartions."
-//#else
-//#  warning "Hoping ftruncate() and fsync() are declared."
+/*#  warning "Kludging ftruncate() and fsync() declartions." */
+/*#else */
+/*#  warning "Hoping ftruncate() and fsync() are declared." */
 #endif
 #endif /* __GNUC__ */
 
@@ -169,8 +169,9 @@ static int whio_dev_FILE_eof( whio_dev * dev )
 
 static whio_size_t whio_dev_FILE_tell( whio_dev * dev )
 {
+    off_t rc;
     WHIO_FILE_DECL(whio_rc.SizeTError);
-    off_t rc = ftello(f->fp);
+    rc = ftello(f->fp);
     return (rc>=0) ? (whio_size_t)rc : whio_rc.SizeTError;
 }
 
@@ -203,6 +204,7 @@ static int whio_dev_FILE_trunc( whio_dev * dev, whio_off_t len )
 
 static int whio_dev_FILE_ioctl( whio_dev * dev, int arg, va_list vargs )
 {
+    int rc = whio_rc.UnsupportedError;
     WHIO_FILE_DECL(whio_rc.ArgError);
     /**
        The standard ioctl() looks like:
@@ -215,7 +217,6 @@ static int whio_dev_FILE_ioctl( whio_dev * dev, int arg, va_list vargs )
        and casting the first ... arg to the proper type (which is
        likely platform-dependent).
     */
-    int rc = whio_rc.UnsupportedError;
     switch( arg )
     {
       case whio_dev_ioctl_FILE_fd:
@@ -237,16 +238,16 @@ static bool whio_dev_FILE_close( whio_dev * dev )
 {
     if( dev )
     {
+        whio_dev_FILE * f;
 	dev->api->flush(dev);
 	if( dev->client.dtor ) dev->client.dtor( dev->client.data );
 	dev->client = whio_client_data_empty;
-	whio_dev_FILE * f = (whio_dev_FILE*)dev->impl.data;
+	f = (whio_dev_FILE*)dev->impl.data;
 	if( f )
 	{
 	    dev->impl.data = 0;
 	    if( f->fp && f->ownsFile ) fclose( f->fp );
 	    f->fileno = 0;
-	    //free( f );
 	    whio_dev_FILE_free( f );
 	    return true;
 	}
@@ -301,20 +302,22 @@ whio_dev * whio_dev_for_FILE( FILE * F, bool takeOwnership )
 #endif
     whio_dev * dev = whio_dev_alloc();
     if( ! dev ) return 0;
-    whio_dev_FILE * meta = whio_dev_FILE_alloc();
-    if( ! meta )
-    {
-	whio_dev_free(dev);
-	return 0;
+    else {
+        whio_dev_FILE * meta = whio_dev_FILE_alloc();
+        if( ! meta )
+        {
+            whio_dev_free(dev);
+            return 0;
+        }
+        *dev = whio_dev_FILE_init;
+        *meta = whio_dev_FILE_meta_init;
+        dev->impl.data = meta;
+        meta->fp = F;
+        meta->ownsFile = takeOwnership;
+        meta->fileno = fileno(F);
+        meta->iomode = -1;
+        return dev;
     }
-    *dev = whio_dev_FILE_init;
-    *meta = whio_dev_FILE_meta_init;
-    dev->impl.data = meta;
-    meta->fp = F;
-    meta->ownsFile = takeOwnership;
-    meta->fileno = fileno(F);
-    meta->iomode = -1;
-    return dev;
 }
 
 #if 0 /* now implemented in whio_dev_fileno.c, but this may be interesting for later. */

@@ -46,7 +46,7 @@ extern "C" {
    @see whio_stream_gunzip()
    @see whio_stream_for_dev()
  */
-int whio_stream_gzip( whio_stream * restrict src, whio_stream * restrict dest, int level );
+int whio_stream_gzip( whio_stream * src, whio_stream * dest, int level );
 
 /**
    Assumes src contains gzipped data and decompresses it to dest.
@@ -67,7 +67,7 @@ int whio_stream_gzip( whio_stream * restrict src, whio_stream * restrict dest, i
    @see whio_stream_gzip()
    @see whio_stream_for_dev()
 */
-int whio_stream_gunzip( whio_stream * restrict src, whio_stream * restrict dest );
+int whio_stream_gunzip( whio_stream * src, whio_stream * dest );
 
 #ifdef __cplusplus
 } /* extern "C" */

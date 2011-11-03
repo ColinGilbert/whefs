@@ -8,12 +8,18 @@
 
 #include "whefs_details.c"
 #include "whefs_cache.h"
-#include <stdlib.h> // free()
-#include <string.h> // memset()
+#include <stdlib.h> /* free() */
+#include <string.h> /* memset() */
 #include <assert.h>
 
 int whefs_inode_hash_cache_load( whefs_fs * fs )
 {
+    whefs_string name = whefs_string_empty;
+    enum { bufSize = WHEFS_MAX_FILENAME_LENGTH+1 };
+    unsigned char buf[bufSize];
+    int rc = 0;
+    whefs_id_type i;
+    whefs_id_type count = 0;
     if( ! WHEFS_FS_HASH_CACHE_IS_ENABLED(fs) ) return whefs_rc.OK;
     if( ! fs->cache.hashes )
     {
@@ -27,19 +33,13 @@ int whefs_inode_hash_cache_load( whefs_fs * fs )
         fs->cache.hashes->maxAlloc = fs->options.inode_count;
     }
 
-    //whefs_hashid h = whefs_hashid_empty;
-    whefs_string name = whefs_string_empty;
-    enum { bufSize = WHEFS_MAX_FILENAME_LENGTH+1 };
-    unsigned char buf[bufSize];
+    /*whefs_hashid h = whefs_hashid_empty; */
     memset( buf, 0, bufSize );
-    // ensure that whefs_inode_name_get() won't malloc():
+    /* ensure that whefs_inode_name_get() won't malloc(): */
     name.string = (char *)buf;
     name.alloced = bufSize;
     name.length = 0;
-    int rc = 0;
-    whefs_id_type i;
-    whefs_id_type count = 0;
-    fs->cache.hashes->skipAutoSort = true; // optimization to avoid extra sorting via whefs_inode_name_get()
+    fs->cache.hashes->skipAutoSort = true; /* optimization to avoid extra sorting via whefs_inode_name_get() */
     for( i = fs->options.inode_count; i >=1 ; --i )
     {
         /**
@@ -61,8 +61,8 @@ int whefs_inode_hash_cache_load( whefs_fs * fs )
                 continue;
             }
 	}
-#endif // WHEFS_CONFIG_ENABLE_BITSET_CACHE
-        rc = whefs_inode_name_get( fs, i, &name ); // this caches the name hash
+#endif /* WHEFS_CONFIG_ENABLE_BITSET_CACHE */
+        rc = whefs_inode_name_get( fs, i, &name ); /* this caches the name hash */
         assert( (name.string == (char *)buf) && "Internal memory management foo-foo." );
         if( whefs_rc.OK != rc ) break;
         ++count;
@@ -110,11 +110,14 @@ whefs_id_type whefs_inode_hash_cache_search_id(whefs_fs * fs, char const * name 
 {
     if( ! WHEFS_FS_HASH_CACHE_IS_ENABLED(fs) ) return 0;
     if( ! fs->cache.hashes ) return 0;
-    whefs_id_type n = whefs_inode_hash_cache_search_ndx( fs, name );
-    WHEFS_DBG_CACHE("Cache %s for name [%s].",((n==whefs_rc.IDTypeEnd) ? "miss" : "hit"), name);
-    return ( n == whefs_rc.IDTypeEnd )
-        ? 0
-        : fs->cache.hashes->list[n].id;
+    else
+    {
+        whefs_id_type n = whefs_inode_hash_cache_search_ndx( fs, name );
+        WHEFS_DBG_CACHE("Cache %s for name [%s].",((n==whefs_rc.IDTypeEnd) ? "miss" : "hit"), name);
+        return ( n == whefs_rc.IDTypeEnd )
+            ? 0
+            : fs->cache.hashes->list[n].id;
+    }
 }
 
 
@@ -131,22 +134,27 @@ void whefs_inode_hash_cache_sort(whefs_fs * fs )
 void whefs_inode_name_uncache(whefs_fs * fs, char const * name )
 {
     if( !fs->cache.hashes || ! name || !*name  ) return;
-    const whefs_id_type ndx = whefs_inode_hash_cache_search_ndx( fs, name );
-    if( whefs_rc.IDTypeEnd != ndx )
-    {
-        fs->cache.hashes->list[ndx] = whefs_hashid_empty;
-        fs->cache.hashes->isSorted = false;
+    else {
+        const whefs_id_type ndx = whefs_inode_hash_cache_search_ndx( fs, name );
+        if( whefs_rc.IDTypeEnd != ndx )
+        {
+            fs->cache.hashes->list[ndx] = whefs_hashid_empty;
+            fs->cache.hashes->isSorted = false;
+        }
     }
 }
 
 int whefs_inode_hash_cache( whefs_fs * fs, whefs_id_type id, char const * name )
 {
+    int rc = whefs_rc.OK;
+    whefs_hashval_type h;
+    whefs_hashid H;
+    whefs_id_type ndx;
     if( ! WHEFS_FS_HASH_CACHE_IS_ENABLED(fs) )
     {
         return whefs_rc.OK;
     }
     if( ! fs || !name || !*name ) return whefs_rc.ArgError;
-    int rc = whefs_rc.OK;
     if( ! fs->cache.hashes )
     {
         const whefs_id_type max = fs->options.inode_count;
@@ -159,9 +167,9 @@ int whefs_inode_hash_cache( whefs_fs * fs, whefs_id_type id, char const * name )
         }
     }
     if( whefs_rc.OK != rc ) return rc;
-    whefs_hashval_type h = fs->cache.hashfunc( name );
+    h = fs->cache.hashfunc( name );
 #if 1
-    const whefs_id_type ndx = whefs_hashid_list_index_of( fs->cache.hashes, h );
+    ndx = whefs_hashid_list_index_of( fs->cache.hashes, h );
     if( whefs_rc.IDTypeEnd != ndx )
     {
         if(0) WHEFS_DBG("CHECKING: name cache count[%"WHEFS_ID_TYPE_PFMT"], alloced=[%"WHEFS_ID_TYPE_PFMT"], hash [%"WHEFS_HASHVAL_TYPE_PFMT"] for name [%s], ndx=[%"WHEFS_ID_TYPE_PFMT"]",
@@ -178,7 +186,7 @@ int whefs_inode_hash_cache( whefs_fs * fs, whefs_id_type id, char const * name )
     WHEFS_DBG_CACHE("ADDING: name cache count[%"WHEFS_ID_TYPE_PFMT"], alloced=[%"WHEFS_ID_TYPE_PFMT"], hash [%"WHEFS_HASHVAL_TYPE_PFMT"] for name [%s]",
                           fs->cache.hashes->count, fs->cache.hashes->alloced, h, name );
 #endif
-    whefs_hashid H = whefs_hashid_empty;
+    H = whefs_hashid_empty;
     H.hash = h;
     H.id = id;
     rc = whefs_hashid_list_add( fs->cache.hashes, &H );

@@ -9,7 +9,7 @@
   Hashing-related types and routines for whefs.
 */
 
-#include <wh/whefs/whefs_config.h> // whefs_id_type, stdint types
+#include <wh/whefs/whefs_config.h> /* whefs_id_type, stdint types */
 
 #ifdef __cplusplus
 extern "C" {
@@ -176,7 +176,7 @@ void whefs_hashid_list_free( whefs_hashid_list * tgt );
    The current usage of the whefs_hashid_list class does not account
    for duplicate hash keys, so ensure that you don't add dupes.
 */
-int whefs_hashid_list_add( whefs_hashid_list * tgt, whefs_hashid const * restrict val );
+int whefs_hashid_list_add( whefs_hashid_list * tgt, whefs_hashid const * val );
 
 /**
    The item at the given index is zeroed out, which is the internal
@@ -295,4 +295,4 @@ whefs_id_type whefs_hashid_list_search( whefs_hashid_list const * src,
 } /* extern "C"*/
 #endif
 
-#endif // WANDERINGHORSE_NET_WHEFS_HASH_H_INCLUDED
+#endif /* WANDERINGHORSE_NET_WHEFS_HASH_H_INCLUDED */

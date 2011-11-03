@@ -54,13 +54,13 @@ WHEFS_DBG_F_mymask = 0x0f000000,
 WHEFS_DBG_F_LOCK = WHEFS_DBG_F_mymask & 0x01000000,
 WHEFS_DBG_F_CACHE = WHEFS_DBG_F_mymask & 0x02000000,
 WHEFS_DBG_F_DEFAULTS_CLIENT = WHEFS_DBG_F_WARNING | WHEFS_DBG_F_ERROR | WHDBG_NYI,
-WHEFS_DBG_F_DEFAULTS_HACKER = WHEFS_DBG_F_DEFAULTS_CLIENT | WHDBG_FIXME | WHEFS_DBG_F_FYI | WHDBG_VERBOSE, // | WHEFS_DBG_F_CACHE, // | WHEFS_DBG_F_LOCK,
+WHEFS_DBG_F_DEFAULTS_HACKER = WHEFS_DBG_F_DEFAULTS_CLIENT | WHDBG_FIXME | WHEFS_DBG_F_FYI | WHDBG_VERBOSE, /* | WHEFS_DBG_F_CACHE | WHEFS_DBG_F_LOCK, */
 
 #if defined(NDEBUG)
 WHEFS_DBG_F_DEFAULT = 0 /* they'll be if(0)'d out in this case, anyway. */
 #else
 WHEFS_DBG_F_DEFAULT = WHEFS_DBG_F_DEFAULTS_CLIENT
-//WHEFS_DBG_F_DEFAULTS_HACKER
+/*WHEFS_DBG_F_DEFAULTS_HACKER */
 #endif
 };
 
@@ -116,7 +116,7 @@ WHEFS_FLAG_FS_EnableHashCache = 0x20,
 */
 WHEFS_FLAG_FS_NoAutoCloseFiles = 0x40,
 
-//WHEFS_FLAG_FS_AutoExpand = 0x0080,
+/*WHEFS_FLAG_FS_AutoExpand = 0x0080, */
 /**
    Mark error state for whefs_file objects.
 */
@@ -488,7 +488,7 @@ extern const whefs_fs whefs_fs_empty;
 
 #define WHEFS_FS_ISRO(FS) ((FS) && ((FS)->flags & WHEFS_FLAG_Read))
 #define WHEFS_FS_ISRW(FS) ((FS) && ((FS)->flags & WHEFS_FLAG_Write))
-//#define WHEFS_FS_ISERR(F) ((F) && ((F)->err != WHEFS_ERR_None))
+/*#define WHEFS_FS_ISERR(F) ((F) && ((F)->err != WHEFS_ERR_None)) */
 
 /**
    Equivalent to calling whio_dev::read() on fs's underlying i/o
@@ -572,7 +572,7 @@ int whefs_block_flush( whefs_fs * fs, whefs_block const * bl );
    otherwise it is not marked (in which case a future call to this
    routine may return that same block).
 */
-int whefs_block_next_free( whefs_fs * restrict fs, whefs_block * restrict tgt, bool markUsed );
+int whefs_block_next_free( whefs_fs * fs, whefs_block * tgt, bool markUsed );
 
 /**
    Zeroes out parts of the given data block. Unlike most routines,
@@ -678,38 +678,6 @@ bool whefs_block_id_is_valid( whefs_fs const * fs, whefs_id_type blockID );
    !bl.
 */
 bool whefs_block_is_valid( whefs_fs const * fs, whefs_block const * bl );
-#endif
-
-
-#if 0 // unused code
-/**
-   Appends a block to a chain of blocks.
-
-   If bl is a valid block:
-
-   - Find the last block in bl's chain. Call that B.
-   - Append a new block after B. Call that B2.
-   - Update B to point to B2.
-   - Flush blocks to disk
-   - Assign tgt to B2.
-
-   If bl is not null and bl->next_block is not 0 then
-   whefs_rc.ArgError is returned to avoid orphaning bl's current next
-   block.
-
-   If bl is not a valid block (is null or id is out of range)
-
-   - Find next free block and mark it as used.
-   - Flush block to disk.
-   - Assign tgt to that block.
-
-   On success returns whefs_rc.OK, else some other value is returned
-   and tgt is left in an undefined state.
-
-   It is theoretically OK for bl and tgt to be the same underlying
-   object.
-*/
-int whefs_block_append( whefs_fs * fs, whefs_block const * bl, whefs_block * tgt );
 #endif
 
 /**
@@ -902,7 +870,7 @@ size_t whefs_fs_sizeof_name( whefs_fs_options const * opt );
 
     On success, fs->err is not modified.
 */
-int whefs_fs_hints_write( whefs_fs * restrict fs );
+int whefs_fs_hints_write( whefs_fs * fs );
 /**
    Populates fs->hints from the position fs->offets[WHEFS_OFF_HINTS]
    in the efs.
@@ -910,7 +878,7 @@ int whefs_fs_hints_write( whefs_fs * restrict fs );
    On error, fs->err is modified and that value is returned. If this
    routine fails then an i/o or consistency error was encountered.
 */
-int whefs_fs_hints_read( whefs_fs * restrict fs );
+int whefs_fs_hints_read( whefs_fs * fs );
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

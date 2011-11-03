@@ -243,28 +243,10 @@ bool whio_stream_getchar( whio_stream * stream, char * tgt );
 
    The data is copied in chunks of some unspecified static size (hint: a few kb).
 */
-int whio_stream_copy( whio_stream * restrict istr, whio_stream * restrict ostr );
-
-
-/**
-   Consumes stream to the first \\n character.  It appends that data, minus the newline,
-   to dest. Returns the number of characters appended to dest, or 0 at EOF or on a read
-   error.
-
-   Note that the stream is consumed and the trailing newline character
-   (if any) is effectively lost.
-*/
-//whio_size_t whio_stream_readln_membuf(whio_stream * stream, struct memblob * dest );
-
-/**
-   Functionally identical to whio_stream_readln_membuf() except that the
-   line is returned as a null-termined string which the caller must
-   clean up using free(). On error or EOF 0 is returned.
-*/
-//char * whio_stream_readln(whio_stream * stream);
+int whio_stream_copy( whio_stream * istr, whio_stream * ostr );
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif // WANDERINGHORSE_NET_WHIO_STREAM_H_INCLUDED
+#endif /* WANDERINGHORSE_NET_WHIO_STREAM_H_INCLUDED*/

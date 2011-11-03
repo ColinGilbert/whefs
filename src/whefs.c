@@ -4,7 +4,7 @@
   License: Public Domain
 */
 
-#include <wh/whefs/whefs_config.h> // MUST COME FIRST b/c of __STDC_FORMAT_MACROS.
+#include <wh/whefs/whefs_config.h> /* MUST COME FIRST b/c of __STDC_FORMAT_MACROS. */
 
 #include <stdlib.h>
 #include <assert.h>
@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include <wh/whefs/whefs.h>
+#include <wh/whprintf.h>
 
 #if defined(__cplusplus)
 extern "C" {
@@ -50,17 +51,46 @@ const uint32_t * whefs_get_core_magic()
     return whefs_fs_magic_bytes;
 }
 
+typedef struct WhprintfToString {
+    char * dest;
+    size_t pos;
+    size_t maxLen;
+} WhprintfToString;
+
+static long whprintf_appender_sprintf( void * arg, char const * data, long n )
+{
+    WhprintfToString * state = (WhprintfToString*)arg;
+    long rc = 0;
+    for(; rc < n; ++rc){
+        state->dest[state->pos++] = *(data++);
+    }
+    return rc;
+}
+
+static long whefs_sprintf( char * dest, char const * fmt, ... ){
+    WhprintfToString state;
+    va_list vargs;
+    long rc;
+    state.dest = dest;
+    state.pos = 0;
+    state.maxLen = 0 /*FIXME: implement this*/;
+    va_start(vargs,fmt);
+    rc = whprintf( whprintf_appender_sprintf, &state, fmt, vargs );
+    va_end(vargs);
+    return rc;
+}
+
 char const * whefs_data_format_version_string()
 {
     enum { bufLen = 60 };
     static char buf[bufLen] = {0,};
     if( ! *buf )
     {
-	snprintf( buf, bufLen, "%4u-%02u-%02u with %02u-bit IDs",
-		  whefs_fs_magic_bytes[0],
-		  whefs_fs_magic_bytes[1],
-		  whefs_fs_magic_bytes[2],
-		  whefs_fs_magic_bytes[3] );
+	whefs_sprintf( buf, "%4u-%02u-%02u with %02u-bit IDs",
+                       whefs_fs_magic_bytes[0],
+                       whefs_fs_magic_bytes[1],
+                       whefs_fs_magic_bytes[2],
+                       whefs_fs_magic_bytes[3] );
     }
     return buf;
 }
@@ -86,7 +116,7 @@ int whefs_id_link( whefs_id_links * tgt, whefs_id_type const * parent, whefs_id_
 }
 #endif
 
-#include "whefs_details.c" // only for debug stuff :(
+#include "whefs_details.c" /* only for debug stuff :( */
 void whefs_setup_debug( FILE * ostream, unsigned int flags )
 {
     whdbg_set_stream( ostream );
@@ -101,7 +131,7 @@ typedef struct
     char const * descr;
 } whefs_dbg_flag_info;
 static const whefs_dbg_flag_info whefs_dbg_flags[] =
-    {// keep sorted on the letter field.
+    {/* keep sorted on the letter field. */
     {'a',WHDBG_ALWAYS,"All messages."},
     {'c',WHEFS_DBG_F_CACHE,"Caching messages."},
     {'d',WHEFS_DBG_F_DEFAULT,"Default log level."},

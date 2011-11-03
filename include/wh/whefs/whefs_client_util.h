@@ -216,4 +216,4 @@ int whefs_fs_entry_foreach( whefs_fs * fs, whefs_fs_entry_foreach_f forEach, voi
 } /* extern "C" */
 #endif
 
-#endif // WANDERINGHORSE_NET_WHEFS_CLIENT_UTIL_INCLUDED
+#endif /* WANDERINGHORSE_NET_WHEFS_CLIENT_UTIL_INCLUDED */

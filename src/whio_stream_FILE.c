@@ -69,57 +69,67 @@ static const whio_stream_FILEINFO whio_stream_FILEINFO_init =
 whio_stream * whio_stream_for_FILE( FILE * fp, bool takeOwnership )
 {
     if( ! fp ) return 0;
-    whio_stream * st = (whio_stream *) malloc( sizeof(whio_stream) );
-    if( ! st ) return 0;
-    whio_stream_FILEINFO * meta = (whio_stream_FILEINFO*) malloc( sizeof(whio_stream_FILEINFO) );
-    if( ! meta )
-    {
-	free( st );
-	return 0;
+    else {
+        whio_stream * st = (whio_stream *) malloc( sizeof(whio_stream) );
+        if( ! st ) return 0;
+        else {
+            whio_stream_FILEINFO * meta = (whio_stream_FILEINFO*) malloc( sizeof(whio_stream_FILEINFO) );
+            if( ! meta )
+            {
+                free( st );
+                return 0;
+            }
+            *st = whio_stream_FILE_init;
+            st->impl.data = meta;
+            *meta = whio_stream_FILEINFO_init;
+            meta->ownsFile = takeOwnership;
+            meta->fp = fp;
+            meta->fileno = fileno(fp);
+            meta->iomode = -1;
+            return st;
+        }
     }
-    *st = whio_stream_FILE_init;
-    st->impl.data = meta;
-    *meta = whio_stream_FILEINFO_init;
-    meta->ownsFile = takeOwnership;
-    meta->fp = fp;
-    meta->fileno = fileno(fp);
-    meta->iomode = -1;
-    return st;
 }
 
 whio_stream * whio_stream_for_filename( char const * src, char const * mode )
 {
     if( ! src || ! mode ) return 0;
-    FILE * fp = fopen( src, mode );
-    if( ! fp ) return 0;
-    whio_stream * st = whio_stream_for_FILE(fp, true);
-    if( ! st )
-    {
-	fclose(fp);
+    else {
+        FILE * fp = fopen( src, mode );
+        if( ! fp ) return 0;
+        else {
+            whio_stream * st = whio_stream_for_FILE(fp, true);
+            if( ! st )
+            {
+                fclose(fp);
+            }
+            else
+            {
+                whio_stream_FILEINFO * meta = (whio_stream_FILEINFO*)st->impl.data;
+                meta->iomode = whio_mode_to_iomode( mode );
+            }
+            return st;
+        }
     }
-    else
-    {
-        whio_stream_FILEINFO * meta = (whio_stream_FILEINFO*)st->impl.data;
-        meta->iomode = whio_mode_to_iomode( mode );
-    }
-    return st;
 }
 
 whio_stream * whio_stream_for_fileno( int fileno, bool writeMode )
 {
     FILE * fp = fdopen( fileno, writeMode ? "wb" : "r+b" );
     if( ! fp ) return 0;
-    whio_stream * st = whio_stream_for_FILE(fp, true);
-    if( ! st )
-    {
-	fclose(fp);
+    else {
+        whio_stream * st = whio_stream_for_FILE(fp, true);
+        if( ! st )
+        {
+            fclose(fp);
+        }
+        else
+        {
+            whio_stream_FILEINFO * meta = (whio_stream_FILEINFO*)st->impl.data;
+            meta->iomode = writeMode ? 1 : 0;
+        }
+        return st;
     }
-    else
-    {
-        whio_stream_FILEINFO * meta = (whio_stream_FILEINFO*)st->impl.data;
-        meta->iomode = writeMode ? 1 : 0;
-    }
-    return st;
 }
 
 /**

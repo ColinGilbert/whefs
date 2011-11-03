@@ -3,8 +3,8 @@
 */
 #include <wh/whefs/whefs.h>
 #include <wh/whefs/whefs_string.h>
-#include <stdlib.h> // malloc()/free()
-#include <string.h> // memset()
+#include <stdlib.h> /* malloc()/free() */
+#include <string.h> /* memset() */
 
 const whefs_string whefs_string_empty = whefs_string_empty_m;
 
@@ -18,8 +18,10 @@ whefs_string * whefs_string_alloc()
 
 int whefs_string_copy_cstring( whefs_string * tgt, char const * str )
 {
-    if( ! str || !tgt ) return whefs_rc.ArgError;
     size_t slen = 0;
+    whefs_string_size_t alen;
+    char * xp;
+    if( ! str || !tgt ) return whefs_rc.ArgError;
     {
 	char const * x = str;
 	for( ; x && *x; ++x, ++slen ) {}
@@ -29,7 +31,7 @@ int whefs_string_copy_cstring( whefs_string * tgt, char const * str )
         tgt->length = 0;
         if( tgt->string /* && tgt->alloced */)
         {
-            //tgt->string[0] = 0;
+            /*tgt->string[0] = 0; */
             memset( tgt->string, 0, tgt->alloced );
         }
         return 0;
@@ -42,15 +44,15 @@ int whefs_string_copy_cstring( whefs_string * tgt, char const * str )
 	return whefs_rc.OK;
     }
     if( (slen+1) >= UINT16_MAX ) return whefs_rc.RangeError;
-    const whefs_string_size_t alen =
-        //slen + 1
-        slen * 1.5 // FIXME: cap at WHEFS_MAX_FILENAME_LENGTH
+    alen =
+        /*slen + 1 */
+        slen * 1.5 /* FIXME: cap at WHEFS_MAX_FILENAME_LENGTH */
         ;
     if( alen < slen )
     { /* overflow! */
 	return whefs_rc.RangeError;
     }
-    char * xp = (char *) realloc( tgt->string, alen );
+    xp = (char *) realloc( tgt->string, alen );
     if( ! xp ) return whefs_rc.AllocError;
     tgt->string = xp;
     tgt->alloced = alen;

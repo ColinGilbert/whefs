@@ -11,7 +11,6 @@
 
 #include <stdint.h> /* uintXX_t */
 #include <inttypes.h> /* PRIuXX macros */
-//#include <unistd.h> /* ONLY for off_t. We need a better way to do this. */
 #include <sys/types.h> /* off_t on Linux */
 
 #ifndef __cplusplus
@@ -53,7 +52,7 @@ extern "C" {
   all debuggering output is disabled.
 */
 #if WHIO_DEBUG_ENABLED
-#  include <stdio.h> // printf()
+#  include <stdio.h>
 #  define WHIO_DEBUG if(WHIO_DEBUG_ENABLED) printf("WHIO_DEBUG: %s:%d:%s():\n",__FILE__,__LINE__,__func__); if(WHIO_DEBUG_ENABLED) printf
 #else
     extern void whio_noop_printf(char const * fmt, ...);

@@ -73,7 +73,7 @@ void whdbgv( unsigned int condition,
 	fflush(whdbg_stream);
 #undef VAPARGS
     }
-#endif // WHDBG_CONFIG_ENABLE
+#endif /* WHDBG_CONFIG_ENABLE */
 }
 
 void whdbg(  unsigned int condition,

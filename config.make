@@ -20,7 +20,7 @@ ENABLE_DEBUG ?= $(DEBUG)
 # The code is C99. How that's enabled/forced is compiler-dependent.
 # gcc needs -std=c99. Other compilers need other args. SunStudio:
 # -xc99=all, tcc: none
-GCC_CFLAGS := -std=c99 -pedantic -Wall -Wimplicit-function-declaration -fPIC -Werror
+GCC_CFLAGS := -std=c89 -pedantic -Wall -Wimplicit-function-declaration -fPIC -Werror
 CXXFLAGS += -fPIC
 ifeq (cc,$(CC))# assume this is gcc (or compatible)
   CFLAGS += $(GCC_CFLAGS)

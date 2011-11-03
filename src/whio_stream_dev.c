@@ -125,20 +125,24 @@ void whio_stream_dev_finalize( whio_stream * self )
 whio_stream * whio_stream_for_dev( whio_dev * dev, bool takeOwnership )
 {
     if( ! dev ) return 0;
-    whio_stream * str = (whio_stream *) malloc( sizeof(whio_stream) );
-    if( ! str ) return 0;
-    whio_stream_dev_meta * meta = (whio_stream_dev_meta *) malloc( sizeof(whio_stream_dev_meta) );
-    if( ! meta )
-    {
-	free(str);
-	return 0;
+    else {
+        whio_stream * str = (whio_stream *) malloc( sizeof(whio_stream) );
+        if( ! str ) return 0;
+        else {
+            whio_stream_dev_meta * meta = (whio_stream_dev_meta *) malloc( sizeof(whio_stream_dev_meta) );
+            if( ! meta )
+            {
+                free(str);
+                return 0;
+            }
+            *str = whio_stream_dev;
+            *meta = whio_stream_dev_meta_empty;
+            str->impl.data = meta;
+            meta->dev = dev;
+            meta->ownsDev = takeOwnership;
+            return str;
+        }
     }
-    *str = whio_stream_dev;
-    *meta = whio_stream_dev_meta_empty;
-    str->impl.data = meta;
-    meta->dev = dev;
-    meta->ownsDev = takeOwnership;
-    return str;
 }
 
 

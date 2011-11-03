@@ -23,7 +23,7 @@ const whio_rc_t whio_rc =
     -4, /* AllocError */
     -5, /* InternalError */
     -6, /* RangeError */
-    // -7 can be reused
+    /* -7 can be reused */
     -8, /* AccessError */
     -9, /* ConsistencyError */
     -10, /* NYIError */

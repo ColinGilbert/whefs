@@ -92,13 +92,13 @@ void whefs_fs_closer_list_free( whefs_fs_closer_list * obj )
 
 int whefs_fs_closer_list_close( whefs_fs_closer_list * head, bool right )
 {
-    if( ! head ) return whefs_rc.ArgError;
     int rc = whefs_rc.OK;
     whefs_fs_closer_list * x = head;
+    if( ! head ) return whefs_rc.ArgError;
     for( ; x; head = x )
     {
         x = head->next;
-        // We unlink head before closing b/c the close routines may update the list indirectly.
+        /* We unlink head before closing b/c the close routines may update the list indirectly. */
         whefs_fs_closer_list_unlink(head);
         switch( head->type )
         {
@@ -131,12 +131,15 @@ int whefs_fs_closer_list_close( whefs_fs_closer_list * head, bool right )
 */
 static int whefs_fs_closer_remove( whefs_fs * fs, char type, void const * obj )
 {
+    whefs_fs_closer_list * li;
+    int rc;
+    bool foundOne;
     if( ! fs || ! obj ) return whefs_rc.ArgError;
-    whefs_fs_closer_list * li = fs->closers;
+    li = fs->closers;
     if( ! li ) return whefs_rc.RangeError;
     while( li->prev ) li = li->prev;
-    int rc = whefs_rc.OK;
-    bool foundOne = false;
+    rc = whefs_rc.OK;
+    foundOne = false;
     for( ; li ; li = li->next )
     {
         if( li->type != type ) continue;
@@ -180,8 +183,9 @@ static int whefs_fs_closer_remove( whefs_fs * fs, char type, void const * obj )
 */
 static whefs_fs_closer_list * whefs_fs_closer_add( whefs_fs * fs )
 {
+    whefs_fs_closer_list * li;
     if( ! fs ) return NULL;
-    whefs_fs_closer_list * li = whefs_fs_closer_list_alloc();
+    li = whefs_fs_closer_list_alloc();
     if( ! li ) return NULL;
     if( ! fs->closers )
     {
@@ -199,8 +203,9 @@ static whefs_fs_closer_list * whefs_fs_closer_add( whefs_fs * fs )
 
 int whefs_fs_closer_file_add( whefs_fs * fs, whefs_file * f )
 {
+    whefs_fs_closer_list * li;
     if( ! fs || ! f ) return whefs_rc.ArgError;
-    whefs_fs_closer_list * li = fs->closers;
+    li = fs->closers;
     if( li )
     { /** If we find f->dev in the list then we
           promote the entry to type WHEFS_CLOSER_TYPE_FILE.
@@ -217,7 +222,7 @@ int whefs_fs_closer_file_add( whefs_fs * fs, whefs_file * f )
     }
     else
     {
-        whefs_fs_closer_list * li = whefs_fs_closer_add(fs);
+        li = whefs_fs_closer_add(fs);
         if( ! li ) return whefs_rc.AllocError /* that's a guess */;
         li->type = WHEFS_CLOSER_TYPE_FILE;
         li->item.file = f;
@@ -232,8 +237,9 @@ int whefs_fs_closer_file_remove( whefs_fs * fs, whefs_file const * f )
 
 int whefs_fs_closer_dev_add( whefs_fs * fs, whio_dev * d )
 {
+    whefs_fs_closer_list * li;
     if( ! fs || ! d ) return whefs_rc.ArgError;
-    whefs_fs_closer_list * li = whefs_fs_closer_add(fs);
+    li = whefs_fs_closer_add(fs);
     if( ! li ) return whefs_rc.AllocError /* that's a guess */;
     li->type = WHEFS_CLOSER_TYPE_DEV;
     li->item.dev = d;
@@ -247,8 +253,9 @@ int whefs_fs_closer_dev_remove( whefs_fs * fs, whio_dev const * d )
 
 int whefs_fs_closer_stream_add( whefs_fs * fs, whio_stream * s, whio_dev const * d )
 {
+    whefs_fs_closer_list * li;
     if( ! fs || ! s || !d ) return whefs_rc.ArgError;
-    whefs_fs_closer_list * li = fs->closers;
+    li = fs->closers;
     if( li )
     { /** If we find f->dev in the list then we
           promote the entry to type WHEFS_CLOSER_TYPE_STREAM.
@@ -266,7 +273,7 @@ int whefs_fs_closer_stream_add( whefs_fs * fs, whio_stream * s, whio_dev const *
     }
     else
     { /* re-evaluate this. Is this sane? */
-        whefs_fs_closer_list * li = whefs_fs_closer_add(fs);
+        li = whefs_fs_closer_add(fs);
         if( ! li ) return whefs_rc.AllocError /* that's a guess */;
         li->type = WHEFS_CLOSER_TYPE_STREAM;
         li->item.stream = s;
