@@ -1,7 +1,7 @@
 #if !defined(WANDERINGHORSE_NET_WHIO_ENCODE_H_INCLUDED)
 #define WANDERINGHORSE_NET_WHIO_ENCODE_H_INCLUDED 1
 /*
-  Author: Stephan Beal (http://wanderinghorse.net/home/stephan/
+  Author: Stephan Beal (http://wanderinghorse.net/home/stephan/)
 
   License: Public Domain
 */
@@ -430,7 +430,7 @@ size_t whio_dev_decode_uint32_array( whio_dev * dev, size_t n, uint32_t * list )
    strlen(s). Zero is also legal string length.
 
    Returns the number of bytes written, which will be (n +
-   whio_dev_size_cstring) on success, 0 if !dev or !s.
+   whio_sizeof_encoded_cstring) on success, 0 if !dev or !s.
 
    @see whio_dev_decode_cstring()
 */
