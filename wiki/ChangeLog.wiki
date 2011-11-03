@@ -6,7 +6,7 @@ This is the informal change list for whefs releases. Newest items are at the top
 ----
 
 *2 Nov 2011:*
-  * Fixed two `whio_size_t` encoding/decoding calls which were incorrectly using `uint32_t` en/decoding. See issue #30 for details. Warning: this fix required a minor file format incompatibility for builds where `WHEFS_ID_TYPE_BITS=16` (i _think_ it's compatible with old FS containers built with `WHEFS_ID_TYPE_BITS=32`, but i didn't test it).
+  * Fixed two `whio_size_t` encoding/decoding calls which were incorrectly using `uint32_t` (as opposed to `whio_size_t`) en/decoding. See issue #30 for details. Warning: this fix required a minor file format incompatibility for builds where `WHEFS_SIZE_T_BITS=16` (it "should" be identical to/compatible with old FS containers built with `WHEFS_SIZE_T_BITS=32`).
 
 *12 Oct 2011:*
   * Fixed issue #28, a misbehaviour the p-file truncation operation which caused it to zero-out data before the truncation point. Thanks once again to mikimotoh for the detailed bug report and test code.
