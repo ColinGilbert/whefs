@@ -1,0 +1,30 @@
+
+
+# Overview of whefs' I/O Model #
+
+whefs is, at its heart, all about input and output. It deals with i/o at two distinctly different levels:
+
+  * The back-end storage, typically a disk.
+  * The public interface for manipulating pseudofiles.
+
+A filesystem inherently requires random-access storage, so it is clear that any i/o model the library uses must support random read/write access. My initial plans for pseudofile i/o only included sequential access, as i considered the problem of solving random-access i/o for them "too difficult." It turned out that the solution to the problem of how to deal with the two i/o domains was simply to realize that they were not two separate problems, but a single problem formulated in different contexts. Once that was recognized, the solution fell right into place.
+
+The initial prototypes of whefs supported only FILE handles as back-end storage. In practice, most whefs use will probably use files for storage, but i wasn't happy with this limitation. As part of [the c11n project](http://s11n.net/c11n/) i had written some i/o stream classes for sequential data access, and had implemented FILE- and memory-based streams on top of them. It was clear that it would be easy to expand the sequential streams interface for random access, so i forked some code out of c11n and created [whio](http://fossil.wanderinghorse.net/repos/whio/), a generic i/o device interface library. There's nothing particularly alarming or clever about whio - it defines an interface class, named whio\_dev, which specifies a handful of low-level i/o-related functions and their expected behaviours (all modelled off of conventional C i/o APIs). On top of that interface it provides a few different implementations (for files and two types of in-memory buffers). The functions defined by the interface are all canon and will be immediately familiar to anyone who's done any sort of i/o using the classical C APIs.
+
+The whio\_dev interface is declared and documented in [whio\_dev.h](http://code.google.com/p/whefs/source/browse/trunk/include/wh/whio/whio_dev.h) and the factory functions for creating instances of specific storage handlers can be found in [whio\_devs.h](http://code.google.com/p/whefs/source/browse/trunk/include/wh/whio/whio_devs.h).
+
+Once whefs was refactored to use whio to abstract away the back-end storage, it inherently supported any storage supported by whio. When it came time to finally add support for pseudofiles, the answer to the question of how to model the i/o was clear: whio. So... i implemented VFS pseudofile i/o as a whio\_dev implementation, meaning that pseudofiles are accessed via the same i/o API as the underlying storage. As one can probably deduce from that, it means that a pseudofile can act has a VFS container for a VFS embedded within another VFS. This can go on to an essentially arbitrary depth, but because an embedded VFS must be smaller than the containing VFS, it is impossible to embed to an infinite depth - we eventually reach some point where the guest VFS would be too small to support a whefs filesystem. That's not a practical limitation, of course, but is nonetheless an interesting observation.
+
+As mentioned above, there's nothing new or exciting about the i/o interface in and of itself. The exciting part is the freedom of storage options which it provides to whefs. As whio\_dev wrappers are written for new storage types, whefs can immediately make use of them.
+
+Another benefit of using a generic i/o library for storage is that we can take advantage of "added value" features which that library provides. For example, whio provides some routines for compressing and decompressing <em>sequential</em> streams using gzip compression. In whio, sequential-access devices are modelled in a class called whio\_stream, which is basically the same as whio\_dev but stripped of features which require random access. whio provides a whio\_stream implementation which can proxy any whio\_dev into a sequential-access stream. Such a stream object can then be used with, e.g., the de/compression routines. This indirection allows us to compress pseudofiles using that same API, without requiring a single line of code in the whefs library. For example, it is trivial to write a program which reads from standard input (or some other source) and writes a gzip-compressed stream directly to a pseudofile. It is fairly simple to create new whio\_stream classes to provide custom filtering, and as those are created they can be used with pseudofiles in the same manner as any other stream.
+
+# Abstract Costs of the I/O Model #
+
+Almost any time a proverbial "level of abstraction" is added, there is a cost associated with it, especially if the abstraction is overly-generic. In whefs the more prominent "abstraction penalties" related to the I/O model can be summarized as follows:
+
+  * The library performs many more `seek()` operations than would be necessary if we optimized for a single storage interface (e.g. `FILE` handles). The object-oriented nature of the I/O API requires that we do many `seek()` and `tell()` operations to ensure consistency in the underlying device cursor across API calls in the whefs kernel. Every `write()` operation on an EFS has at least one seek associated with it, and sometimes more.
+  * There can be no unified interface for integrating device-dependent features, such as file locking. The I/O API contains an `ioctl()`-like interface for activating device-specific features, but the whefs kernel cannot assume that any given device supports a specific feature.
+  * We cannot rely on any given underlying I/O device to support thread-private cursor data, which may complicate the implementation of any eventual thread-locking mechanisms in whefs.
+
+The whio API has very low memory costs, so we won't count that as a penalty. The obvious exceptions to that rule are in-memory I/O devices, which need RAM for their storage and can be arbitrarily large.
